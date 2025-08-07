@@ -1,0 +1,22 @@
+{
+  "name": "uifork",
+  "version": "1.0.0",
+  "description": "A CLI tool for managing UI component versions and switching between them",
+  "main": "cli.js",
+  "bin": {
+    "uifork": "./cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["ui", "components", "versioning", "cli", "switcher"],
+  "author": "",
+  "license": "MIT",
+  "preferGlobal": true,
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3"
+  }
+}
