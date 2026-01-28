@@ -26,6 +26,7 @@ Commands:
 Options:
   -h, --help     Show this help message
   -v, --version  Show version number
+  --W            Don't start watching after init (init command only)
 `);
 }
 
@@ -63,7 +64,8 @@ switch (command) {
     }
 
     try {
-      const scaffolder = new UISwitcherScaffold(argument);
+      const shouldWatch = !args.includes("--W");
+      const scaffolder = new UISwitcherScaffold(argument, shouldWatch);
       scaffolder.scaffold();
     } catch (error) {
       console.error(`Error during scaffolding: ${error.message}`);
