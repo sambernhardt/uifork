@@ -129,6 +129,14 @@ export const UISwitcher = <T extends Record<string, unknown>>({
   const versionsRef = useRef(versions);
   const idRef = useRef(id);
   const activeVersionRef = useRef(activeVersion);
+  const [openPopoverVersion, setOpenPopoverVersion] = useState<string | null>(
+    null,
+  );
+  const popoverTriggerRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const popoverDropdownRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const popoverPositions = useRef<Map<string, { x: number; y: number }>>(
+    new Map(),
+  );
 
   // Keep editingVersion ref updated
   useEffect(() => {
@@ -435,6 +443,18 @@ export const UISwitcher = <T extends Record<string, unknown>>({
     sendWebSocketMessage("new_version", {});
   };
 
+  const handlePromoteVersion = (version: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    // TODO: Wire up promote functionality
+    console.log("[UISwitcher] Promote version:", version);
+    setOpenPopoverVersion(null);
+  };
+
+  const handleTogglePopover = (version: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenPopoverVersion(openPopoverVersion === version ? null : version);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!e.metaKey) return;
@@ -519,6 +539,55 @@ export const UISwitcher = <T extends Record<string, unknown>>({
     return cleanup;
   }, [isOpen]);
 
+  // Position popover menus using floating-ui
+  useEffect(() => {
+    if (!openPopoverVersion) return;
+
+    const trigger = popoverTriggerRefs.current.get(openPopoverVersion);
+    const dropdown = popoverDropdownRefs.current.get(openPopoverVersion);
+
+    if (!trigger || !dropdown) return;
+
+    const updatePosition = async () => {
+      try {
+        const { x, y } = await computePosition(trigger, dropdown, {
+          placement: "bottom-end",
+          strategy: "fixed",
+          middleware: [
+            offset(4),
+            flip({
+              fallbackPlacements: ["bottom-start", "top-end", "top-start"],
+            }),
+            shift({
+              padding: 8,
+            }),
+          ],
+        });
+
+        popoverPositions.current.set(openPopoverVersion, { x, y });
+        // Make dropdown visible after positioning
+        dropdown.style.visibility = "visible";
+      } catch (error) {
+        console.error("Error positioning popover:", error);
+      }
+    };
+
+    // Set initial hidden state
+    dropdown.style.visibility = "hidden";
+
+    updatePosition();
+
+    const cleanup = autoUpdate(trigger, dropdown, updatePosition, {
+      ancestorScroll: true,
+      ancestorResize: true,
+      elementResize: true,
+      layoutShift: true,
+      animationFrame: false,
+    });
+
+    return cleanup;
+  }, [openPopoverVersion]);
+
   // Focus input when entering rename mode
   useEffect(() => {
     if (editingVersion && renameInputRef.current) {
@@ -529,25 +598,41 @@ export const UISwitcher = <T extends Record<string, unknown>>({
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen && !openPopoverVersion) return;
 
     const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+
+      // Check main dropdown
       if (
-        triggerRef.current?.contains(e.target as Node) ||
-        dropdownRef.current?.contains(e.target as Node)
+        triggerRef.current?.contains(target) ||
+        dropdownRef.current?.contains(target)
       ) {
         return;
       }
+
+      // Check popover dropdowns
+      if (openPopoverVersion) {
+        const trigger = popoverTriggerRefs.current.get(openPopoverVersion);
+        const dropdown = popoverDropdownRefs.current.get(openPopoverVersion);
+        if (trigger?.contains(target) || dropdown?.contains(target)) {
+          return;
+        }
+        setOpenPopoverVersion(null);
+      }
+
       // Cancel any ongoing rename when closing dropdown
       if (editingVersion) {
         handleCancelRename();
       }
-      setIsOpen(false);
+      if (isOpen) {
+        setIsOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen, editingVersion, handleCancelRename]);
+  }, [isOpen, openPopoverVersion, editingVersion, handleCancelRename]);
 
   // Handle keyboard navigation within dropdown
   useEffect(() => {
@@ -555,6 +640,11 @@ export const UISwitcher = <T extends Record<string, unknown>>({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // Close popover if open
+        if (openPopoverVersion) {
+          setOpenPopoverVersion(null);
+          return;
+        }
         // Cancel any ongoing rename when closing dropdown
         if (editingVersion) {
           handleCancelRename();
@@ -606,6 +696,7 @@ export const UISwitcher = <T extends Record<string, unknown>>({
     setActiveVersion,
     editingVersion,
     handleCancelRename,
+    openPopoverVersion,
   ]);
 
   const Version =
@@ -670,7 +761,7 @@ export const UISwitcher = <T extends Record<string, unknown>>({
                 ref={dropdownRef}
                 role="listbox"
                 aria-label="UI version options"
-                className="fixed z-[1001] min-w-[120px] rounded-lg bg-neutral-800 py-1 shadow-xl border border-neutral-700"
+                className="fixed z-[1001] min-w-[120px] rounded-lg bg-neutral-800 shadow-xl border border-neutral-700 p-1"
                 style={{
                   left: `${position.x}px`,
                   top: `${position.y}px`,
@@ -772,22 +863,16 @@ export const UISwitcher = <T extends Record<string, unknown>>({
                       onClick={() => {
                         setActiveVersion(key);
                         setIsOpen(false);
+                        setOpenPopoverVersion(null);
                         triggerRef.current?.focus();
                       }}
-                      className="group flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-white transition-colors hover:bg-neutral-700 focus:bg-neutral-700 focus:outline-none"
+                      className="group flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white transition-colors hover:bg-neutral-700 focus:bg-neutral-700 focus:outline-none rounded"
                     >
-                      <div className="flex flex-col flex-1 min-w-0">
-                        <div>{versions[key].label}</div>
-                        {versions[key].description && (
-                          <div className="text-xs text-neutral-400">
-                            {versions[key].description}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
+                      {/* Checkmark icon container - matches plus icon container dimensions */}
+                      <div className="h-4 w-4 flex-shrink-0 flex items-center justify-center">
                         {isSelected && (
                           <svg
-                            className="h-4 w-4 flex-shrink-0"
+                            className="h-4 w-4"
                             fill="none"
                             viewBox="0 0 16 16"
                             xmlns="http://www.w3.org/2000/svg"
@@ -801,14 +886,62 @@ export const UISwitcher = <T extends Record<string, unknown>>({
                             />
                           </svg>
                         )}
-                        {/* Action buttons */}
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {/* Rename button */}
+                      </div>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <div>{versions[key].label}</div>
+                        {versions[key].description && (
+                          <div className="text-xs text-neutral-400">
+                            {versions[key].description}
+                          </div>
+                        )}
+                      </div>
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Clone button */}
+                        <button
+                          onClick={(e) => handleDuplicateVersion(key, e)}
+                          className="p-1 rounded hover:bg-neutral-600 transition-colors"
+                          title="Clone version"
+                          aria-label={`Clone ${key}`}
+                        >
+                          <svg
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            viewBox="0 0 16 16"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <rect
+                              x="5.333"
+                              y="5.333"
+                              width="8"
+                              height="8"
+                              rx="1"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                            />
+                            <path
+                              d="M10.667 2.667H2.667a1 1 0 0 0-1 1v8"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                        {/* 3-dot menu button */}
+                        <div className="relative">
                           <button
-                            onClick={(e) => handleRenameVersion(key, e)}
+                            ref={(el) => {
+                              if (el) {
+                                popoverTriggerRefs.current.set(key, el);
+                              } else {
+                                popoverTriggerRefs.current.delete(key);
+                              }
+                            }}
+                            onClick={(e) => handleTogglePopover(key, e)}
                             className="p-1 rounded hover:bg-neutral-600 transition-colors"
-                            title="Rename version"
-                            aria-label={`Rename ${key}`}
+                            title="More options"
+                            aria-label={`More options for ${key}`}
+                            aria-expanded={openPopoverVersion === key}
                           >
                             <svg
                               className="h-3.5 w-3.5"
@@ -816,67 +949,110 @@ export const UISwitcher = <T extends Record<string, unknown>>({
                               viewBox="0 0 16 16"
                               xmlns="http://www.w3.org/2000/svg"
                             >
-                              <path
-                                d="M11.333 2.667a1.414 1.414 0 0 1 2 2L6 12l-2.667.667L4 10.667l7.333-7.333z"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                              <circle cx="8" cy="4" r="1" fill="currentColor" />
+                              <circle cx="8" cy="8" r="1" fill="currentColor" />
+                              <circle
+                                cx="8"
+                                cy="12"
+                                r="1"
+                                fill="currentColor"
                               />
                             </svg>
                           </button>
-                          {/* Duplicate button */}
-                          <button
-                            onClick={(e) => handleDuplicateVersion(key, e)}
-                            className="p-1 rounded hover:bg-neutral-600 transition-colors"
-                            title="Duplicate version"
-                            aria-label={`Duplicate ${key}`}
-                          >
-                            <svg
-                              className="h-3.5 w-3.5"
-                              fill="none"
-                              viewBox="0 0 16 16"
-                              xmlns="http://www.w3.org/2000/svg"
+                          {/* Popover menu */}
+                          {openPopoverVersion === key && (
+                            <div
+                              ref={(el) => {
+                                if (el) {
+                                  popoverDropdownRefs.current.set(key, el);
+                                } else {
+                                  popoverDropdownRefs.current.delete(key);
+                                }
+                              }}
+                              className="fixed z-[1002] min-w-[120px] rounded-lg bg-neutral-800 shadow-xl border border-neutral-700 p-1"
+                              style={{
+                                left: `${popoverPositions.current.get(key)?.x || 0}px`,
+                                top: `${popoverPositions.current.get(key)?.y || 0}px`,
+                                visibility: "hidden",
+                              }}
+                              role="menu"
                             >
-                              <rect
-                                x="5.333"
-                                y="5.333"
-                                width="8"
-                                height="8"
-                                rx="1"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                              />
-                              <path
-                                d="M10.667 2.667H2.667a1 1 0 0 0-1 1v8"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </button>
-                          {/* Delete button */}
-                          <button
-                            onClick={(e) => handleDeleteVersion(key, e)}
-                            className="p-1 rounded hover:bg-red-600 transition-colors"
-                            title="Delete version"
-                            aria-label={`Delete ${key}`}
-                          >
-                            <svg
-                              className="h-3.5 w-3.5"
-                              fill="none"
-                              viewBox="0 0 16 16"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h10.667z"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
+                              {/* Promote option */}
+                              <button
+                                onClick={(e) => handlePromoteVersion(key, e)}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white transition-colors hover:bg-neutral-700 focus:bg-neutral-700 focus:outline-none rounded"
+                                role="menuitem"
+                              >
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 16 16"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M8 12V4M4 8l4-4 4 4"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                                <span>Promote</span>
+                              </button>
+                              {/* Delete option */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteVersion(key, e);
+                                  setOpenPopoverVersion(null);
+                                }}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 transition-colors hover:bg-neutral-700 focus:bg-neutral-700 focus:outline-none rounded"
+                                role="menuitem"
+                              >
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 16 16"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h10.667z"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                                <span>Delete</span>
+                              </button>
+                              {/* Rename option */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRenameVersion(key, e);
+                                  setOpenPopoverVersion(null);
+                                }}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white transition-colors hover:bg-neutral-700 focus:bg-neutral-700 focus:outline-none rounded"
+                                role="menuitem"
+                              >
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 16 16"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M11.333 2.667a1.414 1.414 0 0 1 2 2L6 12l-2.667.667L4 10.667l7.333-7.333z"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                                <span>Rename</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </button>
@@ -891,22 +1067,25 @@ export const UISwitcher = <T extends Record<string, unknown>>({
                     setIsOpen(false);
                     triggerRef.current?.focus();
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white transition-colors hover:bg-neutral-700 focus:bg-neutral-700 focus:outline-none"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white transition-colors hover:bg-neutral-700 focus:bg-neutral-700 focus:outline-none rounded"
                   title="Create new version"
                 >
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 16 16"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M8 3v10M3 8h10"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+                  {/* Plus icon container - matches checkmark icon container dimensions */}
+                  <div className="h-4 w-4 flex-shrink-0 flex items-center justify-center">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 16 16"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M8 3v10M3 8h10"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
                   <span>New version</span>
                 </button>
               </div>
