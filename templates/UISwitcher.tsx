@@ -121,6 +121,9 @@ export const UISwitcher = <T extends Record<string, unknown>>({
   const [connectionStatus, setConnectionStatus] = useState<
     "connected" | "disconnected" | "connecting"
   >("disconnected");
+  const [editingVersion, setEditingVersion] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState<string>("");
+  const renameInputRef = useRef<HTMLInputElement>(null);
   const previousVersionKeysRef = useRef<Set<string>>(new Set());
   const versionsRef = useRef(versions);
   const idRef = useRef(id);
@@ -277,20 +280,25 @@ export const UISwitcher = <T extends Record<string, unknown>>({
   }, [setActiveVersion]);
 
   // Send WebSocket message helper
-  const sendWebSocketMessage = (
-    type:
-      | "duplicate_version"
-      | "delete_version"
-      | "new_version"
-      | "rename_version",
-    payload: Record<string, unknown>,
-  ) => {
-    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-      wsConnection.send(JSON.stringify({ type, payload }));
-    } else {
-      console.warn("[UISwitcher] WebSocket not connected, cannot send message");
-    }
-  };
+  const sendWebSocketMessage = useCallback(
+    (
+      type:
+        | "duplicate_version"
+        | "delete_version"
+        | "new_version"
+        | "rename_version",
+      payload: Record<string, unknown>,
+    ) => {
+      if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send(JSON.stringify({ type, payload }));
+      } else {
+        console.warn(
+          "[UISwitcher] WebSocket not connected, cannot send message",
+        );
+      }
+    },
+    [wsConnection],
+  );
 
   // Action handlers
   const handleDuplicateVersion = (version: string, e: React.MouseEvent) => {
@@ -305,9 +313,35 @@ export const UISwitcher = <T extends Record<string, unknown>>({
 
   const handleRenameVersion = (version: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    // For now, just log - rename will need a dialog/prompt
-    sendWebSocketMessage("rename_version", { version, newVersion: "" });
+    setEditingVersion(version);
+    setRenameValue(versions[version].label);
   };
+
+  const handleConfirmRename = useCallback(
+    (version: string) => {
+      if (!renameValue.trim() || renameValue === versions[version].label) {
+        // Cancel if empty or unchanged
+        setEditingVersion(null);
+        setRenameValue("");
+        return;
+      }
+
+      // Send rename message via WebSocket
+      sendWebSocketMessage("rename_version", {
+        version,
+        newVersion: renameValue.trim(),
+      });
+
+      setEditingVersion(null);
+      setRenameValue("");
+    },
+    [renameValue, versions, sendWebSocketMessage],
+  );
+
+  const handleCancelRename = useCallback(() => {
+    setEditingVersion(null);
+    setRenameValue("");
+  }, []);
 
   const handleNewVersion = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -398,6 +432,14 @@ export const UISwitcher = <T extends Record<string, unknown>>({
     return cleanup;
   }, [isOpen]);
 
+  // Focus input when entering rename mode
+  useEffect(() => {
+    if (editingVersion && renameInputRef.current) {
+      renameInputRef.current.focus();
+      renameInputRef.current.select();
+    }
+  }, [editingVersion]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     if (!isOpen) return;
@@ -409,12 +451,16 @@ export const UISwitcher = <T extends Record<string, unknown>>({
       ) {
         return;
       }
+      // Cancel any ongoing rename when closing dropdown
+      if (editingVersion) {
+        handleCancelRename();
+      }
       setIsOpen(false);
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, editingVersion, handleCancelRename]);
 
   // Handle keyboard navigation within dropdown
   useEffect(() => {
@@ -422,6 +468,10 @@ export const UISwitcher = <T extends Record<string, unknown>>({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // Cancel any ongoing rename when closing dropdown
+        if (editingVersion) {
+          handleCancelRename();
+        }
         setIsOpen(false);
         triggerRef.current?.focus();
         return;
@@ -463,7 +513,13 @@ export const UISwitcher = <T extends Record<string, unknown>>({
     return () => {
       dropdownRef.current?.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, versionKeys, setActiveVersion]);
+  }, [
+    isOpen,
+    versionKeys,
+    setActiveVersion,
+    editingVersion,
+    handleCancelRename,
+  ]);
 
   const Version =
     versions[activeVersion]?.render || versions[versionKeys[0]].render;
@@ -536,6 +592,90 @@ export const UISwitcher = <T extends Record<string, unknown>>({
               >
                 {versionKeys.toReversed().map((key) => {
                   const isSelected = key === activeVersion;
+                  const isEditing = editingVersion === key;
+
+                  if (isEditing) {
+                    return (
+                      <div
+                        key={key}
+                        className="flex w-full items-center gap-2 px-3 py-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Input */}
+                        <input
+                          ref={renameInputRef}
+                          type="text"
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleConfirmRename(key);
+                            } else if (e.key === "Escape") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleCancelRename();
+                            }
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex-1 rounded bg-neutral-700 px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                          placeholder="Version name"
+                        />
+                        {/* Check button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleConfirmRename(key);
+                          }}
+                          className="p-1 rounded hover:bg-green-600/20 transition-colors flex-shrink-0"
+                          title="Confirm rename"
+                          aria-label="Confirm rename"
+                        >
+                          <svg
+                            className="h-4 w-4 text-green-500"
+                            fill="none"
+                            viewBox="0 0 16 16"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M13.333 4L6 11.333 2.667 8"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                        {/* Cancel button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCancelRename();
+                          }}
+                          className="p-1 rounded hover:bg-red-600/20 transition-colors flex-shrink-0"
+                          title="Cancel rename"
+                          aria-label="Cancel rename"
+                        >
+                          <svg
+                            className="h-4 w-4 text-red-500"
+                            fill="none"
+                            viewBox="0 0 16 16"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M4 4l8 8M12 4l-8 8"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  }
+
                   return (
                     <button
                       key={key}
