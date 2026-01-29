@@ -10,6 +10,7 @@ import {
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { getMountedComponents, subscribe } from "../utils/componentRegistry";
 import type { ComponentInfo, UIForkProps } from "../types";
 
 /**
@@ -33,6 +34,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   const [isMounted, setIsMounted] = useState(false);
   // Component discovery state
   const [components, setComponents] = useState<ComponentInfo[]>([]);
+  const [mountedComponentIds, setMountedComponentIds] = useState<string[]>([]);
   const [selectedComponent, setSelectedComponent] = useLocalStorage<string>(
     "uifork-selected-component",
     "",
@@ -84,8 +86,15 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   const selectedComponentRef = useRef(selectedComponent);
   const activeVersionRef = useRef(activeVersion);
 
+  // Filter components to only show mounted ones
+  const mountedComponents = components.filter((c) =>
+    mountedComponentIds.includes(c.name),
+  );
+
   // Get current component's versions
-  const currentComponent = components.find((c) => c.name === selectedComponent);
+  const currentComponent = mountedComponents.find(
+    (c) => c.name === selectedComponent,
+  );
   const versionKeys = currentComponent?.versions || [];
 
   // Keep refs updated
@@ -116,6 +125,53 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       console.error("[UIFork] Error fetching components:", error);
     }
   }, [port, selectedComponent, setSelectedComponent]);
+
+  // Subscribe to component registry changes
+  useEffect(() => {
+    // Initialize with current mounted components
+    setMountedComponentIds(getMountedComponents());
+
+    // Subscribe to changes
+    const unsubscribe = subscribe(() => {
+      setMountedComponentIds(getMountedComponents());
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Auto-select first mounted component if current selection is not mounted
+  useEffect(() => {
+    if (
+      selectedComponent &&
+      mountedComponentIds.length > 0 &&
+      !mountedComponentIds.includes(selectedComponent)
+    ) {
+      // Current selection is not mounted, switch to first mounted component
+      const firstMounted = components.find((c) =>
+        mountedComponentIds.includes(c.name),
+      );
+      if (firstMounted) {
+        setSelectedComponent(firstMounted.name);
+      }
+    } else if (
+      !selectedComponent &&
+      mountedComponentIds.length > 0 &&
+      components.length > 0
+    ) {
+      // No selection yet, select first mounted component
+      const firstMounted = components.find((c) =>
+        mountedComponentIds.includes(c.name),
+      );
+      if (firstMounted) {
+        setSelectedComponent(firstMounted.name);
+      }
+    }
+  }, [
+    selectedComponent,
+    mountedComponentIds,
+    components,
+    setSelectedComponent,
+  ]);
 
   // Fetch components on mount and when WebSocket reconnects
   useEffect(() => {
@@ -1260,7 +1316,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
             visibility: "hidden",
           }}
         >
-          {components.length === 0 ? (
+          {mountedComponents.length === 0 ? (
             <div
               style={{
                 padding: "8px 12px",
@@ -1268,10 +1324,10 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                 color: "#a3a3a3",
               }}
             >
-              No components found
+              No mounted components found
             </div>
           ) : (
-            components.map((component) => (
+            mountedComponents.map((component) => (
               <button
                 key={component.name}
                 onClick={() => {

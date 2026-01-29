@@ -1,5 +1,9 @@
 import { useEffect } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import {
+  registerComponent,
+  unregisterComponent,
+} from "../utils/componentRegistry";
 import type { BranchedComponentProps } from "../types";
 
 /**
@@ -23,6 +27,14 @@ export function BranchedComponent<T extends Record<string, unknown>>({
     initialVersion,
     true, // sync across tabs
   );
+
+  // Register/unregister this component when it mounts/unmounts
+  useEffect(() => {
+    registerComponent(id);
+    return () => {
+      unregisterComponent(id);
+    };
+  }, [id]);
 
   // If active version no longer exists in versions, fall back to first version
   useEffect(() => {
