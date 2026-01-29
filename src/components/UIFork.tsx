@@ -1,5 +1,3 @@
-"use client";
-
 import {
   autoUpdate,
   computePosition,
@@ -26,7 +24,7 @@ import { RenameIcon } from "./icons/RenameIcon";
 import { PlusIcon } from "./icons/PlusIcon";
 
 // Animation duration constant (in seconds)
-const ANIMATION_DURATION = 3;
+const ANIMATION_DURATION = 0.3;
 
 // Animation easing curve (cubic-bezier)
 const ANIMATION_EASING = [0.18, 0.83, 0, 1] as const;
@@ -630,6 +628,10 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         ref={containerRef}
         className={styles.container}
         layout
+        style={{
+          borderRadius: 12,
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+        }}
         transition={{
           layout: {
             duration: ANIMATION_DURATION,
