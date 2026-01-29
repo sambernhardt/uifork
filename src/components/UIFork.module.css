@@ -1,27 +1,35 @@
-/* Trigger button */
-.trigger {
+/* Container */
+.container {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 1000;
+  z-index: 1001;
+  background-color: #262626;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #404040;
+  transform-origin: bottom right;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+}
+
+/* Trigger button */
+.trigger {
   display: flex;
   align-items: center;
   gap: 8px;
-  border-radius: 12px;
-  background-color: #262626;
-  border: 1px solid #4b4b4b;
   padding: 8px 12px;
   font-size: 14px;
   color: white;
   cursor: pointer;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  transition: transform 0.15s ease-out;
+  background-color: transparent;
+  border: none;
+  white-space: nowrap;
+  height: 40px;
 }
 .trigger:hover {
   background-color: #303030;
-}
-.trigger:active {
-  transform: scale(0.99);
 }
 
 /* Connection status indicator */
@@ -46,6 +54,16 @@
 /* Trigger separator */
 .triggerSeparator {
   color: #a3a3a3;
+  margin: 0 4px;
+}
+
+.triggerLabel,
+.triggerVersion {
+  white-space: nowrap;
+}
+
+.triggerVersion {
+  color: #a3a3a3;
 }
 
 /* Trigger icon */
@@ -58,35 +76,14 @@
   transform: rotate(180deg);
 }
 
-/* Dropdown menu */
+/* Dropdown content */
 .dropdown {
-  position: fixed;
-  z-index: 1001;
   min-width: 200px;
-  border-radius: 12px;
-  background-color: #262626;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 1px solid #404040;
   padding: 4px;
-  animation: fadeUpBlur 0.3s cubic-bezier(0.45, 0.56, 0, 1) forwards;
-  opacity: 0;
-  transform: translateY(8px) scale(0.97);
-  filter: blur(4px);
-  transform-origin: bottom right;
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes fadeUpBlur {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.97);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
 /* Component selector button */
 .componentSelector {
   display: flex;
@@ -120,6 +117,26 @@
 .divider {
   border-top: 1px solid #404040;
   margin: 4px 0;
+}
+
+/* Versions list */
+.versionsList {
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow-y: auto;
+  gap: 2px;
+  /* Custom scrollbar */
+}
+.versionsList::-webkit-scrollbar {
+  width: 4px;
+}
+.versionsList::-webkit-scrollbar-track {
+  background: transparent;
+}
+.versionsList::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 2px;
 }
 
 /* Empty state */

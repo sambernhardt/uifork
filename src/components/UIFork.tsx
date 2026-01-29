@@ -9,10 +9,17 @@ import {
 } from "@floating-ui/dom";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "motion/react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { getMountedComponents, subscribe } from "../utils/componentRegistry";
 import type { ComponentInfo, UIForkProps } from "../types";
 import styles from "./UIFork.module.css";
+
+// Animation duration constant (in seconds)
+const ANIMATION_DURATION = 0.3;
+
+// Animation easing curve (cubic-bezier)
+const ANIMATION_EASING = [0.18, 0.83, 0, 1] as const;
 
 /**
  * UIFork - A floating UI component that renders a version picker in the bottom right.
@@ -53,9 +60,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   // UI state
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const componentSelectorRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [componentSelectorPosition, setComponentSelectorPosition] = useState({
     x: 0,
     y: 0,
@@ -450,59 +457,15 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeVersion, versionKeys, setActiveVersion]);
 
-  // Position dropdown using floating-ui
-  useEffect(() => {
-    if (!isOpen || !triggerRef.current || !dropdownRef.current) return;
-    const updatePosition = async () => {
-      try {
-        const { x, y } = await computePosition(
-          triggerRef.current!,
-          dropdownRef.current!,
-          {
-            placement: "top-end",
-            strategy: "fixed",
-            middleware: [
-              offset(8),
-              flip({
-                fallbackPlacements: ["bottom-end", "top-start", "bottom-start"],
-              }),
-              shift({ padding: 20 }),
-            ],
-          },
-        );
-        setPosition({ x, y });
-        if (dropdownRef.current)
-          dropdownRef.current.style.visibility = "visible";
-      } catch (error) {
-        console.error("Error positioning dropdown:", error);
-      }
-    };
-    if (dropdownRef.current) dropdownRef.current.style.visibility = "hidden";
-    updatePosition();
-    const cleanup = autoUpdate(
-      triggerRef.current,
-      dropdownRef.current,
-      updatePosition,
-      {
-        ancestorScroll: true,
-        ancestorResize: true,
-        elementResize: true,
-        layoutShift: true,
-        animationFrame: false,
-      },
-    );
-    return cleanup;
-  }, [isOpen]);
-
   // Position component selector dropdown
   useEffect(() => {
     if (
       !isComponentSelectorOpen ||
-      !dropdownRef.current ||
+      !containerRef.current ||
       !componentSelectorRef.current
     )
       return;
-    const trigger = dropdownRef.current.querySelector(
+    const trigger = containerRef.current.querySelector(
       "[data-component-selector]",
     ) as HTMLElement;
     if (!trigger) return;
@@ -582,7 +545,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       const target = e.target as Node;
       if (
         triggerRef.current?.contains(target) ||
-        dropdownRef.current?.contains(target)
+        containerRef.current?.contains(target)
       )
         return;
       if (componentSelectorRef.current?.contains(target)) return;
@@ -608,7 +571,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
 
   // Handle keyboard navigation
   useEffect(() => {
-    if (!isOpen || !dropdownRef.current) return;
+    if (!isOpen || !containerRef.current) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (openPopoverVersion) {
@@ -626,9 +589,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         triggerRef.current?.focus();
       }
     };
-    dropdownRef.current.addEventListener("keydown", handleKeyDown);
+    containerRef.current.addEventListener("keydown", handleKeyDown);
     return () =>
-      dropdownRef.current?.removeEventListener("keydown", handleKeyDown);
+      containerRef.current?.removeEventListener("keydown", handleKeyDown);
   }, [
     isOpen,
     openPopoverVersion,
@@ -653,385 +616,453 @@ export function UIFork({ port = 3001 }: UIForkProps) {
 
   return createPortal(
     <>
-      {/* Trigger button */}
-      <button
-        suppressHydrationWarning
-        ref={triggerRef}
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Select UI version"
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
-        className={styles.trigger}
+      <motion.div
+        ref={containerRef}
+        className={styles.container}
+        layout
+        transition={{
+          layout: {
+            duration: ANIMATION_DURATION,
+            ease: ANIMATION_EASING,
+          },
+        }}
       >
-        {/* Connection status indicator */}
-        <div
-          className={`${styles.statusIndicator} ${
-            connectionStatus === "connected"
-              ? styles.statusIndicatorConnected
-              : connectionStatus === "connecting"
-                ? styles.statusIndicatorConnecting
-                : styles.statusIndicatorDisconnected
-          }`}
-          title={
-            connectionStatus === "connected"
-              ? "Connected to watch server"
-              : connectionStatus === "connecting"
-                ? "Connecting..."
-                : "Disconnected from watch server"
-          }
-        />
-        <span>{selectedComponent || "No component"}</span>
-        <span className={styles.triggerSeparator}>/</span>
-        <span>{activeVersion ? formatVersionLabel(activeVersion) : "-"}</span>
-      </button>
-
-      {/* Dropdown menu */}
-      {isOpen && (
-        <div
-          ref={dropdownRef}
-          role="listbox"
-          aria-label="UI version options"
-          className={styles.dropdown}
-          style={{
-            left: `${position.x}px`,
-            top: `${position.y}px`,
-            visibility: "hidden",
-          }}
-        >
-          {/* Component selector */}
-          <button
-            data-component-selector
-            onClick={() => setIsComponentSelectorOpen(!isComponentSelectorOpen)}
-            className={styles.componentSelector}
-          >
-            <span className={styles.componentSelectorLabel}>
-              {selectedComponent || "Select component"}
-            </span>
-            <svg
-              className={styles.componentSelectorIcon}
-              fill="none"
-              viewBox="0 0 16 16"
+        <AnimatePresence mode="popLayout" initial={false}>
+          {!isOpen ? (
+            <motion.button
+              key="trigger"
+              suppressHydrationWarning
+              ref={triggerRef}
+              onClick={() => setIsOpen(true)}
+              aria-label="Select UI version"
+              aria-expanded={false}
+              aria-haspopup="listbox"
+              className={styles.trigger}
+              layout
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: ANIMATION_DURATION,
+                ease: ANIMATION_EASING,
+              }}
             >
-              <path
-                d="M6 4l4 4-4 4"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-
-          <div className={styles.divider} />
-
-          {/* Versions list */}
-          {versionKeys.length === 0 ? (
-            <div className={styles.emptyState}>No versions found</div>
-          ) : (
-            versionKeys
-              .slice()
-              .reverse()
-              .map((key) => {
-                const isSelected = key === activeVersion;
-                const isEditing = editingVersion === key;
-
-                if (isEditing) {
-                  return (
-                    <div
-                      key={key}
-                      className={styles.versionItemEditing}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <input
-                        ref={renameInputRef}
-                        type="text"
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleConfirmRename(key);
-                          } else if (e.key === "Escape") {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleCancelRename();
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className={styles.renameInput}
-                        placeholder="e.g., v1, v2, v1_2"
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleConfirmRename(key);
-                        }}
-                        className={styles.confirmButton}
-                        title="Confirm rename"
-                      >
-                        <svg
-                          className={styles.confirmIcon}
-                          fill="none"
-                          viewBox="0 0 16 16"
-                        >
-                          <path
-                            d="M13.333 4L6 11.333 2.667 8"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCancelRename();
-                        }}
-                        className={styles.confirmButton}
-                        title="Cancel rename"
-                      >
-                        <svg
-                          className={styles.cancelIcon}
-                          fill="none"
-                          viewBox="0 0 16 16"
-                        >
-                          <path
-                            d="M4 4l8 8M12 4l-8 8"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  );
+              <div
+                className={`${styles.statusIndicator} ${
+                  connectionStatus === "connected"
+                    ? styles.statusIndicatorConnected
+                    : connectionStatus === "connecting"
+                      ? styles.statusIndicatorConnecting
+                      : styles.statusIndicatorDisconnected
+                }`}
+                title={
+                  connectionStatus === "connected"
+                    ? "Connected to watch server"
+                    : connectionStatus === "connecting"
+                      ? "Connecting..."
+                      : "Disconnected from watch server"
                 }
+              />
+              <motion.span
+                layoutId="component-name"
+                layout="position"
+                className={styles.triggerLabel}
+                transition={{
+                  duration: ANIMATION_DURATION,
+                  ease: ANIMATION_EASING,
+                }}
+              >
+                {selectedComponent || "No component"}
+              </motion.span>
+              <span className={styles.triggerSeparator}>/</span>
+              <span className={styles.triggerVersion}>
+                {activeVersion ? formatVersionLabel(activeVersion) : "-"}
+              </span>
+            </motion.button>
+          ) : (
+            <motion.div
+              key="dropdown"
+              ref={dropdownRef}
+              role="listbox"
+              aria-label="UI version options"
+              className={styles.dropdown}
+              layout
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: ANIMATION_DURATION,
+                ease: ANIMATION_EASING,
+              }}
+            >
+              {/* Component selector */}
+              <button
+                data-component-selector
+                onClick={() =>
+                  setIsComponentSelectorOpen(!isComponentSelectorOpen)
+                }
+                className={styles.componentSelector}
+              >
+                <motion.span
+                  layoutId="component-name"
+                  layout="position"
+                  className={styles.componentSelectorLabel}
+                  transition={{
+                    duration: ANIMATION_DURATION,
+                    ease: ANIMATION_EASING,
+                  }}
+                >
+                  {selectedComponent || "Select component"}
+                </motion.span>
+                <svg
+                  className={styles.componentSelectorIcon}
+                  fill="none"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
 
-                return (
-                  <div
-                    key={key}
-                    role="option"
-                    aria-selected={isSelected}
-                    data-key={key}
-                    onClick={() => {
-                      setActiveVersion(key);
-                      setIsOpen(false);
-                      setOpenPopoverVersion(null);
-                      triggerRef.current?.focus();
-                    }}
-                    className={styles.versionItem}
-                  >
-                    {/* Checkmark */}
-                    <div className={styles.checkmarkContainer}>
-                      {isSelected && (
-                        <svg
-                          className={styles.checkmarkIcon}
-                          fill="none"
-                          viewBox="0 0 16 16"
-                        >
-                          <path
-                            d="M13.333 4L6 11.333 2.667 8"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                    <div className={styles.versionLabel}>
-                      {formatVersionLabel(key)}
-                    </div>
-                    {/* Action buttons */}
-                    <div data-actions className={styles.actions}>
-                      <button
-                        onClick={(e) => handleDuplicateVersion(key, e)}
-                        className={styles.actionButton}
-                        title="Clone version"
-                      >
-                        <svg
-                          className={styles.actionIcon}
-                          fill="none"
-                          viewBox="0 0 16 16"
-                        >
-                          <rect
-                            x="5.333"
-                            y="5.333"
-                            width="8"
-                            height="8"
-                            rx="1"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                          />
-                          <path
-                            d="M10.667 2.667H2.667a1 1 0 0 0-1 1v8"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </button>
-                      <div className={styles.actionButtonMore}>
-                        <button
-                          ref={(el) => {
-                            if (el) popoverTriggerRefs.current.set(key, el);
-                            else popoverTriggerRefs.current.delete(key);
-                          }}
-                          onClick={(e) => handleTogglePopover(key, e)}
-                          className={styles.actionButton}
-                          title="More options"
-                        >
-                          <svg
-                            className={styles.actionIcon}
-                            fill="none"
-                            viewBox="0 0 16 16"
-                          >
-                            <circle cx="8" cy="4" r="1" fill="currentColor" />
-                            <circle cx="8" cy="8" r="1" fill="currentColor" />
-                            <circle cx="8" cy="12" r="1" fill="currentColor" />
-                          </svg>
-                        </button>
-                        {/* Popover menu */}
-                        {openPopoverVersion === key && (
+              <div className={styles.divider} />
+
+              {/* Versions list */}
+              <div className={styles.versionsList}>
+                {versionKeys.length === 0 ? (
+                  <div className={styles.emptyState}>No versions found</div>
+                ) : (
+                  versionKeys
+                    .slice()
+                    .reverse()
+                    .map((key) => {
+                      const isSelected = key === activeVersion;
+                      const isEditing = editingVersion === key;
+
+                      if (isEditing) {
+                        return (
                           <div
-                            ref={(el) => {
-                              if (el) popoverDropdownRefs.current.set(key, el);
-                              else popoverDropdownRefs.current.delete(key);
-                            }}
-                            className={styles.popover}
-                            style={{
-                              left: `${popoverPositions.current.get(key)?.x || 0}px`,
-                              top: `${popoverPositions.current.get(key)?.y || 0}px`,
-                              visibility: "hidden",
-                            }}
-                            role="menu"
+                            key={key}
+                            className={styles.versionItemEditing}
+                            onClick={(e) => e.stopPropagation()}
                           >
+                            <input
+                              ref={renameInputRef}
+                              type="text"
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleConfirmRename(key);
+                                } else if (e.key === "Escape") {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleCancelRename();
+                                }
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className={styles.renameInput}
+                              placeholder="e.g., v1, v2, v1_2"
+                            />
                             <button
-                              onClick={(e) => handlePromoteVersion(key, e)}
-                              className={styles.popoverMenuItem}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleConfirmRename(key);
+                              }}
+                              className={styles.confirmButton}
+                              title="Confirm rename"
                             >
                               <svg
-                                className={styles.popoverMenuItemIcon}
+                                className={styles.confirmIcon}
                                 fill="none"
                                 viewBox="0 0 16 16"
                               >
                                 <path
-                                  d="M8 12V4M4 8l4-4 4 4"
+                                  d="M13.333 4L6 11.333 2.667 8"
                                   stroke="currentColor"
                                   strokeWidth="2"
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                 />
                               </svg>
-                              <span>Promote</span>
-                            </button>
-                            <button
-                              onClick={(e) => handleOpenInEditor(key, e)}
-                              className={styles.popoverMenuItem}
-                            >
-                              <svg
-                                className={styles.popoverMenuItemIcon}
-                                fill="none"
-                                viewBox="0 0 16 16"
-                              >
-                                <path
-                                  d="M5.333 2.667H3.333a1.333 1.333 0 0 0-1.333 1.333v8a1.333 1.333 0 0 0 1.333 1.333h9.334a1.333 1.333 0 0 0 1.333-1.333V10M10.667 2.667h3.333M14 2.667v3.333M8 8l6-6"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                              <span>Open in editor</span>
                             </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteVersion(key, e);
-                                setOpenPopoverVersion(null);
+                                handleCancelRename();
                               }}
-                              className={`${styles.popoverMenuItem} ${styles.popoverMenuItemDelete}`}
+                              className={styles.confirmButton}
+                              title="Cancel rename"
                             >
                               <svg
-                                className={styles.popoverMenuItemIcon}
+                                className={styles.cancelIcon}
                                 fill="none"
                                 viewBox="0 0 16 16"
                               >
                                 <path
-                                  d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h10.667z"
+                                  d="M4 4l8 8M12 4l-8 8"
                                   stroke="currentColor"
-                                  strokeWidth="1.5"
+                                  strokeWidth="2"
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                 />
                               </svg>
-                              <span>Delete</span>
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRenameVersion(key, e);
-                                setOpenPopoverVersion(null);
-                              }}
-                              className={styles.popoverMenuItem}
-                            >
-                              <svg
-                                className={styles.popoverMenuItemIcon}
-                                fill="none"
-                                viewBox="0 0 16 16"
-                              >
-                                <path
-                                  d="M11.333 2.667a1.414 1.414 0 0 1 2 2L6 12l-2.667.667L4 10.667l7.333-7.333z"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                              <span>Rename</span>
                             </button>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-          )}
+                        );
+                      }
 
-          <div className={styles.divider} />
+                      return (
+                        <div
+                          key={key}
+                          role="option"
+                          aria-selected={isSelected}
+                          data-key={key}
+                          onClick={() => {
+                            setActiveVersion(key);
+                            setIsOpen(false);
+                            setOpenPopoverVersion(null);
+                            triggerRef.current?.focus();
+                          }}
+                          className={styles.versionItem}
+                        >
+                          {/* Checkmark */}
+                          <div className={styles.checkmarkContainer}>
+                            {isSelected && (
+                              <svg
+                                className={styles.checkmarkIcon}
+                                fill="none"
+                                viewBox="0 0 16 16"
+                              >
+                                <path
+                                  d="M13.333 4L6 11.333 2.667 8"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          <div className={styles.versionLabel}>
+                            {formatVersionLabel(key)}
+                          </div>
+                          {/* Action buttons */}
+                          <div data-actions className={styles.actions}>
+                            <button
+                              onClick={(e) => handleDuplicateVersion(key, e)}
+                              className={styles.actionButton}
+                              title="Clone version"
+                            >
+                              <svg
+                                className={styles.actionIcon}
+                                fill="none"
+                                viewBox="0 0 16 16"
+                              >
+                                <rect
+                                  x="5.333"
+                                  y="5.333"
+                                  width="8"
+                                  height="8"
+                                  rx="1"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                />
+                                <path
+                                  d="M10.667 2.667H2.667a1 1 0 0 0-1 1v8"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </button>
+                            <div className={styles.actionButtonMore}>
+                              <button
+                                ref={(el) => {
+                                  if (el)
+                                    popoverTriggerRefs.current.set(key, el);
+                                  else popoverTriggerRefs.current.delete(key);
+                                }}
+                                onClick={(e) => handleTogglePopover(key, e)}
+                                className={styles.actionButton}
+                                title="More options"
+                              >
+                                <svg
+                                  className={styles.actionIcon}
+                                  fill="none"
+                                  viewBox="0 0 16 16"
+                                >
+                                  <circle
+                                    cx="8"
+                                    cy="4"
+                                    r="1"
+                                    fill="currentColor"
+                                  />
+                                  <circle
+                                    cx="8"
+                                    cy="8"
+                                    r="1"
+                                    fill="currentColor"
+                                  />
+                                  <circle
+                                    cx="8"
+                                    cy="12"
+                                    r="1"
+                                    fill="currentColor"
+                                  />
+                                </svg>
+                              </button>
+                              {/* Popover menu */}
+                              {openPopoverVersion === key && (
+                                <div
+                                  ref={(el) => {
+                                    if (el)
+                                      popoverDropdownRefs.current.set(key, el);
+                                    else
+                                      popoverDropdownRefs.current.delete(key);
+                                  }}
+                                  className={styles.popover}
+                                  style={{
+                                    left: `${popoverPositions.current.get(key)?.x || 0}px`,
+                                    top: `${popoverPositions.current.get(key)?.y || 0}px`,
+                                    visibility: "hidden",
+                                  }}
+                                  role="menu"
+                                >
+                                  <button
+                                    onClick={(e) =>
+                                      handlePromoteVersion(key, e)
+                                    }
+                                    className={styles.popoverMenuItem}
+                                  >
+                                    <svg
+                                      className={styles.popoverMenuItemIcon}
+                                      fill="none"
+                                      viewBox="0 0 16 16"
+                                    >
+                                      <path
+                                        d="M8 12V4M4 8l4-4 4 4"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                    <span>Promote</span>
+                                  </button>
+                                  <button
+                                    onClick={(e) => handleOpenInEditor(key, e)}
+                                    className={styles.popoverMenuItem}
+                                  >
+                                    <svg
+                                      className={styles.popoverMenuItemIcon}
+                                      fill="none"
+                                      viewBox="0 0 16 16"
+                                    >
+                                      <path
+                                        d="M5.333 2.667H3.333a1.333 1.333 0 0 0-1.333 1.333v8a1.333 1.333 0 0 0 1.333 1.333h9.334a1.333 1.333 0 0 0 1.333-1.333V10M10.667 2.667h3.333M14 2.667v3.333M8 8l6-6"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                    <span>Open in editor</span>
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteVersion(key, e);
+                                      setOpenPopoverVersion(null);
+                                    }}
+                                    className={`${styles.popoverMenuItem} ${styles.popoverMenuItemDelete}`}
+                                  >
+                                    <svg
+                                      className={styles.popoverMenuItemIcon}
+                                      fill="none"
+                                      viewBox="0 0 16 16"
+                                    >
+                                      <path
+                                        d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h10.667z"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                    <span>Delete</span>
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRenameVersion(key, e);
+                                      setOpenPopoverVersion(null);
+                                    }}
+                                    className={styles.popoverMenuItem}
+                                  >
+                                    <svg
+                                      className={styles.popoverMenuItemIcon}
+                                      fill="none"
+                                      viewBox="0 0 16 16"
+                                    >
+                                      <path
+                                        d="M11.333 2.667a1.414 1.414 0 0 1 2 2L6 12l-2.667.667L4 10.667l7.333-7.333z"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                    <span>Rename</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </div>
 
-          {/* New version button */}
-          <button
-            onClick={(e) => {
-              handleNewVersion(e);
-              setIsOpen(false);
-              triggerRef.current?.focus();
-            }}
-            className={styles.newVersionButton}
-            title="Create new version"
-          >
-            <div className={styles.newVersionIconContainer}>
-              <svg
-                className={styles.newVersionIcon}
-                fill="none"
-                viewBox="0 0 16 16"
+              <div className={styles.divider} />
+
+              {/* New version button */}
+              <button
+                onClick={(e) => {
+                  handleNewVersion(e);
+                  setIsOpen(false);
+                  triggerRef.current?.focus();
+                }}
+                className={styles.newVersionButton}
+                title="Create new version"
               >
-                <path
-                  d="M8 3v10M3 8h10"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-            <span>New version</span>
-          </button>
-        </div>
-      )}
+                <div className={styles.newVersionIconContainer}>
+                  <svg
+                    className={styles.newVersionIcon}
+                    fill="none"
+                    viewBox="0 0 16 16"
+                  >
+                    <path
+                      d="M8 3v10M3 8h10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+                <span>New version</span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       {/* Component selector dropdown */}
       {isOpen && isComponentSelectorOpen && (

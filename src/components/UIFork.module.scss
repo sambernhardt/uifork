@@ -36,31 +36,38 @@ $z-trigger: 1000;
 $z-dropdown: 1001;
 $z-popover: 1002;
 
-/* Trigger button */
-.trigger {
+/* Container */
+.container {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: $z-trigger;
+  z-index: $z-dropdown;
+  background-color: $bg-dark;
+  box-shadow: $shadow-md;
+  border: 1px solid $border-color;
+  transform-origin: bottom right;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: $radius-lg;
+}
+
+/* Trigger button */
+.trigger {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  border-radius: $radius-lg;
-  background-color: $bg-dark;
-  border: 1px solid #4b4b4b;
   padding: $spacing-sm $spacing-md;
   font-size: 14px;
   color: $text-primary;
   cursor: pointer;
-  box-shadow: $shadow-sm;
-  transition: transform 0.15s ease-out;
+  background-color: transparent;
+  border: none;
+  white-space: nowrap;
+  height: 40px; // Fixed height for trigger
 
   &:hover {
     background-color: $bg-hover;
-  }
-
-  &:active {
-    transform: scale(0.99);
   }
 }
 
@@ -86,6 +93,16 @@ $z-popover: 1002;
 /* Trigger separator */
 .triggerSeparator {
   color: $text-secondary;
+  margin: 0 $spacing-xs;
+}
+
+.triggerLabel,
+.triggerVersion {
+  white-space: nowrap;
+}
+
+.triggerVersion {
+  color: $text-secondary;
 }
 
 /* Trigger icon */
@@ -99,34 +116,12 @@ $z-popover: 1002;
   }
 }
 
-/* Dropdown menu */
+/* Dropdown content */
 .dropdown {
-  position: fixed;
-  z-index: $z-dropdown;
   min-width: 200px;
-  border-radius: $radius-lg;
-  background-color: $bg-dark;
-  box-shadow: $shadow-md;
-  border: 1px solid $border-color;
   padding: $spacing-xs;
-  animation: fadeUpBlur 0.3s cubic-bezier(0.45, 0.56, 0, 1) forwards;
-  opacity: 0;
-  transform: translateY(8px) scale(0.97);
-  filter: blur(4px);
-  transform-origin: bottom right;
-}
-
-@keyframes fadeUpBlur {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.97);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
+  display: flex;
+  flex-direction: column;
 }
 
 /* Component selector button */
@@ -163,6 +158,29 @@ $z-popover: 1002;
 .divider {
   border-top: 1px solid $border-color;
   margin: $spacing-xs 0;
+}
+
+/* Versions list */
+.versionsList {
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow-y: auto;
+  gap: 2px;
+
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-color;
+    border-radius: 2px;
+  }
 }
 
 /* Empty state */
