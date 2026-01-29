@@ -14,9 +14,19 @@ import { useLocalStorage } from "../hooks/useLocalStorage";
 import { getMountedComponents, subscribe } from "../utils/componentRegistry";
 import type { ComponentInfo, UIForkProps } from "../types";
 import styles from "./UIFork.module.css";
+import { ChevronRightIcon } from "./icons/ChevronRightIcon";
+import { CheckmarkIcon } from "./icons/CheckmarkIcon";
+import { CancelIcon } from "./icons/CancelIcon";
+import { CopyIcon } from "./icons/CopyIcon";
+import { MoreOptionsIcon } from "./icons/MoreOptionsIcon";
+import { PromoteIcon } from "./icons/PromoteIcon";
+import { OpenInEditorIcon } from "./icons/OpenInEditorIcon";
+import { DeleteIcon } from "./icons/DeleteIcon";
+import { RenameIcon } from "./icons/RenameIcon";
+import { PlusIcon } from "./icons/PlusIcon";
 
 // Animation duration constant (in seconds)
-const ANIMATION_DURATION = 0.3;
+const ANIMATION_DURATION = 3;
 
 // Animation easing curve (cubic-bezier)
 const ANIMATION_EASING = [0.18, 0.83, 0, 1] as const;
@@ -714,19 +724,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                 >
                   {selectedComponent || "Select component"}
                 </motion.span>
-                <svg
-                  className={styles.componentSelectorIcon}
-                  fill="none"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    d="M6 4l4 4-4 4"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ChevronRightIcon className={styles.componentSelectorIcon} />
               </button>
 
               <div className={styles.divider} />
@@ -778,19 +776,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                               className={styles.confirmButton}
                               title="Confirm rename"
                             >
-                              <svg
-                                className={styles.confirmIcon}
-                                fill="none"
-                                viewBox="0 0 16 16"
-                              >
-                                <path
-                                  d="M13.333 4L6 11.333 2.667 8"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
+                              <CheckmarkIcon className={styles.confirmIcon} />
                             </button>
                             <button
                               onClick={(e) => {
@@ -800,19 +786,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                               className={styles.confirmButton}
                               title="Cancel rename"
                             >
-                              <svg
-                                className={styles.cancelIcon}
-                                fill="none"
-                                viewBox="0 0 16 16"
-                              >
-                                <path
-                                  d="M4 4l8 8M12 4l-8 8"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
+                              <CancelIcon className={styles.cancelIcon} />
                             </button>
                           </div>
                         );
@@ -835,19 +809,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                           {/* Checkmark */}
                           <div className={styles.checkmarkContainer}>
                             {isSelected && (
-                              <svg
-                                className={styles.checkmarkIcon}
-                                fill="none"
-                                viewBox="0 0 16 16"
-                              >
-                                <path
-                                  d="M13.333 4L6 11.333 2.667 8"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
+                              <CheckmarkIcon className={styles.checkmarkIcon} />
                             )}
                           </div>
                           <div className={styles.versionLabel}>
@@ -860,27 +822,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                               className={styles.actionButton}
                               title="Clone version"
                             >
-                              <svg
-                                className={styles.actionIcon}
-                                fill="none"
-                                viewBox="0 0 16 16"
-                              >
-                                <rect
-                                  x="5.333"
-                                  y="5.333"
-                                  width="8"
-                                  height="8"
-                                  rx="1"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                />
-                                <path
-                                  d="M10.667 2.667H2.667a1 1 0 0 0-1 1v8"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                />
-                              </svg>
+                              <CopyIcon className={styles.actionIcon} />
                             </button>
                             <div className={styles.actionButtonMore}>
                               <button
@@ -893,30 +835,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                                 className={styles.actionButton}
                                 title="More options"
                               >
-                                <svg
+                                <MoreOptionsIcon
                                   className={styles.actionIcon}
-                                  fill="none"
-                                  viewBox="0 0 16 16"
-                                >
-                                  <circle
-                                    cx="8"
-                                    cy="4"
-                                    r="1"
-                                    fill="currentColor"
-                                  />
-                                  <circle
-                                    cx="8"
-                                    cy="8"
-                                    r="1"
-                                    fill="currentColor"
-                                  />
-                                  <circle
-                                    cx="8"
-                                    cy="12"
-                                    r="1"
-                                    fill="currentColor"
-                                  />
-                                </svg>
+                                />
                               </button>
                               {/* Popover menu */}
                               {openPopoverVersion === key && (
@@ -941,38 +862,18 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                                     }
                                     className={styles.popoverMenuItem}
                                   >
-                                    <svg
+                                    <PromoteIcon
                                       className={styles.popoverMenuItemIcon}
-                                      fill="none"
-                                      viewBox="0 0 16 16"
-                                    >
-                                      <path
-                                        d="M8 12V4M4 8l4-4 4 4"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
+                                    />
                                     <span>Promote</span>
                                   </button>
                                   <button
                                     onClick={(e) => handleOpenInEditor(key, e)}
                                     className={styles.popoverMenuItem}
                                   >
-                                    <svg
+                                    <OpenInEditorIcon
                                       className={styles.popoverMenuItemIcon}
-                                      fill="none"
-                                      viewBox="0 0 16 16"
-                                    >
-                                      <path
-                                        d="M5.333 2.667H3.333a1.333 1.333 0 0 0-1.333 1.333v8a1.333 1.333 0 0 0 1.333 1.333h9.334a1.333 1.333 0 0 0 1.333-1.333V10M10.667 2.667h3.333M14 2.667v3.333M8 8l6-6"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
+                                    />
                                     <span>Open in editor</span>
                                   </button>
                                   <button
@@ -983,19 +884,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                                     }}
                                     className={`${styles.popoverMenuItem} ${styles.popoverMenuItemDelete}`}
                                   >
-                                    <svg
+                                    <DeleteIcon
                                       className={styles.popoverMenuItemIcon}
-                                      fill="none"
-                                      viewBox="0 0 16 16"
-                                    >
-                                      <path
-                                        d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h10.667z"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
+                                    />
                                     <span>Delete</span>
                                   </button>
                                   <button
@@ -1006,19 +897,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                                     }}
                                     className={styles.popoverMenuItem}
                                   >
-                                    <svg
+                                    <RenameIcon
                                       className={styles.popoverMenuItemIcon}
-                                      fill="none"
-                                      viewBox="0 0 16 16"
-                                    >
-                                      <path
-                                        d="M11.333 2.667a1.414 1.414 0 0 1 2 2L6 12l-2.667.667L4 10.667l7.333-7.333z"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
+                                    />
                                     <span>Rename</span>
                                   </button>
                                 </div>
@@ -1044,18 +925,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                 title="Create new version"
               >
                 <div className={styles.newVersionIconContainer}>
-                  <svg
-                    className={styles.newVersionIcon}
-                    fill="none"
-                    viewBox="0 0 16 16"
-                  >
-                    <path
-                      d="M8 3v10M3 8h10"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+                  <PlusIcon className={styles.newVersionIcon} />
                 </div>
                 <span>New version</span>
               </button>
@@ -1093,19 +963,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
               >
                 <div className={styles.componentSelectorItemCheckmarkContainer}>
                   {component.name === selectedComponent && (
-                    <svg
+                    <CheckmarkIcon
                       className={styles.componentSelectorItemCheckmark}
-                      fill="none"
-                      viewBox="0 0 16 16"
-                    >
-                      <path
-                        d="M13.333 4L6 11.333 2.667 8"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    />
                   )}
                 </div>
                 <span>{component.name}</span>
