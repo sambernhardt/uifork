@@ -251,6 +251,17 @@ export function UIFork({ port = 3001 }: UIForkProps) {
             versionToActivate = data.payload.version;
           } else if (message.includes("renamed") && newVersion) {
             versionToActivate = newVersion;
+          } else if (message.includes("promoted")) {
+            // Component was promoted, refresh components list
+            // The component will no longer appear in the list
+            const promotedComponent =
+              data.payload.component || selectedComponentRef.current;
+            fetchComponents();
+            // Clear selection if the promoted component was selected
+            if (selectedComponentRef.current === promotedComponent) {
+              setSelectedComponent("");
+            }
+            return;
           }
 
           if (versionToActivate) {
@@ -297,7 +308,8 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         | "duplicate_version"
         | "delete_version"
         | "new_version"
-        | "rename_version",
+        | "rename_version"
+        | "promote_version",
       payload: Record<string, unknown>,
     ) => {
       if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
@@ -379,8 +391,15 @@ export function UIFork({ port = 3001 }: UIForkProps) {
 
   const handlePromoteVersion = (version: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("[UIFork] Promote version:", version);
-    setOpenPopoverVersion(null);
+    // Confirm before promoting since this is a destructive operation
+    if (
+      window.confirm(
+        `Are you sure you want to promote version ${formatVersionLabel(version)}?\n\nThis will:\n- Replace the main component with this version\n- Remove all versioning scaffolding\n- This action cannot be undone`,
+      )
+    ) {
+      sendWebSocketMessage("promote_version", { version });
+      setOpenPopoverVersion(null);
+    }
   };
 
   const handleTogglePopover = (version: string, e: React.MouseEvent) => {
