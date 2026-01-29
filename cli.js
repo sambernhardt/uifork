@@ -9,18 +9,19 @@ function showHelp() {
 uifork - A CLI tool for managing UI component versions
 
 Usage:
-  uifork init <component-path>    Initialize a new UI switcher from a component file
-  uifork watch <component-name>   Watch a component directory for version changes
+  uifork init <component-path>    Initialize a new branched component from a component file
+  uifork watch [directory]        Watch for version changes (defaults to current directory)
   uifork promote <component-path> <version-id>  Promote a version to be the main component
 
 Examples:
   uifork init frontend/src/SomeDropdownComponent.tsx
-  uifork watch SomeDropdownComponent
+  uifork watch
+  uifork watch ./src
   uifork promote SomeDropdownComponent v2
 
 Commands:
-  init     Convert a single component file into a versioned UI switcher
-  watch    Watch for changes in version files and automatically update versions.ts
+  init     Convert a single component file into a versioned branched component
+  watch    Start the watch server and discover all versioned components
   promote  Promote a version to be the main component and remove versioning scaffolding
 
 Options:
@@ -74,17 +75,9 @@ switch (command) {
     break;
 
   case "watch":
-    if (!argument) {
-      console.error(
-        "Error: Component name or path is required for watch command",
-      );
-      console.error("Usage: uifork watch <component-name-or-path>");
-      console.error("Example: uifork watch ZoomDatePickerDropdown");
-      process.exit(1);
-    }
-
+    // Watch can be called without arguments - defaults to current directory
     try {
-      new VersionSync(argument);
+      new VersionSync(argument || process.cwd());
     } catch (error) {
       console.error(`Error during watching: ${error.message}`);
       process.exit(1);
