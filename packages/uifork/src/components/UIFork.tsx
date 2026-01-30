@@ -1004,6 +1004,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         onStackItemSelect={async (element, frame) => {
           await selectElement(element, frame);
         }}
+        sendMessage={sendMessage}
       />
 
     </>,

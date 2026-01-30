@@ -7,6 +7,7 @@ const WebSocket = require("ws");
 const cors = require("cors");
 const { exec } = require("child_process");
 const { VersionPromoter } = require("./promote");
+const { UISwitcherScaffold } = require("./init");
 
 /**
  * ComponentManager - Manages a single component's versions
@@ -743,6 +744,7 @@ class VersionSync {
 
   handleWebSocketMessage(ws, data) {
     const { type, payload } = data;
+    console.log(`[WebSocket] Received message type: ${type}`, JSON.stringify(data, null, 2));
     const componentName = payload?.component;
 
     // Validate component for operations that need it
@@ -791,6 +793,9 @@ class VersionSync {
         break;
       case "promote_version":
         this.handlePromoteVersion(ws, payload);
+        break;
+      case "init_component":
+        this.handleInitComponent(ws, payload);
         break;
       default:
         console.warn(`[WebSocket] Unknown message type: ${type}`);
@@ -1181,6 +1186,117 @@ export default function ${componentName}() {
       );
     } catch (error) {
       console.error(`[WebSocket] Promote version error: ${error.message}`);
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          payload: { message: error.message },
+        }),
+      );
+    }
+  }
+
+  handleInitComponent(ws, payload) {
+    const { componentPath } = payload;
+    const timestamp = new Date().toISOString();
+
+    try {
+      if (!componentPath) {
+        throw new Error("Missing componentPath parameter");
+      }
+
+      // Resolve the component path
+      // Paths from bippy often start with /src/ but are relative to project root, not absolute filesystem paths
+      let resolvedPath;
+      
+      // Check if it's a truly absolute filesystem path (starts with /Users, /home, C:\, etc.)
+      const isTrulyAbsolute = path.isAbsolute(componentPath) && 
+        (componentPath.startsWith("/Users") || 
+         componentPath.startsWith("/home") || 
+         componentPath.match(/^[A-Z]:\\/i) ||
+         !componentPath.startsWith("/src"));
+      
+      if (isTrulyAbsolute) {
+        // Truly absolute path (e.g., /Users/...)
+        resolvedPath = componentPath;
+      } else {
+        // Path is relative to project root (e.g., /src/examples/Example2.tsx)
+        // Find the project root by looking for package.json or node_modules
+        let projectRoot = this.watchPath;
+        let foundRoot = false;
+        
+        // Walk up from watchPath to find project root
+        for (let i = 0; i < 10; i++) {
+          const packageJsonPath = path.join(projectRoot, "package.json");
+          const nodeModulesPath = path.join(projectRoot, "node_modules");
+          
+          if (fs.existsSync(packageJsonPath) || fs.existsSync(nodeModulesPath)) {
+            foundRoot = true;
+            break;
+          }
+          
+          const parent = path.dirname(projectRoot);
+          if (parent === projectRoot) {
+            // Reached filesystem root
+            break;
+          }
+          projectRoot = parent;
+        }
+        
+        // Remove leading slash from componentPath if present
+        const normalizedPath = componentPath.startsWith("/")
+          ? componentPath.slice(1)
+          : componentPath;
+        
+        // Resolve relative to project root
+        resolvedPath = path.resolve(projectRoot, normalizedPath);
+      }
+
+      if (!fs.existsSync(resolvedPath)) {
+        throw new Error(`Component file not found: ${resolvedPath} (original: ${componentPath}, watchPath: ${this.watchPath})`);
+      }
+
+      console.log(`[WebSocket] Init component: ${componentPath}`);
+      console.log(`  Timestamp: ${timestamp}`);
+      console.log(`  Resolved path: ${resolvedPath}`);
+
+      // Create scaffolder with shouldWatch=false since we're already watching
+      const scaffolder = new UISwitcherScaffold(resolvedPath, false);
+      scaffolder.scaffold();
+
+      // Discover the new component and add it to our tracking
+      const parsedPath = path.parse(resolvedPath);
+      const componentName = parsedPath.name;
+      const versionsFile = path.join(
+        parsedPath.dir,
+        `${componentName}.versions.ts`,
+      );
+
+      if (fs.existsSync(versionsFile)) {
+        const manager = new ComponentManager(versionsFile, {
+          lazy: this.lazy,
+        });
+        this.components.set(manager.componentName, manager);
+        manager.generateVersionsFile();
+        manager.updatePreviousVersionsData();
+        console.log(
+          `[WebSocket] Component initialized and added to watch: ${componentName}`,
+        );
+      }
+
+      // Broadcast to all clients that files changed
+      this.broadcastFileChange(componentName);
+
+      ws.send(
+        JSON.stringify({
+          type: "ack",
+          payload: {
+            message: `Successfully initialized component: ${componentPath}`,
+            component: componentName,
+          },
+        }),
+      );
+    } catch (error) {
+      console.error(`[WebSocket] Init component error: ${error.message}`);
       ws.send(
         JSON.stringify({
           type: "error",

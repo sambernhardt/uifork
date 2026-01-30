@@ -11,7 +11,8 @@ export type WebSocketMessageType =
   | "delete_version"
   | "new_version"
   | "rename_version"
-  | "promote_version";
+  | "promote_version"
+  | "init_component";
 
 interface UseWebSocketConnectionOptions {
   port: number;

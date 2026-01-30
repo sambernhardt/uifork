@@ -9,6 +9,7 @@ import {
   getComponentStackWithContext,
 } from "../utils/sourceTracing";
 import { GitForkIcon } from "./icons/GitForkIcon";
+import type { WebSocketMessageType } from "../hooks/useWebSocketConnection";
 
 export interface ComponentStackContext {
   above: ComponentStackFrame | null;
@@ -32,6 +33,8 @@ export interface ElementSelectionOverlayProps {
   isActive: boolean;
   /** Callback when a component in the stack is selected */
   onStackItemSelect?: (element: Element, frame: ComponentStackFrame) => void;
+  /** Function to send websocket messages */
+  sendMessage?: (type: WebSocketMessageType, payload: Record<string, unknown>) => void;
 }
 
 /**
@@ -45,6 +48,7 @@ export function ElementSelectionOverlay({
   selectedComponentStack,
   isActive,
   onStackItemSelect,
+  sendMessage,
 }: ElementSelectionOverlayProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -293,9 +297,15 @@ export function ElementSelectionOverlay({
               className={styles.elementSelectionStackForkButton}
               onClick={(e) => {
                 e.stopPropagation();
-                console.log(`Fake forking ${selectedSourceInfo.filePath}`);
+                if (selectedSourceInfo?.filePath && sendMessage) {
+                  sendMessage("init_component", {
+                    componentPath: selectedSourceInfo.filePath,
+                  });
+                } else {
+                  console.log(`Fake forking ${selectedSourceInfo?.filePath}`);
+                }
               }}
-              title={`Fork ${selectedSourceInfo.filePath}`}
+              title={`Fork ${selectedSourceInfo?.filePath}`}
             >
               <GitForkIcon className={styles.elementSelectionStackForkIcon} />
             </button>

@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const { VersionSync } = require("./watch");
 
 class UISwitcherScaffold {
   constructor(filePath, shouldWatch = true) {
@@ -136,6 +135,8 @@ export { VERSIONS }
         `5. Import the component: import ${this.componentName} from './${this.componentName}'`,
       );
       // Start watching automatically
+      // Lazy require to avoid circular dependency with watch.js
+      const { VersionSync } = require("./watch");
       new VersionSync(this.parentDir);
     } else {
       console.log(`3. Run: uifork watch (to start the watch server)`);
