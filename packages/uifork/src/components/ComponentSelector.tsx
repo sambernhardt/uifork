@@ -74,7 +74,6 @@ export function ComponentSelectorDropdown({
   return (
     <div
       ref={componentSelectorRef}
-      data-uifork
       className={styles.componentSelectorDropdown}
       style={{
         left: `${position.x}px`,
@@ -105,9 +104,7 @@ export function ComponentSelectorDropdown({
                 />
               )}
             </div>
-            <span className={styles.componentSelectorItemName}>
-              {component.name}
-            </span>
+            <span className={styles.componentSelectorItemName}>{component.name}</span>
             <span className={styles.componentSelectorItemCount}>
               {component.versions.length}
             </span>

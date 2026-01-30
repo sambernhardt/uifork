@@ -788,143 +788,203 @@
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 1000;
 }
 
 .elementSelectionHighlight {
   position: absolute;
-  border: 1px solid #f97316;
-  background-color: rgba(249, 115, 22, 0.1);
-  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.2);
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
   pointer-events: none;
-  border-radius: 6px;
-  transition: opacity 0.15s ease-out;
+  transition: opacity 0.15s ease-in-out;
 }
 
 .elementSelectionSourceInfo {
   position: absolute;
-  padding: 8px 12px;
+  padding: 4px 8px;
   font-size: 12px;
-  color: var(--uifork-text-primary);
+  color: var(--uifork-fg);
   background-color: var(--uifork-bg-dark);
   border: 1px solid var(--uifork-border-color);
   border-radius: 6px;
   box-shadow: var(--uifork-shadow-md);
   pointer-events: none;
   white-space: nowrap;
-  font-family: monospace;
-  max-width: 500px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: opacity 0.15s ease-out;
-  z-index: 10000;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* Button row container */
+.elementSelectionButtonRow {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  z-index: 1002;
+}
+
+.elementSelectionSourceButton {
+  position: relative;
+  padding: 4px 8px;
+  font-size: 12px;
+  height: 24px;
+  color: var(--uifork-fg);
+  background-color: var(--uifork-bg-dark);
+  border: 1px solid var(--uifork-border-color);
+  border-radius: 6px;
+  box-shadow: var(--uifork-shadow-md);
+  pointer-events: auto;
+  white-space: nowrap;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  transition: opacity 0.15s ease-in-out;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.elementSelectionSourceButton:hover {
+  background-color: var(--uifork-bg-hover);
+}
+
+.elementSelectionSourceButtonArrow {
+  font-size: 10px;
+  color: var(--uifork-fg-secondary);
+  flex-shrink: 0;
+}
+
+.elementSelectionForkButton {
+  position: relative;
+  padding: 4px 4px;
+  font-size: 12px;
+  height: 24px;
+  width: 24px;
+  color: var(--uifork-fg);
+  background-color: var(--uifork-bg-dark);
+  border: 1px solid var(--uifork-border-color);
+  border-radius: 6px;
+  box-shadow: var(--uifork-shadow-md);
+  pointer-events: auto;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.elementSelectionForkButton:hover {
+  background-color: var(--uifork-hover-bg);
+}
+
+.elementSelectionForkIcon {
+  width: 14px;
+  height: 14px;
+  color: var(--uifork-fg-secondary);
+  transition: color 0.15s;
+}
+
+.elementSelectionForkButton:hover .elementSelectionForkIcon {
+  color: var(--uifork-fg);
 }
 
 .elementSelectionComponentName {
-  color: var(--uifork-text-secondary);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  color: var(--uifork-fg-secondary);
 }
 
+/* Element selection stack dropdown */
 .elementSelectionStackDropdown {
-  position: absolute;
-  min-width: 300px;
-  max-width: 500px;
-  z-index: 10000;
-  transition: opacity 0.15s ease-out;
+  position: fixed;
+  z-index: 1004;
+  min-width: 280px;
+  max-width: 400px;
+  background-color: var(--uifork-bg-dark);
+  border: 1px solid var(--uifork-border-color);
+  border-radius: 8px;
+  box-shadow: var(--uifork-shadow-md);
   pointer-events: auto;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  animation: popoverFadeIn 0.2s cubic-bezier(0.04, 1.02, 0.13, 1.02);
 }
 
 .elementSelectionStackDropdownHeader {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--uifork-border-color);
 }
 
 .elementSelectionStackDropdownTrigger {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex: 1;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 0;
   font-size: 12px;
-  color: var(--uifork-text-primary);
-  background-color: var(--uifork-bg-dark);
-  border: 1px solid var(--uifork-border-color);
-  border-radius: 6px;
-  box-shadow: var(--uifork-shadow-md);
+  color: var(--uifork-fg);
+  background-color: transparent;
+  border: none;
   cursor: pointer;
-  font-family: monospace;
-  transition: background-color 0.15s;
-}
-
-.elementSelectionStackDropdownTrigger:hover {
-  background-color: var(--uifork-bg-hover);
+  text-align: left;
 }
 
 .elementSelectionStackDropdownArrow {
-  margin-left: 8px;
   font-size: 10px;
-  color: var(--uifork-text-secondary);
+  color: var(--uifork-fg-secondary);
   flex-shrink: 0;
 }
 
 .elementSelectionStackForkButton {
+  padding: 4px;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--uifork-fg);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
-  background-color: var(--uifork-bg-dark);
-  border: 1px solid var(--uifork-border-color);
-  border-radius: 6px;
-  box-shadow: var(--uifork-shadow-md);
-  cursor: pointer;
   transition: background-color 0.15s;
-  flex-shrink: 0;
 }
 
 .elementSelectionStackForkButton:hover {
-  background-color: var(--uifork-bg-hover);
-}
-
-.elementSelectionStackForkIcon {
-  color: var(--uifork-text-primary);
-  transition: color 0.15s;
-}
-
-.elementSelectionStackForkButton:hover .elementSelectionStackForkIcon {
-  color: var(--uifork-text-primary);
-}
-
-.elementSelectionStackDropdownContent {
-  margin-top: 4px;
-  background-color: var(--uifork-bg-dark);
-  border: 1px solid var(--uifork-border-color);
-  border-radius: 6px;
-  box-shadow: var(--uifork-shadow-md);
-  overflow: hidden;
-}
-
-.elementSelectionStackItem {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--uifork-border-color);
-  position: relative;
-  transition: background-color 0.15s;
-}
-
-.elementSelectionStackItem:last-child {
-  border-bottom: none;
-}
-
-.elementSelectionStackItemCurrent {
   background-color: var(--uifork-hover-bg);
 }
 
-.elementSelectionStackItemChild {
-  border-left: 2px solid var(--uifork-border-color);
-  margin-left: 0;
+.elementSelectionStackForkIcon {
+  width: 14px;
+  height: 14px;
+  color: var(--uifork-fg-secondary);
+}
+
+.elementSelectionStackForkButton:hover .elementSelectionStackForkIcon {
+  color: var(--uifork-fg);
+}
+
+.elementSelectionStackDropdownContent {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.elementSelectionStackItem {
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--uifork-fg);
+  border-radius: 4px;
+  cursor: default;
+  transition: background-color 0.15s;
 }
 
 .elementSelectionStackItemClickable {
@@ -935,48 +995,54 @@
   background-color: var(--uifork-hover-bg);
 }
 
-.elementSelectionStackItemLabel {
-  font-size: 10px;
+.elementSelectionStackItemCurrent {
+  background-color: var(--uifork-hover-bg);
   font-weight: 500;
-  color: var(--uifork-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
-.elementSelectionStackItemPath {
-  font-size: 12px;
-  color: var(--uifork-text-primary);
-  font-family: monospace;
-  word-break: break-all;
+.elementSelectionStackItemChild {
+  /* Styles for child items if needed */
+}
+
+.elementSelectionStackItemLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--uifork-fg-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   margin-bottom: 2px;
 }
 
-.elementSelectionStackItemComponent {
+.elementSelectionStackItemPath {
   font-size: 11px;
-  color: var(--uifork-text-secondary);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  color: var(--uifork-fg-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Branched component label */
-.branchedComponentLabel {
+.elementSelectionStackItemComponent {
+  font-size: 12px;
+  color: var(--uifork-fg);
+  font-weight: 500;
+}
+
+/* Source popover that appears below dropdown items */
+.elementSelectionSourcePopover {
   position: fixed;
-  padding: 4px 8px;
-  font-size: 11px;
-  color: var(--uifork-text-primary);
+  z-index: 1004;
+  pointer-events: none;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  animation: popoverFadeIn 0.2s cubic-bezier(0.04, 1.02, 0.13, 1.02);
+}
+
+.elementSelectionSourcePopoverContent {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--uifork-fg);
   background-color: var(--uifork-bg-dark);
   border: 1px solid var(--uifork-border-color);
-  border-radius: 4px;
-  box-shadow: var(--uifork-shadow-sm);
-  pointer-events: none;
+  border-radius: 6px;
+  box-shadow: var(--uifork-shadow-md);
   white-space: nowrap;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  z-index: 9998;
-  transform: translateY(-100%);
-  margin-top: -4px;
-  font-weight: 500;
-  border-color: #3b82f6;
-  background-color: rgba(59, 130, 246, 0.15);
-  color: #3b82f6;
 }

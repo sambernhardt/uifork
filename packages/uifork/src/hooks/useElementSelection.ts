@@ -42,7 +42,10 @@ export interface UseElementSelectionReturn {
   /** Manually toggle selection mode */
   toggleSelectionMode: () => void;
   /** Programmatically select an element */
-  selectElement: (element: Element, targetFrame?: ComponentStackFrame | null) => Promise<void>;
+  selectElement: (
+    element: Element,
+    targetFrame?: ComponentStackFrame | null
+  ) => Promise<void>;
 }
 
 /**
@@ -90,7 +93,7 @@ export function useElementSelection(
    */
   const isBranchedComponentFiber = useCallback((fiber: any): boolean => {
     if (!fiber || !fiber.type) return false;
-    
+
     const componentType = fiber.type;
     return (
       componentType === BranchedComponent ||
@@ -105,39 +108,42 @@ export function useElementSelection(
   /**
    * Find the root DOM element for a BranchedComponent fiber
    */
-  const findRootElementForBranchedComponent = useCallback((fiber: any): Element | null => {
-    if (!fiber) return null;
+  const findRootElementForBranchedComponent = useCallback(
+    (fiber: any): Element | null => {
+      if (!fiber) return null;
 
-    // Traverse down the fiber tree to find the first host element
-    let current: any = fiber.child;
-    const visited = new Set<any>();
+      // Traverse down the fiber tree to find the first host element
+      let current: any = fiber.child;
+      const visited = new Set<any>();
 
-    while (current && !visited.has(current)) {
-      visited.add(current);
-      
-      const isHostElement = current.type && typeof current.type === "string";
-      
-      if (isHostElement && current.stateNode instanceof Element) {
-        const element = current.stateNode;
-        // Skip our own UI elements
-        if (!element.closest("[data-uifork]")) {
-          return element;
+      while (current && !visited.has(current)) {
+        visited.add(current);
+
+        const isHostElement = current.type && typeof current.type === "string";
+
+        if (isHostElement && current.stateNode instanceof Element) {
+          const element = current.stateNode;
+          // Skip our own UI elements
+          if (!element.closest("[data-uifork]")) {
+            return element;
+          }
+        }
+
+        // Traverse children first, then siblings
+        if (current.child) {
+          current = current.child;
+        } else if (current.sibling) {
+          current = current.sibling;
+        } else {
+          // Go back up and try next sibling
+          current = current.return?.sibling;
         }
       }
 
-      // Traverse children first, then siblings
-      if (current.child) {
-        current = current.child;
-      } else if (current.sibling) {
-        current = current.sibling;
-      } else {
-        // Go back up and try next sibling
-        current = current.return?.sibling;
-      }
-    }
-
-    return null;
-  }, []);
+      return null;
+    },
+    []
+  );
 
   /**
    * Get component ID from BranchedComponent fiber props
@@ -152,7 +158,10 @@ export function useElementSelection(
    * Find all DOM elements that correspond to BranchedComponent instances
    * Returns a map of element -> component ID
    */
-  const findBranchedComponentElements = useCallback((): Map<Element, string> => {
+  const findBranchedComponentElements = useCallback((): Map<
+    Element,
+    string
+  > => {
     const elementMap = new Map<Element, string>();
     const seenElements = new Set<Element>();
 
@@ -185,7 +194,7 @@ export function useElementSelection(
         if (isBranchedComponentFiber(current)) {
           // Get the component ID from the fiber props
           const componentId = getComponentIdFromFiber(current);
-          
+
           // Find the root element for this BranchedComponent
           const rootElement = findRootElementForBranchedComponent(current);
           if (rootElement && !seenElements.has(rootElement)) {
@@ -205,7 +214,11 @@ export function useElementSelection(
     }
 
     return elementMap;
-  }, [isBranchedComponentFiber, findRootElementForBranchedComponent, getComponentIdFromFiber]);
+  }, [
+    isBranchedComponentFiber,
+    findRootElementForBranchedComponent,
+    getComponentIdFromFiber,
+  ]);
 
   /**
    * Update outlines for branched components
@@ -224,10 +237,10 @@ export function useElementSelection(
 
     // Find all branched component elements with their IDs
     const elementMap = findBranchedComponentElements();
-    
+
     // Update state with the element map
     setBranchedComponentElements(elementMap);
-    
+
     // Add outline to each element
     elementMap.forEach((_, el) => {
       el.setAttribute("data-uifork-branched-outline", "true");
@@ -315,14 +328,18 @@ export function useElementSelection(
 
       const target = e.target as HTMLElement;
 
-      // Check if clicking inside the dropdown or UIFork UI
-      // Try multiple selectors to catch the dropdown
+      // Check if clicking inside the dropdown, source button, fork button, or UIFork UI
+      // Try multiple selectors to catch all element selection controls
       const isInsideDropdown =
         target.closest(".elementSelectionStackDropdown") ||
         target.closest('[class*="elementSelectionStack"]') ||
         target.classList.contains("elementSelectionStackDropdownTrigger") ||
         target.closest(".elementSelectionStackDropdownTrigger") ||
-        target.closest(".elementSelectionStackDropdownContent");
+        target.closest(".elementSelectionStackDropdownContent") ||
+        target.closest(".elementSelectionSourceButton") ||
+        target.closest(".elementSelectionForkButton") ||
+        target.closest(".elementSelectionSourcePopover") ||
+        target.closest("[data-element-selection-control]");
 
       const isInsideUIFork = target.closest("[data-uifork]");
 
@@ -359,7 +376,9 @@ export function useElementSelection(
         // Log the selected element and its path
         if (sourceInfo.filePath) {
           console.log(
-            `[UIFork] Selected: ${sourceInfo.componentName || "Unknown"} @ ${sourceInfo.filePath}`
+            `[UIFork] Selected: ${sourceInfo.componentName || "Unknown"} @ ${
+              sourceInfo.filePath
+            }`
           );
         }
 
@@ -598,10 +617,7 @@ export function useElementSelection(
    * This is used when clicking on a component in the stack dropdown
    */
   const selectElement = useCallback(
-    async (
-      element: Element,
-      targetFrame?: ComponentStackFrame | null
-    ) => {
+    async (element: Element, targetFrame?: ComponentStackFrame | null) => {
       if (!isSelectionMode) {
         return;
       }
@@ -619,7 +635,7 @@ export function useElementSelection(
       // to show that component as CURRENT, but preserve the original hierarchy order
       let adjustedStack = componentStack;
       let finalSourceInfo = sourceInfo;
-      
+
       if (targetFrame && targetFrame.componentName) {
         // Find the target component in the stack
         const targetIndex = componentStack.all.findIndex(
@@ -638,7 +654,10 @@ export function useElementSelection(
           adjustedStack = {
             current: preservedStack[targetIndex] || null,
             above: targetIndex > 0 ? preservedStack[targetIndex - 1] : null,
-            below: targetIndex < preservedStack.length - 1 ? preservedStack[targetIndex + 1] : null,
+            below:
+              targetIndex < preservedStack.length - 1
+                ? preservedStack[targetIndex + 1]
+                : null,
             all: preservedStack, // Keep original order
           };
 
@@ -655,7 +674,9 @@ export function useElementSelection(
       // Log the selected element and its path
       if (finalSourceInfo.filePath) {
         console.log(
-          `[UIFork] Selected: ${finalSourceInfo.componentName || "Unknown"} @ ${finalSourceInfo.filePath}`
+          `[UIFork] Selected: ${finalSourceInfo.componentName || "Unknown"} @ ${
+            finalSourceInfo.filePath
+          }`
         );
       }
 

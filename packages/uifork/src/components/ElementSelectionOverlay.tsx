@@ -1,5 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
+import {
+  autoUpdate,
+  computePosition,
+  flip,
+  offset,
+  shift,
+} from "@floating-ui/dom";
 import styles from "./UIFork.module.css";
 import {
   SourceInfo,
@@ -9,6 +16,7 @@ import {
   getComponentStackWithContext,
 } from "../utils/sourceTracing";
 import { GitForkIcon } from "./icons/GitForkIcon";
+import { SelectorIcon } from "./icons/SelectorIcon";
 import type { WebSocketMessageType } from "../hooks/useWebSocketConnection";
 
 export interface ComponentStackContext {
@@ -34,7 +42,10 @@ export interface ElementSelectionOverlayProps {
   /** Callback when a component in the stack is selected */
   onStackItemSelect?: (element: Element, frame: ComponentStackFrame) => void;
   /** Function to send websocket messages */
-  sendMessage?: (type: WebSocketMessageType, payload: Record<string, unknown>) => void;
+  sendMessage?: (
+    type: WebSocketMessageType,
+    payload: Record<string, unknown>
+  ) => void;
 }
 
 /**
@@ -51,19 +62,27 @@ export function ElementSelectionOverlay({
   sendMessage,
 }: ElementSelectionOverlayProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // Close dropdown when selection changes
-  useEffect(() => {
-    if (!selectedElement) {
-      setIsDropdownOpen(false);
-    }
-  }, [selectedElement]);
+  const [hoveredItemIndex, setHoveredItemIndex] = useState<number | null>(null);
+  const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const sourcePopoverRef = useRef<HTMLDivElement | null>(null);
+  const sourceButtonRef = useRef<HTMLButtonElement | null>(null);
+  const forkButtonRef = useRef<HTMLButtonElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [bounds, setBounds] = useState<DOMRect | null>(null);
   const [opacity, setOpacity] = useState(0);
 
   // Use selected element if available, otherwise use hovered element
   const targetElement = selectedElement || hoveredElement;
 
+  // Close dropdown when selection changes
+  useEffect(() => {
+    if (!selectedElement) {
+      setIsDropdownOpen(false);
+      setHoveredItemIndex(null);
+    }
+  }, [selectedElement]);
+
+  // Update bounds and opacity based on active state and target element
   useEffect(() => {
     if (!isActive || !targetElement) {
       // Fade out before clearing bounds
@@ -96,6 +115,117 @@ export function ElementSelectionOverlay({
     };
   }, [targetElement, isActive]);
 
+  // Position dropdown popover relative to source button using Floating UI
+  useEffect(() => {
+    if (!isDropdownOpen || !sourceButtonRef.current || !dropdownRef.current) {
+      return;
+    }
+
+    const triggerElement = sourceButtonRef.current;
+    const dropdownElement = dropdownRef.current;
+
+    let cancelled = false;
+
+    const updatePosition = async () => {
+      if (cancelled) return;
+      try {
+        const { x, y } = await computePosition(
+          triggerElement,
+          dropdownElement,
+          {
+            placement: "bottom-start",
+            strategy: "fixed",
+            middleware: [
+              offset(4),
+              flip({
+                fallbackPlacements: ["bottom-end", "top-start", "top-end"],
+              }),
+              shift({ padding: 8 }),
+            ],
+          }
+        );
+        if (!cancelled) {
+          dropdownElement.style.left = `${x}px`;
+          dropdownElement.style.top = `${y}px`;
+          dropdownElement.style.visibility = "visible";
+        }
+      } catch (error) {
+        // Error positioning dropdown
+      }
+    };
+
+    dropdownElement.style.visibility = "hidden";
+    updatePosition();
+    const cleanup = autoUpdate(triggerElement, dropdownElement, updatePosition);
+
+    return () => {
+      cancelled = true;
+      cleanup();
+      // Hide dropdown when effect cleans up
+      if (dropdownElement) {
+        dropdownElement.style.visibility = "hidden";
+      }
+    };
+  }, [isDropdownOpen]);
+
+  // Position source popover below hovered dropdown item using Floating UI
+  useEffect(() => {
+    if (
+      hoveredItemIndex === null ||
+      !isDropdownOpen ||
+      !sourcePopoverRef.current
+    ) {
+      return;
+    }
+
+    const triggerElement = itemRefs.current.get(hoveredItemIndex);
+    const popoverElement = sourcePopoverRef.current;
+
+    if (!triggerElement || !popoverElement) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const updatePosition = async () => {
+      if (cancelled) return;
+      try {
+        const { x, y } = await computePosition(triggerElement, popoverElement, {
+          placement: "bottom-start",
+          strategy: "fixed",
+          middleware: [
+            offset(4),
+            flip({
+              fallbackPlacements: ["bottom-end", "top-start", "top-end"],
+            }),
+            shift({ padding: 8 }),
+          ],
+        });
+        if (!cancelled) {
+          popoverElement.style.left = `${x}px`;
+          popoverElement.style.top = `${y}px`;
+          popoverElement.style.visibility = "visible";
+        }
+      } catch (error) {
+        // Error positioning popover
+      }
+    };
+
+    popoverElement.style.visibility = "hidden";
+    updatePosition();
+    const cleanup = autoUpdate(triggerElement, popoverElement, updatePosition);
+
+    return () => {
+      cancelled = true;
+      cleanup();
+      // Hide popover when effect cleans up
+      if (popoverElement) {
+        popoverElement.style.visibility = "hidden";
+      }
+    };
+  }, [hoveredItemIndex, isDropdownOpen]);
+
+  // Early return after all hooks have been called
   if (!isActive || !targetElement || !bounds) {
     return null;
   }
@@ -230,8 +360,17 @@ export function ElementSelectionOverlay({
     }
   }
 
+  // Determine which source info to display
+  const displaySourceInfo = showDropdown
+    ? selectedSourceInfo
+    : hoveredSourceInfo;
+
+  // Determine if we should show the button row
+  const showButtonRow = (showSourceInfo || showDropdown) && displaySourceInfo;
+
   return createPortal(
     <div className={styles.elementSelectionOverlay}>
+      {/* Highlight box around the selected/hovered element */}
       <div
         className={styles.elementSelectionHighlight}
         style={{
@@ -243,10 +382,10 @@ export function ElementSelectionOverlay({
         }}
       />
 
-      {/* Show source info above the selection outline when hovering */}
-      {showSourceInfo && hoveredSourceInfo && (
+      {/* Button Row: Dropdown trigger + Fork button */}
+      {showButtonRow && (
         <div
-          className={styles.elementSelectionSourceInfo}
+          className={styles.elementSelectionButtonRow}
           style={{
             left: `${highlightBounds.left}px`,
             top: `${highlightBounds.top - 8}px`,
@@ -254,47 +393,38 @@ export function ElementSelectionOverlay({
             transform: "translateY(-100%)",
           }}
         >
-          {hoveredSourceInfo.filePath}
-          {hoveredSourceInfo.componentName && (
-            <span className={styles.elementSelectionComponentName}>
-              {" "}
-              ({hoveredSourceInfo.componentName})
+          {/* Dropdown trigger button - shows source info */}
+          <button
+            ref={showDropdown ? sourceButtonRef : null}
+            className={styles.elementSelectionSourceButton}
+            data-element-selection-control
+            onClick={
+              showDropdown
+                ? (e) => {
+                    e.stopPropagation();
+                    setIsDropdownOpen(!isDropdownOpen);
+                  }
+                : undefined
+            }
+          >
+            {displaySourceInfo?.filePath}
+            {displaySourceInfo?.componentName && (
+              <span className={styles.elementSelectionComponentName}>
+                {" "}
+                ({displaySourceInfo.componentName})
+              </span>
+            )}
+            <span className={styles.elementSelectionSourceButtonArrow}>
+              <SelectorIcon />
             </span>
-          )}
-        </div>
-      )}
+          </button>
 
-      {/* Show dropdown above when element is selected (replaces source info) */}
-      {showDropdown && selectedSourceInfo?.filePath && (
-        <div
-          className={styles.elementSelectionStackDropdown}
-          style={{
-            left: `${highlightBounds.left}px`,
-            top: `${highlightBounds.top - 8}px`,
-            opacity,
-            transform: "translateY(-100%)",
-          }}
-        >
-          <div className={styles.elementSelectionStackDropdownHeader}>
+          {/* Fork button - only shown when element is selected */}
+          {showDropdown && selectedSourceInfo?.filePath && (
             <button
-              className={styles.elementSelectionStackDropdownTrigger}
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            >
-              <span>
-                {selectedSourceInfo.filePath}
-                {selectedSourceInfo.componentName && (
-                  <span className={styles.elementSelectionComponentName}>
-                    {" "}
-                    ({selectedSourceInfo.componentName})
-                  </span>
-                )}
-              </span>
-              <span className={styles.elementSelectionStackDropdownArrow}>
-                {isDropdownOpen ? "▲" : "▼"}
-              </span>
-            </button>
-            <button
-              className={styles.elementSelectionStackForkButton}
+              ref={forkButtonRef}
+              className={styles.elementSelectionForkButton}
+              data-element-selection-control
               onClick={(e) => {
                 e.stopPropagation();
                 if (selectedSourceInfo?.filePath && sendMessage) {
@@ -307,71 +437,81 @@ export function ElementSelectionOverlay({
               }}
               title={`Fork ${selectedSourceInfo?.filePath}`}
             >
-              <GitForkIcon className={styles.elementSelectionStackForkIcon} />
+              <GitForkIcon className={styles.elementSelectionForkIcon} />
             </button>
-          </div>
-          {isDropdownOpen && stackItems.length > 0 && (
-            <div className={styles.elementSelectionStackDropdownContent}>
-              {stackItems.map((item, index) => {
-                const handleItemClick = async (e: React.MouseEvent) => {
-                  e.stopPropagation();
+          )}
+        </div>
+      )}
 
-                  // Find DOM element associated with this component frame
-                  // Pass the currently selected element as context
-                  const element = await findElementFromStackFrame(
-                    item.frame,
-                    selectedElement
-                  );
+      {/* Component Stack Dropdown - opens below button row */}
+      {isDropdownOpen && stackItems.length > 0 && (
+        <div
+          ref={dropdownRef}
+          className={styles.elementSelectionStackDropdown}
+          data-element-selection-control
+          style={{
+            visibility: "hidden",
+          }}
+        >
+          <div className={styles.elementSelectionStackDropdownContent}>
+            {stackItems.map((item, index) => {
+              const handleItemClick = async (e: React.MouseEvent) => {
+                e.stopPropagation();
 
-                  if (element && onStackItemSelect) {
-                    // Call the callback with the new element and target frame
-                    // The hook will update source info and component stack to show
-                    // the clicked component as CURRENT
-                    onStackItemSelect(element, item.frame);
-                    // Close the dropdown to revert to compact display
-                    setIsDropdownOpen(false);
-                  }
-                };
+                // Find DOM element associated with this component frame
+                const element = await findElementFromStackFrame(
+                  item.frame,
+                  selectedElement
+                );
 
-                return (
-                  <div
-                    key={`${item.filePath}-${item.index}`}
-                    className={`${styles.elementSelectionStackItem} ${
-                      item.isCurrent
-                        ? styles.elementSelectionStackItemCurrent
-                        : ""
-                    } ${
-                      item.isChild ? styles.elementSelectionStackItemChild : ""
-                    } ${
-                      !item.isCurrent
-                        ? styles.elementSelectionStackItemClickable
-                        : ""
-                    }`}
-                    style={{
-                      paddingLeft: `${12 + item.level * 20}px`,
-                    }}
-                    onClick={!item.isCurrent ? handleItemClick : undefined}
-                  >
-                    {item.label && (
-                      <div className={styles.elementSelectionStackItemLabel}>
-                        {item.label}
-                      </div>
-                    )}
+                if (element && onStackItemSelect) {
+                  onStackItemSelect(element, item.frame);
+                  setIsDropdownOpen(false);
+                }
+              };
+
+              return (
+                <div
+                  key={`${item.filePath}-${item.index}`}
+                  ref={(el) => {
+                    if (el) {
+                      itemRefs.current.set(index, el);
+                    } else {
+                      itemRefs.current.delete(index);
+                    }
+                  }}
+                  className={`${styles.elementSelectionStackItem} ${
+                    item.isCurrent
+                      ? styles.elementSelectionStackItemCurrent
+                      : ""
+                  } ${
+                    item.isChild ? styles.elementSelectionStackItemChild : ""
+                  } ${
+                    !item.isCurrent
+                      ? styles.elementSelectionStackItemClickable
+                      : ""
+                  }`}
+                  style={{
+                    paddingLeft: `${12 + item.level * 20}px`,
+                  }}
+                  onClick={!item.isCurrent ? handleItemClick : undefined}
+                  onMouseEnter={() => setHoveredItemIndex(index)}
+                  onMouseLeave={() => setHoveredItemIndex(null)}
+                >
+                  {item.componentName && (
+                    <div className={styles.elementSelectionStackItemComponent}>
+                      {item.componentName}
+                    </div>
+                  )}
+                  {item.filePath && (
                     <div className={styles.elementSelectionStackItemPath}>
                       {item.filePath}
                     </div>
-                    {item.componentName && (
-                      <div
-                        className={styles.elementSelectionStackItemComponent}
-                      >
-                        {item.componentName}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>,
