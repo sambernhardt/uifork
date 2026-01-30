@@ -251,11 +251,13 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   const {
     isSelectionMode,
     hoveredElement,
+    hoveredSourceInfo,
     selectedElement,
+    selectedSourceInfo,
+    selectedComponentStack,
   } = useElementSelection({
-    onSelect: (element) => {
-      // Element is already logged in the hook
-      // Future: will add source tracing here in Stage 2
+    onSelect: (element, sourceInfo) => {
+      // Element and source info are already logged in the hook
     },
   });
 
@@ -832,7 +834,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                       ease: ANIMATION_EASING,
                     }}
                   >
-                    {isSelectionMode ? "Select an element" : (selectedComponent || "No component")}
+                    {isSelectionMode
+                      ? "Select an element"
+                      : selectedComponent || "No component"}
                   </motion.span>
                   {!isSelectionMode && (
                     <span className={styles.triggerVersion}>
@@ -990,7 +994,10 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       {/* Element selection overlay */}
       <ElementSelectionOverlay
         hoveredElement={hoveredElement}
+        hoveredSourceInfo={hoveredSourceInfo}
         selectedElement={selectedElement}
+        selectedSourceInfo={selectedSourceInfo}
+        selectedComponentStack={selectedComponentStack}
         isActive={isSelectionMode}
       />
     </>,

@@ -1,3 +1,5 @@
+// CRITICAL: bippy MUST be imported before React
+import "bippy";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { UIFork } from "./components/UIFork";
