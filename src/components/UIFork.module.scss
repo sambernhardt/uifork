@@ -1,40 +1,17 @@
 // Font family
 $font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 
-// Colors
-$bg-dark: #262626;
-$bg-hover: #303030;
-$bg-input: #404040;
-$border-color: #404040;
-$text-primary: white;
-$text-secondary: #a3a3a3;
-$text-muted: #a3a3a3;
-
-// Status colors
-$status-connected: #22c55e;
-$status-connecting: #eab308;
-$status-disconnected: #ef4444;
-
-// Accent colors
-$accent-success: #22c55e;
-$accent-danger: #ef4444;
-$accent-delete: #f87171;
-
-// Spacing
+// Spacing (non-theme variables)
 $spacing-xs: 4px;
 $spacing-sm: 8px;
 $spacing-md: 12px;
 
-// Border radius
+// Border radius (non-theme variables)
 $radius-sm: 4px;
 $radius-md: 8px;
 $radius-lg: 12px;
 
-// Shadows
-$shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-$shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-
-// Z-index layers
+// Z-index layers (non-theme variables)
 $z-trigger: 1000;
 $z-dropdown: 1001;
 $z-popover: 1002;
@@ -42,6 +19,81 @@ $z-popover: 1002;
 // Animation constants (matching UIFork.tsx)
 $animation-duration: 0.2s;
 $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
+
+// Root wrapper - CSS variables for theming
+.uiforkRoot {
+  // Default (dark theme) CSS variables
+  --uifork-bg-dark: #262626;
+  --uifork-bg-hover: #303030;
+  --uifork-bg-input: #404040;
+  --uifork-border-color: #404040;
+  --uifork-text-primary: white;
+  --uifork-text-secondary: #a3a3a3;
+  --uifork-text-muted: #a3a3a3;
+  --uifork-status-connected: #22c55e;
+  --uifork-status-connecting: #eab308;
+  --uifork-status-disconnected: #ef4444;
+  --uifork-accent-success: #22c55e;
+  --uifork-accent-danger: #ef4444;
+  --uifork-accent-delete: #f87171;
+  --uifork-shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --uifork-shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  // Simplified semantic variables for buttons and icons
+  --uifork-bg: var(--uifork-bg-dark);
+  --uifork-fg: var(--uifork-text-primary);
+  --uifork-fg-secondary: var(--uifork-text-secondary);
+
+  // Light theme overrides
+  &[data-theme="light"] {
+    --uifork-bg-dark: #ffffff;
+    --uifork-bg-hover: #f5f5f5;
+    --uifork-bg-input: #e5e5e5;
+    --uifork-border-color: #d4d4d4;
+    --uifork-text-primary: #171717;
+    --uifork-text-secondary: #525252;
+    --uifork-text-muted: #737373;
+    --uifork-shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --uifork-shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  }
+
+  // System theme - uses prefers-color-scheme
+  &[data-theme="system"] {
+    @media (prefers-color-scheme: light) {
+      --uifork-bg-dark: #ffffff;
+      --uifork-bg-hover: #f5f5f5;
+      --uifork-bg-input: #e5e5e5;
+      --uifork-border-color: #d4d4d4;
+      --uifork-text-primary: #171717;
+      --uifork-text-secondary: #525252;
+      --uifork-text-muted: #737373;
+      --uifork-shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --uifork-shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+// SCSS variables that map to CSS variables (for use in SCSS)
+$bg-dark: var(--uifork-bg-dark);
+$bg-hover: var(--uifork-bg-hover);
+$bg-input: var(--uifork-bg-input);
+$border-color: var(--uifork-border-color);
+$text-primary: var(--uifork-text-primary);
+$text-secondary: var(--uifork-text-secondary);
+$text-muted: var(--uifork-text-muted);
+$status-connected: var(--uifork-status-connected);
+$status-connecting: var(--uifork-status-connecting);
+$status-disconnected: var(--uifork-status-disconnected);
+$accent-success: var(--uifork-accent-success);
+$accent-danger: var(--uifork-accent-danger);
+$accent-delete: var(--uifork-accent-delete);
+$shadow-sm: var(--uifork-shadow-sm);
+$shadow-md: var(--uifork-shadow-md);
+
+// Simplified semantic variables
+$bg: var(--uifork-bg);
+$fg: var(--uifork-fg);
+$fg-secondary: var(--uifork-fg-secondary);
 
 // Popover fade in animation with scale, opacity, and blur
 @keyframes popoverFadeIn {
@@ -61,7 +113,7 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
 @mixin menuItemBase {
   padding: $spacing-sm $spacing-md;
   font-size: 14px;
-  color: $text-primary;
+  color: $fg;
   background-color: transparent;
   border: none;
   border-radius: $radius-md;
@@ -75,13 +127,10 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
 /* Container */
 .container {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
   z-index: $z-dropdown;
   background-color: $bg-dark;
   box-shadow: $shadow-md;
   border: 1px solid $border-color;
-  transform-origin: bottom right;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -96,7 +145,7 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
   gap: $spacing-sm;
   padding: $spacing-sm $spacing-md;
   font-size: 14px;
-  color: $text-primary;
+  color: $fg;
   cursor: pointer;
   background-color: transparent;
   border: none;
@@ -136,7 +185,7 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
 
 /* Trigger separator */
 .triggerSeparator {
-  color: $text-secondary;
+  color: $fg-secondary;
   margin: 0 $spacing-xs;
 }
 
@@ -146,7 +195,7 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
 }
 
 .triggerVersion {
-  color: $text-secondary;
+  color: $fg-secondary;
 }
 
 /* Trigger icon */
@@ -189,11 +238,14 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
 
 .componentSelectorLabel {
   font-weight: 500;
+  color: $fg;
 }
 
 .componentSelectorIcon {
   width: 12px;
   height: 12px;
+  color: $fg-secondary;
+  flex-shrink: 0;
 }
 
 .componentSelectorSettings {
@@ -205,7 +257,7 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: $fg;
   transition: background-color 0.15s;
 
   &:hover {
@@ -267,13 +319,13 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
 .emptyStateHeading {
   font-size: 14px;
   font-weight: 500;
-  color: $text-primary;
+  color: $fg;
   margin: 0;
 }
 
 .emptyStateText {
   font-size: 13px;
-  color: $text-secondary;
+  color: $fg-secondary;
   margin: 0;
   line-height: 1.4;
   max-width: 200px;
@@ -298,7 +350,7 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
 
 .emptyStateCommand {
   font-size: 13px;
-  color: $text-primary;
+  color: $fg;
   margin: 0;
   font-family: monospace;
 }
@@ -364,7 +416,7 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
   background-color: $bg-input;
   padding: $spacing-xs $spacing-sm;
   font-size: 14px;
-  color: $text-primary;
+  color: $fg;
   border: none;
   outline: none;
 }
@@ -384,12 +436,23 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
   background-color: transparent;
   border: none;
   cursor: pointer;
-  color: $text-primary;
+  color: $fg;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: $bg-hover;
+  }
 }
 
 .actionIcon {
   width: 14px;
   height: 14px;
+  color: $fg-secondary;
+  transition: color 0.15s;
+
+  .actionButton:hover & {
+    color: $fg;
+  }
 }
 
 .actionButtonMore {
@@ -419,7 +482,7 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
   gap: $spacing-sm;
   padding: $spacing-sm $spacing-md;
   font-size: 14px;
-  color: $text-primary;
+  color: $fg;
   background-color: transparent;
   border: none;
   border-radius: $radius-sm;
@@ -438,6 +501,8 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
 .popoverMenuItemIcon {
   width: 16px;
   height: 16px;
+  color: $fg-secondary;
+  flex-shrink: 0;
 }
 
 /* Confirm/Cancel buttons */
@@ -469,6 +534,11 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
   align-items: center;
   gap: $spacing-sm;
   text-align: left;
+  color: $fg;
+
+  &:hover {
+    background-color: $bg-hover;
+  }
 }
 
 .newVersionIconContainer {
@@ -508,7 +578,7 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
   gap: $spacing-sm;
   padding: $spacing-sm $spacing-md;
   font-size: 14px;
-  color: $text-primary;
+  color: $fg;
   background-color: transparent;
   border: none;
   border-radius: $radius-sm;
@@ -562,7 +632,7 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
   gap: $spacing-sm;
   padding: $spacing-sm $spacing-md;
   font-size: 14px;
-  color: white;
+  color: $fg;
   background-color: transparent;
   border: none;
   border-radius: $radius-md;
@@ -589,13 +659,61 @@ $animation-easing: cubic-bezier(0.04, 1.02, 0.13, 1.02);
 .settingsTitle {
   font-size: 16px;
   font-weight: 500;
-  color: white;
+  color: $fg;
   margin: 0 0 $spacing-sm 0;
 }
 
 .settingsText {
   font-size: 14px;
-  color: $text-secondary;
+  color: $fg-secondary;
   margin: 0;
   line-height: 1.5;
+}
+
+.settingsGroup {
+  margin-bottom: $spacing-md;
+}
+
+.settingsLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: $fg;
+  margin-bottom: $spacing-xs;
+}
+
+.settingsSelect {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  font-size: 14px;
+  color: $fg;
+  background-color: $bg-input;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.15s, border-color 0.15s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23a3a3a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right $spacing-sm center;
+  padding-right: $spacing-md * 2.5;
+
+  &:hover {
+    background-color: $bg-hover;
+    border-color: $border-color;
+    opacity: 0.9;
+  }
+
+  &:focus {
+    border-color: $border-color;
+    background-color: $bg-hover;
+    outline: 2px solid $border-color;
+    outline-offset: 2px;
+  }
+
+  option {
+    background-color: $bg-dark;
+    color: $fg;
+  }
 }

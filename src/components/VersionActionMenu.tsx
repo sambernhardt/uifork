@@ -27,6 +27,16 @@ export function VersionActionMenu({
   onClose,
   setDropdownRef,
 }: VersionActionMenuProps) {
+  // Get the root wrapper element so we portal into it for theme inheritance
+  const rootElement =
+    typeof document !== "undefined"
+      ? document.getElementById("uifork-root") || document.body
+      : null;
+
+  if (!rootElement) {
+    return null;
+  }
+
   // Don't set position via props - the positioning effect handles it directly
   // This prevents the popover from flashing at (0, 0) on initial render
   // The CSS animation will handle the fade-in and scale effect
@@ -84,6 +94,6 @@ export function VersionActionMenu({
         <span>Rename</span>
       </button>
     </div>,
-    document.body,
+    rootElement,
   );
 }

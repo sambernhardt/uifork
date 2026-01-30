@@ -27,6 +27,7 @@ import { useComponentDiscovery } from "../hooks/useComponentDiscovery";
 import { useVersionManagement } from "../hooks/useVersionManagement";
 import { usePopoverPosition } from "../hooks/usePopoverPosition";
 import { useClickOutside } from "../hooks/useClickOutside";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import {
   useVersionKeyboardShortcuts,
   useDropdownKeyboard,
@@ -70,6 +71,22 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     y: 0,
   });
   const [copied, setCopied] = useState(false);
+
+  // Settings
+  const [theme, setTheme] = useLocalStorage<"light" | "dark" | "system">(
+    "uifork-theme",
+    "system",
+  );
+  const [position, setPosition] = useLocalStorage<
+    "top-left" | "top-right" | "bottom-left" | "bottom-right"
+  >("uifork-position", "bottom-right");
+  const [codeEditor, setCodeEditor] = useLocalStorage<"vscode" | "cursor">(
+    "uifork-code-editor",
+    "vscode",
+  );
+
+  // Root ref for theme wrapper
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   // Refs
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -385,8 +402,76 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     }
   }, []);
 
+  // Calculate container position based on settings
+  const containerPosition = React.useMemo(() => {
+    const offset = 20;
+    const positions = {
+      "top-left": {
+        top: `${offset}px`,
+        left: `${offset}px`,
+        bottom: "auto",
+        right: "auto",
+      },
+      "top-right": {
+        top: `${offset}px`,
+        right: `${offset}px`,
+        bottom: "auto",
+        left: "auto",
+      },
+      "bottom-left": {
+        bottom: `${offset}px`,
+        left: `${offset}px`,
+        top: "auto",
+        right: "auto",
+      },
+      "bottom-right": {
+        bottom: `${offset}px`,
+        right: `${offset}px`,
+        top: "auto",
+        left: "auto",
+      },
+    };
+    return positions[position];
+  }, [position]);
+
+  const transformOrigin = React.useMemo(() => {
+    const origins = {
+      "top-left": "top left",
+      "top-right": "top right",
+      "bottom-left": "bottom left",
+      "bottom-right": "bottom right",
+    };
+    return origins[position];
+  }, [position]);
+
+  // Create or get root element for theming
+  useEffect(() => {
+    if (!isMounted) return;
+
+    let rootEl = document.getElementById("uifork-root");
+    if (!rootEl) {
+      rootEl = document.createElement("div");
+      rootEl.id = "uifork-root";
+      rootEl.className = styles.uiforkRoot || "uiforkRoot";
+      document.body.appendChild(rootEl);
+    }
+    rootRef.current = rootEl;
+
+    // Update theme attribute
+    rootEl.setAttribute("data-theme", theme);
+
+    return () => {
+      // Don't remove root element on unmount as it might be used by other instances
+    };
+  }, [isMounted, theme, styles]);
+
   // Don't render until mounted on client (prevents hydration mismatch)
   if (!isMounted) {
+    return null;
+  }
+
+  const portalRoot = rootRef.current || document.getElementById("uifork-root");
+  if (!portalRoot) {
     return null;
   }
 
@@ -399,6 +484,8 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         style={{
           borderRadius: 12,
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+          ...containerPosition,
+          transformOrigin,
         }}
         transition={{
           layout: {
@@ -512,7 +599,15 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                   </button>
                 </div>
               ) : isSettingsOpen ? (
-                <SettingsView onBack={() => setIsSettingsOpen(false)} />
+                <SettingsView
+                  onBack={() => setIsSettingsOpen(false)}
+                  theme={theme}
+                  setTheme={setTheme}
+                  position={position}
+                  setPosition={setPosition}
+                  codeEditor={codeEditor}
+                  setCodeEditor={setCodeEditor}
+                />
               ) : (
                 <>
                   {/* Component selector */}
@@ -591,6 +686,6 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         />
       )}
     </>,
-    document.body,
+    portalRoot,
   );
 }
