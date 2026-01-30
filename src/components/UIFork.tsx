@@ -524,9 +524,6 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                     popoverPositions={popoverPositions}
                     onSelectVersion={(version) => {
                       setActiveVersion(version);
-                      setIsOpen(false);
-                      setOpenPopoverVersion(null);
-                      triggerRef.current?.focus();
                     }}
                     onDuplicateVersion={handleDuplicateVersion}
                     onTogglePopover={handleTogglePopover}
@@ -547,8 +544,6 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                   <button
                     onClick={(e) => {
                       handleNewVersion(e);
-                      setIsOpen(false);
-                      triggerRef.current?.focus();
                     }}
                     className={styles.newVersionButton}
                     title="Create new version"
