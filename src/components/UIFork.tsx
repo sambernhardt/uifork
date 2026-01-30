@@ -772,18 +772,6 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                 <BranchIcon className={styles.triggerIcon} />
               ) : (
                 <>
-                  {connectionStatus === "connecting" && (
-                    <div
-                      className={`${styles.statusIndicator} ${styles.statusIndicatorConnecting}`}
-                      title="Connecting..."
-                    />
-                  )}
-                  {connectionStatus === "connected" && (
-                    <div
-                      className={`${styles.statusIndicator} ${styles.statusIndicatorConnected}`}
-                      title="Connected to watch server"
-                    />
-                  )}
                   <BranchIcon className={styles.triggerIcon} />
                   <motion.span
                     layoutId="component-name"
