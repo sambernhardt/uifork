@@ -677,18 +677,23 @@
 
 .settingsGroup {
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .settingsLabel {
-  display: block;
   font-size: 13px;
   font-weight: 500;
   color: var(--uifork-fg);
-  margin-bottom: 4px;
+  white-space: nowrap;
+  width: 100px;
+  text-align: left;
+  flex-shrink: 0;
 }
 
 .settingsSelect {
-  width: 100%;
+  flex: 1;
   padding: 8px 12px;
   font-size: 14px;
   color: var(--uifork-fg);
@@ -703,6 +708,7 @@
   background-repeat: no-repeat;
   background-position: right 8px center;
   padding-right: 30px;
+  text-align: left;
 }
 .settingsSelect:hover {
   background-color: var(--uifork-hover-bg);
