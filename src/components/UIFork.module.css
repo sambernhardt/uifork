@@ -152,6 +152,7 @@
 .menuItem {
   height: var(--uifork-menu-item-height);
   min-height: var(--uifork-menu-item-height);
+  border-radius: 8px;
 }
 
 /* Trigger separator */
@@ -372,7 +373,7 @@
 
 /* Version item */
 .versionItem {
-  padding: 8px 4px 8px 12px;
+  padding: 8px 4px 8px 8px;
   font-size: 14px;
   color: var(--uifork-fg);
   background-color: transparent;
@@ -417,7 +418,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 8px 8px;
 }
 
 /* Rename input */
@@ -494,12 +495,11 @@
   width: 100%;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 8px 8px;
   font-size: 14px;
   color: var(--uifork-fg);
   background-color: transparent;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
   text-align: left;
 }
@@ -540,7 +540,7 @@
 
 /* New version button */
 .newVersionButton {
-  padding: 8px 12px;
+  padding: 8px 8px;
   font-size: 14px;
   color: var(--uifork-fg);
   background-color: transparent;

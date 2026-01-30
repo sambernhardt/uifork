@@ -690,12 +690,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     }
 
     return "opened-version-list";
-  }, [
-    isOpen,
-    connectionStatus,
-    isSettingsOpen,
-    mountedComponents.length,
-  ]);
+  }, [isOpen, connectionStatus, isSettingsOpen, mountedComponents.length]);
 
   // Don't render until mounted on client (prevents hydration mismatch)
   if (!isMounted) {
@@ -784,13 +779,13 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                 <>
                   {connectionStatus === "disconnected" ||
                   connectionStatus === "failed" ? (
-                <div className={styles.triggerIconContainer}>
-                  <BranchIcon className={styles.triggerIcon} />
-                  <div
-                    className={styles.connectionErrorDot}
-                    title="Disconnected from watch server"
-                  />
-                </div>
+                    <div className={styles.triggerIconContainer}>
+                      <BranchIcon className={styles.triggerIcon} />
+                      <div
+                        className={styles.connectionErrorDot}
+                        title="Disconnected from watch server"
+                      />
+                    </div>
                   ) : (
                     <>
                       {connectionStatus === "connecting" && (
@@ -806,18 +801,6 @@ export function UIFork({ port = 3001 }: UIForkProps) {
               ) : (
                 // Icon+label state: connected with components
                 <>
-                  {connectionStatus === "connecting" && (
-                    <div
-                      className={`${styles.statusIndicator} ${styles.statusIndicatorConnecting}`}
-                      title="Connecting..."
-                    />
-                  )}
-                  {connectionStatus === "connected" && (
-                    <div
-                      className={`${styles.statusIndicator} ${styles.statusIndicatorConnected}`}
-                      title="Connected to watch server"
-                    />
-                  )}
                   <BranchIcon className={styles.triggerIcon} />
                   <motion.span
                     layoutId="component-name"
@@ -968,18 +951,18 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       {/* Component selector dropdown */}
       {activeView !== "closed-trigger-icon" &&
         activeView !== "closed-trigger-label" && (
-        <ComponentSelectorDropdown
-          mountedComponents={mountedComponents}
-          selectedComponent={selectedComponent}
-          isOpen={isComponentSelectorOpen}
-          position={componentSelectorPosition}
-          onSelect={(componentName) => {
-            setSelectedComponent(componentName);
-            setIsComponentSelectorOpen(false);
-          }}
-          componentSelectorRef={componentSelectorRef}
-        />
-      )}
+          <ComponentSelectorDropdown
+            mountedComponents={mountedComponents}
+            selectedComponent={selectedComponent}
+            isOpen={isComponentSelectorOpen}
+            position={componentSelectorPosition}
+            onSelect={(componentName) => {
+              setSelectedComponent(componentName);
+              setIsComponentSelectorOpen(false);
+            }}
+            componentSelectorRef={componentSelectorRef}
+          />
+        )}
     </>,
     portalRoot,
   );
