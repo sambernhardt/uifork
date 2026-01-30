@@ -9,8 +9,15 @@ export default defineConfig({
   resolve: {
     alias: {
       // Alias the package to the source directory for direct imports
-      uifork: resolve(__dirname, "../src"),
+      // This allows HMR to work with changes in the uifork package
+      uifork: resolve(__dirname, "../../packages/uifork/src"),
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    watch: {
+      // Watch the uifork source directory for changes
+      ignored: ["!**/node_modules/**", "!**/packages/uifork/src/**"],
     },
   },
 });

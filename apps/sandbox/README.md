@@ -30,7 +30,7 @@ Or from the root directory:
 npm run sandbox
 ```
 
-The sandbox is configured to import the UIFork package directly from the `../src` directory, so any changes you make to the source code will be reflected immediately in the sandbox.
+The sandbox is configured to import the UIFork package directly from the `../../packages/uifork/src` directory, so any changes you make to the source code will be reflected immediately in the sandbox.
 
 ## How it works
 
@@ -39,7 +39,7 @@ The `vite.config.ts` uses an alias to map `uifork` imports to the parent `src` d
 ```ts
 resolve: {
   alias: {
-    uifork: resolve(__dirname, "../src"),
+    uifork: resolve(__dirname, "../../packages/uifork/src"),
   },
 }
 ```

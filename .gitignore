@@ -1,5 +1,8 @@
 .DS_Store
 node_modules
 dist
-sandbox/node_modules
-sandbox/dist
+**/node_modules
+**/dist
+
+# Turborepo
+.turbo

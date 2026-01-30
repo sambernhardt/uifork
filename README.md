@@ -208,7 +208,13 @@ Versions follow a simple naming convention:
 
 ## Development Setup
 
-For local development of uifork itself:
+This is a monorepo managed by Turborepo with the following packages:
+
+- **`packages/uifork`** - React components library (the main package)
+- **`packages/cli`** - CLI tool (`@uifork/cli`)
+- **`apps/sandbox`** - Development sandbox for testing components
+
+For local development:
 
 ```bash
 # Clone and install
@@ -216,14 +222,18 @@ git clone <repo>
 cd uifork
 npm install
 
-# Link globally for CLI testing
-npm link
-
-# Build the React components
+# Build all packages
 npm run build
 
-# Or watch for changes
+# Run dev mode (watches for changes)
 npm run dev
+
+# Run sandbox app
+npm run sandbox
+
+# Link CLI globally for testing
+cd packages/cli
+npm link
 ```
 
 # To-dos
