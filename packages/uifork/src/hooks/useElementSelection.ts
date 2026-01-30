@@ -5,6 +5,10 @@ import {
   SourceInfo,
   ComponentStackFrame,
 } from "../utils/sourceTracing";
+import { getMountedComponents, subscribe } from "../utils/componentRegistry";
+import { getFiberFromHostInstance } from "bippy";
+import { BranchedComponent } from "../components/BranchedComponent";
+import { LazyBranchedComponent } from "../components/LazyBranchedComponent";
 
 export interface UseElementSelectionOptions {
   /** Keyboard shortcut to activate selection mode (default: 'Cmd+Shift+E' or 'Ctrl+Shift+E') */
@@ -33,10 +37,12 @@ export interface UseElementSelectionReturn {
   selectedSourceInfo: SourceInfo | null;
   /** Component stack context for the selected element */
   selectedComponentStack: ComponentStackContext | null;
+  /** Map of branched component elements to their component IDs */
+  branchedComponentElements: Map<Element, string>;
   /** Manually toggle selection mode */
   toggleSelectionMode: () => void;
   /** Programmatically select an element */
-  selectElement: (element: Element) => Promise<void>;
+  selectElement: (element: Element, targetFrame?: ComponentStackFrame | null) => Promise<void>;
 }
 
 /**
@@ -65,11 +71,169 @@ export function useElementSelection(
   const rafIdRef = useRef<number | null>(null);
   // Ref to track selected element for synchronous access in event handlers
   const selectedElementRef = useRef<Element | null>(null);
+  // Ref to track outlined elements for cleanup
+  const outlinedElementsRef = useRef<Set<Element>>(new Set());
+  // Ref to track mounted component IDs
+  const mountedComponentIdsRef = useRef<string[]>([]);
+  // State to track branched component elements and their IDs
+  const [branchedComponentElements, setBranchedComponentElements] = useState<
+    Map<Element, string>
+  >(new Map());
 
   // Keep ref in sync with selectedElement state
   useEffect(() => {
     selectedElementRef.current = selectedElement;
   }, [selectedElement]);
+
+  /**
+   * Check if a fiber is a BranchedComponent instance
+   */
+  const isBranchedComponentFiber = useCallback((fiber: any): boolean => {
+    if (!fiber || !fiber.type) return false;
+    
+    const componentType = fiber.type;
+    return (
+      componentType === BranchedComponent ||
+      componentType === LazyBranchedComponent ||
+      componentType.name === "BranchedComponent" ||
+      componentType.name === "LazyBranchedComponent" ||
+      componentType.displayName === "BranchedComponent" ||
+      componentType.displayName === "LazyBranchedComponent"
+    );
+  }, []);
+
+  /**
+   * Find the root DOM element for a BranchedComponent fiber
+   */
+  const findRootElementForBranchedComponent = useCallback((fiber: any): Element | null => {
+    if (!fiber) return null;
+
+    // Traverse down the fiber tree to find the first host element
+    let current: any = fiber.child;
+    const visited = new Set<any>();
+
+    while (current && !visited.has(current)) {
+      visited.add(current);
+      
+      const isHostElement = current.type && typeof current.type === "string";
+      
+      if (isHostElement && current.stateNode instanceof Element) {
+        const element = current.stateNode;
+        // Skip our own UI elements
+        if (!element.closest("[data-uifork]")) {
+          return element;
+        }
+      }
+
+      // Traverse children first, then siblings
+      if (current.child) {
+        current = current.child;
+      } else if (current.sibling) {
+        current = current.sibling;
+      } else {
+        // Go back up and try next sibling
+        current = current.return?.sibling;
+      }
+    }
+
+    return null;
+  }, []);
+
+  /**
+   * Get component ID from BranchedComponent fiber props
+   */
+  const getComponentIdFromFiber = useCallback((fiber: any): string | null => {
+    if (!fiber || !fiber.memoizedProps) return null;
+    // BranchedComponent receives an `id` prop
+    return fiber.memoizedProps.id || null;
+  }, []);
+
+  /**
+   * Find all DOM elements that correspond to BranchedComponent instances
+   * Returns a map of element -> component ID
+   */
+  const findBranchedComponentElements = useCallback((): Map<Element, string> => {
+    const elementMap = new Map<Element, string>();
+    const seenElements = new Set<Element>();
+
+    // Get all elements in the document
+    const allElements = document.querySelectorAll("*");
+
+    for (const element of allElements) {
+      // Skip our own UI elements
+      if (element.closest("[data-uifork]")) {
+        continue;
+      }
+
+      // Skip if we've already processed this element
+      if (seenElements.has(element)) {
+        continue;
+      }
+
+      // Get the fiber for this element
+      const fiber = getFiberFromHostInstance(element);
+      if (!fiber) continue;
+
+      // Traverse up the fiber tree to find BranchedComponent instances
+      let current: any = fiber;
+      const visited = new Set<any>();
+
+      while (current && !visited.has(current)) {
+        visited.add(current);
+
+        // Check if this fiber is a BranchedComponent
+        if (isBranchedComponentFiber(current)) {
+          // Get the component ID from the fiber props
+          const componentId = getComponentIdFromFiber(current);
+          
+          // Find the root element for this BranchedComponent
+          const rootElement = findRootElementForBranchedComponent(current);
+          if (rootElement && !seenElements.has(rootElement)) {
+            if (componentId) {
+              elementMap.set(rootElement, componentId);
+            }
+            seenElements.add(rootElement);
+          }
+          // Once we find a BranchedComponent, we can stop traversing up
+          // (we don't want to highlight nested BranchedComponents separately)
+          break;
+        }
+
+        // Move up the tree
+        current = current.return;
+      }
+    }
+
+    return elementMap;
+  }, [isBranchedComponentFiber, findRootElementForBranchedComponent, getComponentIdFromFiber]);
+
+  /**
+   * Update outlines for branched components
+   */
+  const updateBranchedComponentOutlines = useCallback(() => {
+    // Remove existing outlines
+    outlinedElementsRef.current.forEach((el) => {
+      el.removeAttribute("data-uifork-branched-outline");
+    });
+    outlinedElementsRef.current.clear();
+
+    if (!isSelectionMode) {
+      setBranchedComponentElements(new Map());
+      return;
+    }
+
+    // Find all branched component elements with their IDs
+    const elementMap = findBranchedComponentElements();
+    
+    // Update state with the element map
+    setBranchedComponentElements(elementMap);
+    
+    // Add outline to each element
+    elementMap.forEach((_, el) => {
+      el.setAttribute("data-uifork-branched-outline", "true");
+      outlinedElementsRef.current.add(el);
+    });
+  }, [isSelectionMode, findBranchedComponentElements]);
 
   /**
    * Get element at point, filtering out our own UI elements
@@ -290,6 +454,82 @@ export function useElementSelection(
   }, [isSelectionMode]);
 
   /**
+   * Subscribe to component registry changes and update outlines
+   */
+  useEffect(() => {
+    // Update mounted component IDs
+    mountedComponentIdsRef.current = getMountedComponents();
+
+    // Subscribe to changes
+    const unsubscribe = subscribe(() => {
+      mountedComponentIdsRef.current = getMountedComponents();
+      // Update outlines when components change
+      updateBranchedComponentOutlines();
+    });
+
+    return unsubscribe;
+  }, [updateBranchedComponentOutlines]);
+
+  /**
+   * Update outlines when selection mode changes
+   */
+  useEffect(() => {
+    updateBranchedComponentOutlines();
+
+    return () => {
+      // Cleanup outlines when selection mode is disabled
+      if (!isSelectionMode) {
+        outlinedElementsRef.current.forEach((el) => {
+          el.removeAttribute("data-uifork-branched-outline");
+        });
+        outlinedElementsRef.current.clear();
+      }
+    };
+  }, [isSelectionMode, updateBranchedComponentOutlines]);
+
+  /**
+   * Watch for DOM changes and update outlines accordingly
+   */
+  useEffect(() => {
+    if (!isSelectionMode) return;
+
+    // Debounce updates to avoid excessive recalculations
+    let updateTimeout: number | null = null;
+    const scheduleUpdate = () => {
+      if (updateTimeout !== null) {
+        clearTimeout(updateTimeout);
+      }
+      updateTimeout = window.setTimeout(() => {
+        updateBranchedComponentOutlines();
+        updateTimeout = null;
+      }, 100);
+    };
+
+    // Watch for DOM mutations
+    const observer = new MutationObserver(() => {
+      scheduleUpdate();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Also update on scroll/resize in case elements move
+    window.addEventListener("scroll", scheduleUpdate, true);
+    window.addEventListener("resize", scheduleUpdate);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", scheduleUpdate, true);
+      window.removeEventListener("resize", scheduleUpdate);
+      if (updateTimeout !== null) {
+        clearTimeout(updateTimeout);
+      }
+    };
+  }, [isSelectionMode, updateBranchedComponentOutlines]);
+
+  /**
    * Set up mouse and keyboard event listeners
    */
   useEffect(() => {
@@ -433,6 +673,7 @@ export function useElementSelection(
     selectedElement,
     selectedSourceInfo,
     selectedComponentStack,
+    branchedComponentElements,
     toggleSelectionMode,
     selectElement,
   };

@@ -255,6 +255,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     selectedElement,
     selectedSourceInfo,
     selectedComponentStack,
+    branchedComponentElements,
     selectElement,
   } = useElementSelection({
     onSelect: (element, sourceInfo) => {
@@ -1004,6 +1005,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
           await selectElement(element, frame);
         }}
       />
+
     </>,
     portalRoot
   );

@@ -8,6 +8,7 @@ import {
   getSourceFromElement,
   getComponentStackWithContext,
 } from "../utils/sourceTracing";
+import { GitForkIcon } from "./icons/GitForkIcon";
 
 export interface ComponentStackContext {
   above: ComponentStackFrame | null;
@@ -270,23 +271,35 @@ export function ElementSelectionOverlay({
             transform: "translateY(-100%)",
           }}
         >
-          <button
-            className={styles.elementSelectionStackDropdownTrigger}
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            <span>
-              {selectedSourceInfo.filePath}
-              {selectedSourceInfo.componentName && (
-                <span className={styles.elementSelectionComponentName}>
-                  {" "}
-                  ({selectedSourceInfo.componentName})
-                </span>
-              )}
-            </span>
-            <span className={styles.elementSelectionStackDropdownArrow}>
-              {isDropdownOpen ? "▲" : "▼"}
-            </span>
-          </button>
+          <div className={styles.elementSelectionStackDropdownHeader}>
+            <button
+              className={styles.elementSelectionStackDropdownTrigger}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              <span>
+                {selectedSourceInfo.filePath}
+                {selectedSourceInfo.componentName && (
+                  <span className={styles.elementSelectionComponentName}>
+                    {" "}
+                    ({selectedSourceInfo.componentName})
+                  </span>
+                )}
+              </span>
+              <span className={styles.elementSelectionStackDropdownArrow}>
+                {isDropdownOpen ? "▲" : "▼"}
+              </span>
+            </button>
+            <button
+              className={styles.elementSelectionStackForkButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log(`Fake forking ${selectedSourceInfo.filePath}`);
+              }}
+              title={`Fork ${selectedSourceInfo.filePath}`}
+            >
+              <GitForkIcon className={styles.elementSelectionStackForkIcon} />
+            </button>
+          </div>
           {isDropdownOpen && stackItems.length > 0 && (
             <div className={styles.elementSelectionStackDropdownContent}>
               {stackItems.map((item, index) => {
@@ -305,6 +318,8 @@ export function ElementSelectionOverlay({
                     // The hook will update source info and component stack to show
                     // the clicked component as CURRENT
                     onStackItemSelect(element, item.frame);
+                    // Close the dropdown to revert to compact display
+                    setIsDropdownOpen(false);
                   }
                 };
 
