@@ -1,6 +1,6 @@
 {
   "name": "uifork",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A CLI tool and React components for managing UI component versions and switching between them",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
