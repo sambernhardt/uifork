@@ -8,7 +8,7 @@ interface SettingsViewProps {
   setTheme: (theme: "light" | "dark" | "system") => void;
   position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   setPosition: (
-    position: "top-left" | "top-right" | "bottom-left" | "bottom-right",
+    position: "top-left" | "top-right" | "bottom-left" | "bottom-right"
   ) => void;
   codeEditor: "vscode" | "cursor";
   setCodeEditor: (editor: "vscode" | "cursor") => void;
@@ -30,8 +30,6 @@ export function SettingsView({
         <span>Back</span>
       </button>
       <div className={styles.settingsContent}>
-        <h3 className={styles.settingsTitle}>Settings</h3>
-
         <div className={styles.settingsGroup}>
           <label className={styles.settingsLabel}>Theme</label>
           <select
@@ -57,7 +55,7 @@ export function SettingsView({
                   | "top-left"
                   | "top-right"
                   | "bottom-left"
-                  | "bottom-right",
+                  | "bottom-right"
               )
             }
             className={styles.settingsSelect}

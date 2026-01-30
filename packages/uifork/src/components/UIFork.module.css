@@ -664,14 +664,14 @@
 .settingsView {
   display: flex;
   flex-direction: column;
-  min-height: 200px;
 }
 
 .settingsBackButton {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 8px;
   font-size: 14px;
   color: var(--uifork-fg);
   background-color: transparent;
@@ -692,7 +692,7 @@
 }
 
 .settingsContent {
-  padding: 12px;
+  padding: 4px 12px 12px 12px;
   flex: 1;
 }
 
@@ -716,6 +716,9 @@
   align-items: center;
   gap: 8px;
 }
+.settingsGroup:last-child {
+  margin-bottom: 0;
+}
 
 .settingsLabel {
   font-size: 13px;
@@ -729,7 +732,8 @@
 
 .settingsSelect {
   flex: 1;
-  padding: 8px 12px;
+  padding: 4px 12px;
+  height: var(--uifork-menu-item-height);
   font-size: 14px;
   color: var(--uifork-fg);
   background-color: var(--uifork-bg-input);
