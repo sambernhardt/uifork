@@ -108,7 +108,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   >("uifork-position", "bottom-right");
   const [codeEditor, setCodeEditor] = useLocalStorage<"vscode" | "cursor">(
     "uifork-code-editor",
-    "vscode"
+    "cursor"
   );
 
   // Root ref for theme wrapper
