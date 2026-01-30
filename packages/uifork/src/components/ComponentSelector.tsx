@@ -74,6 +74,7 @@ export function ComponentSelectorDropdown({
   return (
     <div
       ref={componentSelectorRef}
+      data-uifork
       className={styles.componentSelectorDropdown}
       style={{
         left: `${position.x}px`,

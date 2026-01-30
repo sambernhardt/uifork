@@ -782,3 +782,24 @@
 .tooltipVisible {
   opacity: 1;
 }
+
+/* Element selection overlay */
+.elementSelectionOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.elementSelectionHighlight {
+  position: absolute;
+  border: 1px solid #f97316;
+  background-color: rgba(249, 115, 22, 0.1);
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.2);
+  pointer-events: none;
+  border-radius: 6px;
+  transition: opacity 0.15s ease-out;
+}

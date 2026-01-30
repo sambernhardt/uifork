@@ -12,6 +12,7 @@ import type { UIForkProps } from "../types";
 import styles from "./UIFork.module.css";
 import { PlusIcon } from "./icons/PlusIcon";
 import { BranchIcon } from "./icons/BranchIcon";
+import { ClickIcon } from "./icons/ClickIcon";
 import { CopyIcon } from "./icons/CopyIcon";
 import { CheckmarkIcon } from "./icons/CheckmarkIcon";
 import {
@@ -20,6 +21,7 @@ import {
 } from "./ComponentSelector";
 import { VersionsList } from "./VersionsList";
 import { SettingsView } from "./SettingsView";
+import { ElementSelectionOverlay } from "./ElementSelectionOverlay";
 
 // Custom hooks
 import { useWebSocketConnection } from "../hooks/useWebSocketConnection";
@@ -32,6 +34,7 @@ import {
   useVersionKeyboardShortcuts,
   useDropdownKeyboard,
 } from "../hooks/useKeyboardShortcuts";
+import { useElementSelection } from "../hooks/useElementSelection";
 
 // Animation duration constant (in seconds)
 const ANIMATION_DURATION = 0.3;
@@ -241,6 +244,18 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     onClose: () => {
       setIsOpen(false);
       setIsSettingsOpen(false);
+    },
+  });
+
+  // Element selection hook
+  const {
+    isSelectionMode,
+    hoveredElement,
+    selectedElement,
+  } = useElementSelection({
+    onSelect: (element) => {
+      // Element is already logged in the hook
+      // Future: will add source tracing here in Stage 2
     },
   });
 
@@ -703,6 +718,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     <>
       <motion.div
         ref={containerRef}
+        data-uifork
         className={`${styles.container} ${
           !isOpen ? styles.containerClosed : ""
         }`}
@@ -776,8 +792,10 @@ export function UIFork({ port = 3001 }: UIForkProps) {
               {activeView === "closed-trigger-icon" ? (
                 // Icon-only state: error, connecting, or no components
                 <>
-                  {connectionStatus === "disconnected" ||
-                  connectionStatus === "failed" ? (
+                  {isSelectionMode ? (
+                    <ClickIcon className={styles.triggerIcon} />
+                  ) : connectionStatus === "disconnected" ||
+                    connectionStatus === "failed" ? (
                     <div className={styles.triggerIconContainer}>
                       <BranchIcon className={styles.triggerIcon} />
                       <div
@@ -800,7 +818,11 @@ export function UIFork({ port = 3001 }: UIForkProps) {
               ) : (
                 // Icon+label state: connected with components
                 <>
-                  <BranchIcon className={styles.triggerIcon} />
+                  {isSelectionMode ? (
+                    <ClickIcon className={styles.triggerIcon} />
+                  ) : (
+                    <BranchIcon className={styles.triggerIcon} />
+                  )}
                   <motion.span
                     layoutId="component-name"
                     layout="position"
@@ -810,11 +832,13 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                       ease: ANIMATION_EASING,
                     }}
                   >
-                    {selectedComponent || "No component"}
+                    {isSelectionMode ? "Select an element" : (selectedComponent || "No component")}
                   </motion.span>
-                  <span className={styles.triggerVersion}>
-                    {activeVersion ? formatVersionLabel(activeVersion) : "-"}
-                  </span>
+                  {!isSelectionMode && (
+                    <span className={styles.triggerVersion}>
+                      {activeVersion ? formatVersionLabel(activeVersion) : "-"}
+                    </span>
+                  )}
                 </>
               )}
             </motion.button>
@@ -962,6 +986,13 @@ export function UIFork({ port = 3001 }: UIForkProps) {
             componentSelectorRef={componentSelectorRef}
           />
         )}
+
+      {/* Element selection overlay */}
+      <ElementSelectionOverlay
+        hoveredElement={hoveredElement}
+        selectedElement={selectedElement}
+        isActive={isSelectionMode}
+      />
     </>,
     portalRoot
   );
