@@ -904,7 +904,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                     onClick={(e) => {
                       handleNewVersion(e);
                     }}
-                    className={styles.newVersionButton}
+                    className={`${styles.newVersionButton} ${styles.menuItem}`}
                     title="Create new version"
                   >
                     <div className={styles.newVersionIconContainer}>

@@ -19,6 +19,7 @@
   --uifork-fg: var(--uifork-text-primary);
   --uifork-fg-secondary: var(--uifork-text-secondary);
   --uifork-hover-bg: rgba(255, 255, 255, 0.1);
+  --uifork-menu-item-height: 36px;
 }
 :global(#uifork-root[data-theme=light]) {
   --uifork-bg-dark: #ffffff;
@@ -138,6 +139,12 @@
   50% {
     opacity: 0.5;
   }
+}
+
+/* Common menu item class */
+.menuItem {
+  height: var(--uifork-menu-item-height);
+  min-height: var(--uifork-menu-item-height);
 }
 
 /* Trigger separator */
@@ -360,7 +367,7 @@
 
 /* Version item */
 .versionItem {
-  padding: 8px 12px;
+  padding: 8px 4px 8px 12px;
   font-size: 14px;
   color: var(--uifork-fg);
   background-color: transparent;
@@ -424,7 +431,7 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   opacity: 0;
   transition: opacity 0.15s;
 }
@@ -440,6 +447,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  height: calc(var(--uifork-menu-item-height) - 8px);
+  width: calc(var(--uifork-menu-item-height) - 8px);
 }
 .actionButton:hover {
   background-color: var(--uifork-hover-bg);

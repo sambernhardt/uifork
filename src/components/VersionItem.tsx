@@ -45,7 +45,7 @@ export function VersionItem({
       aria-selected={isSelected}
       data-key={version}
       onClick={() => onSelect(version)}
-      className={styles.versionItem}
+      className={`${styles.versionItem} ${styles.menuItem}`}
     >
       {/* Checkmark */}
       <div className={styles.checkmarkContainer}>
@@ -64,7 +64,7 @@ export function VersionItem({
               e.stopPropagation();
               onDuplicate(version, e);
             }}
-            className={styles.actionButton}
+            className={`${styles.actionButton}`}
           >
             <CopyIcon className={styles.actionIcon} />
           </button>
@@ -77,7 +77,7 @@ export function VersionItem({
                 e.stopPropagation();
                 onTogglePopover(version, e);
               }}
-              className={styles.actionButton}
+              className={`${styles.actionButton}`}
             >
               <MoreOptionsIcon className={styles.actionIcon} />
             </button>

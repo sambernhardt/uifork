@@ -56,7 +56,7 @@ export function VersionActionMenu({
           onPromote(version, e);
           onClose();
         }}
-        className={styles.popoverMenuItem}
+        className={`${styles.popoverMenuItem} ${styles.menuItem}`}
       >
         <PromoteIcon className={styles.popoverMenuItemIcon} />
         <span>Promote</span>
@@ -66,7 +66,7 @@ export function VersionActionMenu({
           onOpenInEditor(version, e);
           onClose();
         }}
-        className={styles.popoverMenuItem}
+        className={`${styles.popoverMenuItem} ${styles.menuItem}`}
       >
         <OpenInEditorIcon className={styles.popoverMenuItemIcon} />
         <span>Open in editor</span>
@@ -77,7 +77,7 @@ export function VersionActionMenu({
           onDelete(version, e);
           onClose();
         }}
-        className={`${styles.popoverMenuItem} ${styles.popoverMenuItemDelete}`}
+        className={`${styles.popoverMenuItem} ${styles.menuItem} ${styles.popoverMenuItemDelete}`}
       >
         <DeleteIcon className={styles.popoverMenuItemIcon} />
         <span>Delete</span>
@@ -88,7 +88,7 @@ export function VersionActionMenu({
           onRename(version, e);
           onClose();
         }}
-        className={styles.popoverMenuItem}
+        className={`${styles.popoverMenuItem} ${styles.menuItem}`}
       >
         <RenameIcon className={styles.popoverMenuItemIcon} />
         <span>Rename</span>

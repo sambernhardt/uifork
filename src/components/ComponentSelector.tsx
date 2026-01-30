@@ -25,7 +25,7 @@ export function ComponentSelector({
       <button
         data-component-selector
         onClick={onToggle}
-        className={styles.componentSelector}
+        className={`${styles.componentSelector} ${styles.menuItem}`}
       >
         <motion.span
           layoutId="component-name"
@@ -91,7 +91,7 @@ export function ComponentSelectorDropdown({
           <button
             key={component.name}
             onClick={() => onSelect(component.name)}
-            className={`${styles.componentSelectorItem} ${
+            className={`${styles.componentSelectorItem} ${styles.menuItem} ${
               component.name === selectedComponent
                 ? styles.componentSelectorItemSelected
                 : ""
