@@ -83,21 +83,19 @@ uifork new Button
 uifork new Button v3
 ```
 
-### `uifork duplicate <component-path> <version-id> [target-version]`
+### `uifork fork <component-path> <version-id> [target-version]`
 
-<!-- TODO: Rename this command from `uifork duplicate` to `uifork fork` -->
-
-Duplicate an existing version to create a new one.
+Fork an existing version to create a new one.
 
 ```bash
-# Duplicate v1 to auto-incremented version
-uifork duplicate Button v1
+# Fork v1 to auto-incremented version
+uifork fork Button v1
 
-# Duplicate v1 to specific version
-uifork duplicate Button v1 v2
+# Fork v1 to specific version
+uifork fork Button v1 v2
 ```
 
-Alias: `uifork fork`
+Alias: `uifork duplicate`
 
 ### `uifork rename <component-path> <version-id> <new-version-id>`
 
@@ -137,7 +135,7 @@ A floating UI widget that appears in your app during development. It connects to
 
 - **Switch versions** - Click on any version to switch to it
 - **Create new versions** - Click the "+" button to create a blank version
-- **Duplicate versions** - Fork an existing version to iterate on it
+- **Fork versions** - Fork an existing version to iterate on it
 - **Rename versions** - Give versions meaningful names
 - **Delete versions** - Remove versions you no longer need
 - **Promote versions** - When satisfied, promote a version to become the main component
@@ -177,9 +175,6 @@ export default function Button(props) {
 ```
 
 ## File Structure
-
-<!-- TODO: Add "THIS FILE IS GENERATED" header to the generated wrapper component (Button.tsx) -->
-<!-- TODO: Add "THIS FILE IS GENERATED" header to the generated versions.ts file -->
 
 After running `uifork init src/components/Button.tsx`:
 

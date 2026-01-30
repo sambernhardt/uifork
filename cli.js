@@ -15,7 +15,7 @@ Usage:
   uifork init <component-path>                    Initialize a new branched component
   uifork watch [directory]                        Watch for version changes (defaults to current directory)
   uifork new <component-path> [version-id]        Create a new version
-  uifork duplicate <component-path> <version-id> [target-version]  Duplicate/fork a version
+  uifork fork <component-path> <version-id> [target-version]  Fork/duplicate a version
   uifork rename <component-path> <version-id> <new-version-id>  Rename a version
   uifork delete <component-path> <version-id>    Delete a version
   uifork promote <component-path> <version-id>   Promote a version to be the main component
@@ -26,7 +26,7 @@ Examples:
   uifork watch ./src
   uifork new SomeDropdownComponent
   uifork new SomeDropdownComponent v3
-  uifork duplicate SomeDropdownComponent v1 v2
+  uifork fork SomeDropdownComponent v1 v2
   uifork rename SomeDropdownComponent v1 v2
   uifork delete SomeDropdownComponent v2
   uifork promote SomeDropdownComponent v2
@@ -35,10 +35,13 @@ Commands:
   init      Convert a single component file into a versioned branched component
   watch     Start the watch server and discover all versioned components
   new       Create a new version (auto-increments if version-id not provided)
-  duplicate Duplicate/fork a version (auto-increments target if not provided)
+  fork      Fork/duplicate a version (auto-increments target if not provided)
   rename    Rename a version
   delete    Delete a version
   promote   Promote a version to be the main component and remove versioning scaffolding
+
+Aliases:
+  duplicate  Alias for fork
 
 Options:
   -h, --help     Show this help message
@@ -211,15 +214,15 @@ export default function ${componentName}() {
     }
     break;
 
-  case "duplicate":
   case "fork":
+  case "duplicate":
     if (!argument) {
       console.error("Error: Component path and version ID are required");
       console.error(
-        "Usage: uifork duplicate <component-path> <version-id> [target-version]",
+        "Usage: uifork fork <component-path> <version-id> [target-version]",
       );
-      console.error("Example: uifork duplicate SomeDropdownComponent v1");
-      console.error("Example: uifork duplicate SomeDropdownComponent v1 v2");
+      console.error("Example: uifork fork SomeDropdownComponent v1");
+      console.error("Example: uifork fork SomeDropdownComponent v1 v2");
       process.exit(1);
     }
 
@@ -227,7 +230,7 @@ export default function ${componentName}() {
     if (!sourceVersion) {
       console.error("Error: Source version ID is required");
       console.error(
-        "Usage: uifork duplicate <component-path> <version-id> [target-version]",
+        "Usage: uifork fork <component-path> <version-id> [target-version]",
       );
       process.exit(1);
     }
@@ -272,12 +275,12 @@ export default function ${componentName}() {
       fs.writeFileSync(finalTargetPath, sourceContent, "utf8");
       manager.generateVersionsFile();
 
-      console.log(`✅ Duplicated version: ${sourceVersion} → ${targetVersion}`);
+      console.log(`✅ Forked version: ${sourceVersion} → ${targetVersion}`);
       console.log(`   Component: ${manager.componentName}`);
       console.log(`   Source: ${path.basename(sourceFilePath)}`);
       console.log(`   Target: ${path.basename(finalTargetPath)}`);
     } catch (error) {
-      console.error(`Error duplicating version: ${error.message}`);
+      console.error(`Error forking version: ${error.message}`);
       process.exit(1);
     }
     break;
