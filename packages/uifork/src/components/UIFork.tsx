@@ -157,7 +157,6 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     selectedComponent,
     onComponentsUpdate,
     onVersionAck: ({ version, message, newVersion }) => {
-      console.log("[UIFork] onVersionAck:", { version, message, newVersion });
       let versionToActivate: string | null = null;
 
       if (
@@ -170,7 +169,6 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       }
 
       if (versionToActivate) {
-        console.log("[UIFork] Activating version:", versionToActivate);
         storePendingVersion(versionToActivate);
       }
     },
@@ -318,7 +316,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         if (componentSelectorRef.current)
           componentSelectorRef.current.style.visibility = "visible";
       } catch (error) {
-        console.error("Error positioning component selector:", error);
+        // Error positioning component selector
       }
     };
     if (componentSelectorRef.current)
@@ -403,11 +401,10 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         }),
       });
       if (!response.ok) {
-        const error = await response.json();
-        console.error("[UIFork] Error opening in editor:", error.error);
+        await response.json();
       }
     } catch (error) {
-      console.error("[UIFork] Error opening in editor:", error);
+      // Error opening in editor
     }
     setOpenPopoverVersion(null);
   };
@@ -425,7 +422,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error("Failed to copy command:", error);
+      // Failed to copy command
     }
   }, []);
 

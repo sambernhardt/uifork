@@ -57,7 +57,7 @@ export function Tooltip({ label, children, placement = "top" }: TooltipProps) {
           }
         }
       } catch (error) {
-        console.error("Error positioning tooltip:", error);
+        // Error positioning tooltip
       }
     };
 

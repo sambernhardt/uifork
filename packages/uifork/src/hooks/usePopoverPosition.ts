@@ -63,7 +63,7 @@ export function usePopoverPosition({
             dropdown.classList.add(styles.popoverVisible);
           }
         } catch (error) {
-          console.error("Error positioning popover:", error);
+          // Error positioning popover
         }
       };
 

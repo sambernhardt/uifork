@@ -144,7 +144,7 @@ export function useWebSocketConnection({
     };
 
     ws.onerror = (error) => {
-      console.error("[UIFork] WebSocket error:", error);
+      // WebSocket error
       isConnectingRef.current = false;
       // Mark as failed if we haven't connected yet
       if (!hasConnected) {
@@ -157,7 +157,6 @@ export function useWebSocketConnection({
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log("[WebSocket] Received:", data);
 
         if (data.type === "components" && data.payload?.components) {
           onComponentsUpdateRef.current?.(data.payload.components);
@@ -180,11 +179,10 @@ export function useWebSocketConnection({
             newVersion,
           });
         } else if (data.type === "error") {
-          console.error("[UIFork] Server error:", data.payload?.message);
           onErrorRef.current?.(data.payload?.message || "Unknown error");
         }
       } catch (error) {
-        console.error("[UIFork] Error parsing WebSocket message:", error);
+        // Error parsing WebSocket message
       }
     };
   }, [port]);
@@ -232,7 +230,7 @@ export function useWebSocketConnection({
           }),
         );
       } else {
-        console.warn("[UIFork] WebSocket not connected, cannot send message");
+        // WebSocket not connected, cannot send message
       }
     },
     [wsConnection],

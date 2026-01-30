@@ -56,10 +56,6 @@ export function LazyBranchedComponent<T extends Record<string, unknown>>({
       const timer = setTimeout(() => {
         // Double check after delay
         if (!versionKeys.includes(activeVersion)) {
-          console.log(
-            "[BranchedComponent] Active version not found in keys, reverting to:",
-            versionKeys[0],
-          );
           setActiveVersion(versionKeys[0]);
         }
       }, 2500);

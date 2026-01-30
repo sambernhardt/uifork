@@ -32,18 +32,7 @@ export function useVersionManagement({
       const pendingKey = `${selectedComponent}-pending-version`;
       const pendingVersion = localStorage.getItem(pendingKey);
 
-      console.log("[useVersionManagement] Version check:", {
-        selectedComponent,
-        versionKeys,
-        activeVersion,
-        pendingVersion,
-      });
-
       if (pendingVersion && versionKeys.includes(pendingVersion)) {
-        console.log(
-          "[useVersionManagement] Applying pending version:",
-          pendingVersion,
-        );
         setActiveVersion(pendingVersion);
         localStorage.removeItem(pendingKey);
       } else {
@@ -54,16 +43,8 @@ export function useVersionManagement({
           const parsedVersion = savedVersion ? JSON.parse(savedVersion) : null;
 
           if (parsedVersion && versionKeys.includes(parsedVersion)) {
-            console.log(
-              "[useVersionManagement] Restoring saved version:",
-              parsedVersion,
-            );
             setActiveVersion(parsedVersion);
           } else {
-            console.log(
-              "[useVersionManagement] Fallback to default:",
-              versionKeys[0],
-            );
             setActiveVersion(versionKeys[0]);
           }
         }
@@ -75,10 +56,6 @@ export function useVersionManagement({
   const storePendingVersion = useCallback(
     (version: string) => {
       const pendingKey = `${selectedComponent}-pending-version`;
-      console.log("[useVersionManagement] Storing pending version:", {
-        pendingKey,
-        version,
-      });
       localStorage.setItem(pendingKey, version);
     },
     [selectedComponent],
