@@ -24,6 +24,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch",
+    "sandbox": "cd sandbox && npm run dev",
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
