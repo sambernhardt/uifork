@@ -426,6 +426,18 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     }
   }, []);
 
+  // Copy watch command to clipboard
+  const handleCopyWatchCommand = useCallback(async () => {
+    const command = "npx uifork watch";
+    try {
+      await navigator.clipboard.writeText(command);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      // Failed to copy command
+    }
+  }, []);
+
   // Calculate nearest corner based on position
   const getNearestCorner = useCallback(
     (
@@ -836,12 +848,27 @@ export function UIFork({ port = 3001 }: UIForkProps) {
             >
               {activeView === "opened-no-connection" && (
                 <div className={styles.emptyStateContainer}>
-                  <h3 className={styles.emptyStateHeading}>Connection lost</h3>
+                  <h3 className={styles.emptyStateHeading}>
+                    Start the Local Server
+                  </h3>
                   <p className={styles.emptyStateText}>
-                    You need to run{" "}
-                    <code className={styles.inlineCode}>uifork watch</code> to
-                    connect to the watch server
+                    Run the watch command in your project root to connect
                   </p>
+                  <button
+                    onClick={handleCopyWatchCommand}
+                    className={styles.emptyStateCommandContainer}
+                    title="Copy command"
+                    aria-label="Copy command to clipboard"
+                  >
+                    <code className={styles.emptyStateCommand}>
+                      npx uifork watch
+                    </code>
+                    {copied ? (
+                      <CheckmarkIcon className={styles.emptyStateCopyIcon} />
+                    ) : (
+                      <CopyIcon className={styles.emptyStateCopyIcon} />
+                    )}
+                  </button>
                 </div>
               )}
 
