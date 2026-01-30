@@ -61,11 +61,17 @@ export function useWebSocketConnection({
   const shouldReconnectRef = useRef(true);
   const hasEverConnectedRef = useRef(false);
   const retryCountRef = useRef(0);
+  const connectionStatusRef = useRef<ConnectionStatus>("disconnected");
 
   // Keep wsConnectionRef in sync with state
   useEffect(() => {
     wsConnectionRef.current = wsConnection;
   }, [wsConnection]);
+
+  // Keep connectionStatusRef in sync with state
+  useEffect(() => {
+    connectionStatusRef.current = connectionStatus;
+  }, [connectionStatus]);
 
   useEffect(() => {
     selectedComponentRef.current = selectedComponent;
@@ -94,7 +100,10 @@ export function useWebSocketConnection({
     
     // Only show "connecting" status on first attempt or if we've successfully connected before
     // This prevents animation flashes during retry loops
-    if (retryCountRef.current === 0 || hasEverConnectedRef.current) {
+    // Also, don't change status if we're already in a failed state to prevent jitter
+    // during retry attempts when viewing the empty state
+    if ((retryCountRef.current === 0 || hasEverConnectedRef.current) && 
+        connectionStatusRef.current !== "failed") {
       setConnectionStatus("connecting");
     }
     retryCountRef.current++;
@@ -121,8 +130,11 @@ export function useWebSocketConnection({
     ws.onclose = () => {
       isConnectingRef.current = false;
       // Only mark as failed if we never successfully connected
+      // Don't update status if we're already in failed state to prevent jitter
       if (!hasConnected) {
-        setConnectionStatus("failed");
+        if (connectionStatusRef.current !== "failed") {
+          setConnectionStatus("failed");
+        }
       } else {
         setConnectionStatus("disconnected");
       }
@@ -147,8 +159,11 @@ export function useWebSocketConnection({
       // WebSocket error
       isConnectingRef.current = false;
       // Mark as failed if we haven't connected yet
+      // Don't update status if we're already in failed state to prevent jitter
       if (!hasConnected) {
-        setConnectionStatus("failed");
+        if (connectionStatusRef.current !== "failed") {
+          setConnectionStatus("failed");
+        }
       } else {
         setConnectionStatus("disconnected");
       }
