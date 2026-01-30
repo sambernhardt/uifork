@@ -799,7 +799,11 @@
   border: 2px solid #3b82f6;
   border-radius: 4px;
   pointer-events: none;
-  transition: opacity 0.15s ease-in-out;
+  transition: opacity 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.elementSelectionHighlightBranched {
+  border-color: #f97316;
 }
 
 .elementSelectionSourceInfo {
@@ -1045,4 +1049,79 @@
   border-radius: 6px;
   box-shadow: var(--uifork-shadow-md);
   white-space: nowrap;
+}
+
+/* Branched component highlight overlay */
+.branchedComponentHighlight {
+  position: absolute;
+  border: 2px solid #f97316;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Branched component label */
+.branchedComponentLabel {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  height: 24px;
+  font-size: 12px;
+  color: var(--uifork-fg);
+  background-color: var(--uifork-bg-dark);
+  border: 1px solid var(--uifork-border-color);
+  border-radius: 6px;
+  box-shadow: var(--uifork-shadow-md);
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  z-index: 1;
+  transform: translateY(calc(-100% - 8px));
+  box-sizing: border-box;
+}
+
+.branchedComponentLabelIcon {
+  width: 12px;
+  height: 12px;
+  color: var(--uifork-fg-secondary);
+}
+
+/* Branched source button styling */
+.elementSelectionSourceButtonBranched {
+  /* Same styling as regular source button */
+}
+
+.elementSelectionBranchedIcon {
+  width: 12px;
+  height: 12px;
+  color: var(--uifork-fg-secondary);
+  flex-shrink: 0;
+}
+
+/* View versions button */
+.elementSelectionViewVersionsButton {
+  position: relative;
+  padding: 4px 8px;
+  font-size: 12px;
+  height: 24px;
+  color: var(--uifork-fg);
+  background-color: var(--uifork-bg-dark);
+  border: 1px solid var(--uifork-border-color);
+  border-radius: 6px;
+  box-shadow: var(--uifork-shadow-md);
+  pointer-events: auto;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.elementSelectionViewVersionsButton:hover {
+  background-color: var(--uifork-bg-hover);
 }

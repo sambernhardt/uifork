@@ -1006,6 +1006,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         selectedSourceInfo={selectedSourceInfo}
         selectedComponentStack={selectedComponentStack}
         isActive={isSelectionMode}
+        branchedComponentElements={branchedComponentElements}
         onStackItemSelect={async (element, frame) => {
           await selectElement(element, frame);
         }}
@@ -1017,6 +1018,16 @@ export function UIFork({ port = 3001 }: UIForkProps) {
           }
           // Set the selected component in UIFork
           setSelectedComponent(componentName);
+        }}
+        onViewVersions={(componentId) => {
+          // Exit element selection mode
+          if (isSelectionMode) {
+            toggleSelectionMode();
+          }
+          // Set the selected component to view its versions
+          setSelectedComponent(componentId);
+          // Open the UIFork dropdown
+          setIsOpen(true);
         }}
       />
     </>,

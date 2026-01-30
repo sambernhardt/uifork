@@ -82,6 +82,7 @@ export function useElementSelection(
   const [branchedComponentElements, setBranchedComponentElements] = useState<
     Map<Element, string>
   >(new Map());
+  const branchedComponentElementsRef = useRef<Map<Element, string>>(new Map());
 
   // Keep ref in sync with selectedElement state
   useEffect(() => {
@@ -240,6 +241,7 @@ export function useElementSelection(
 
     // Update state with the element map
     setBranchedComponentElements(elementMap);
+    branchedComponentElementsRef.current = elementMap;
 
     // Add outline to each element
     elementMap.forEach((_, el) => {
@@ -271,6 +273,24 @@ export function useElementSelection(
   );
 
   /**
+   * Resolve an element to its branched component root if it exists
+   */
+  const resolveToBranchedElement = useCallback(
+    (element: Element | null): Element | null => {
+      let current = element;
+      while (current) {
+        if (branchedComponentElementsRef.current.has(current)) {
+          return current;
+        }
+        if (current === document.body) break;
+        current = current.parentElement;
+      }
+      return element;
+    },
+    []
+  );
+
+  /**
    * Handle mouse move to update hovered element
    */
   const handleMouseMove = useCallback(
@@ -289,10 +309,11 @@ export function useElementSelection(
         rafIdRef.current = requestAnimationFrame(() => {
           rafIdRef.current = null;
           if (mousePositionRef.current) {
-            const element = getElementAtPoint(
+            let element = getElementAtPoint(
               mousePositionRef.current.x,
               mousePositionRef.current.y
             );
+            element = resolveToBranchedElement(element);
             setHoveredElement(element);
 
             // Clear previous timeout
@@ -316,7 +337,12 @@ export function useElementSelection(
         });
       }
     },
-    [isSelectionMode, selectedElement, getElementAtPoint]
+    [
+      isSelectionMode,
+      selectedElement,
+      getElementAtPoint,
+      resolveToBranchedElement,
+    ]
   );
 
   /**
@@ -362,7 +388,9 @@ export function useElementSelection(
       e.preventDefault();
       e.stopPropagation();
 
-      const element = getElementAtPoint(e.clientX, e.clientY);
+      let element = getElementAtPoint(e.clientX, e.clientY);
+      element = resolveToBranchedElement(element);
+
       if (element) {
         selectedElementRef.current = element;
         setSelectedElement(element);
@@ -387,7 +415,7 @@ export function useElementSelection(
         onSelect?.(element, sourceInfo);
       }
     },
-    [isSelectionMode, getElementAtPoint, onSelect]
+    [isSelectionMode, getElementAtPoint, onSelect, resolveToBranchedElement]
   );
 
   /**

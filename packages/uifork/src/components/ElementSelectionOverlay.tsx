@@ -17,6 +17,7 @@ import {
 } from "../utils/sourceTracing";
 import { GitForkIcon } from "./icons/GitForkIcon";
 import { SelectorIcon } from "./icons/SelectorIcon";
+import { BranchIcon } from "./icons/BranchIcon";
 import type { WebSocketMessageType } from "../hooks/useWebSocketConnection";
 
 export interface ComponentStackContext {
@@ -39,6 +40,8 @@ export interface ElementSelectionOverlayProps {
   selectedComponentStack: ComponentStackContext | null;
   /** Whether selection mode is active */
   isActive: boolean;
+  /** Map of branched component elements to their component IDs */
+  branchedComponentElements?: Map<Element, string>;
   /** Callback when a component in the stack is selected */
   onStackItemSelect?: (element: Element, frame: ComponentStackFrame) => void;
   /** Function to send websocket messages */
@@ -48,6 +51,8 @@ export interface ElementSelectionOverlayProps {
   ) => void;
   /** Callback to clear selection and exit selection mode */
   onForkComplete?: (componentName: string) => void;
+  /** Callback when "View versions" is clicked on a branched component */
+  onViewVersions?: (componentId: string) => void;
 }
 
 /**
@@ -60,9 +65,11 @@ export function ElementSelectionOverlay({
   selectedSourceInfo,
   selectedComponentStack,
   isActive,
+  branchedComponentElements = new Map(),
   onStackItemSelect,
   sendMessage,
   onForkComplete,
+  onViewVersions,
 }: ElementSelectionOverlayProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [hoveredItemIndex, setHoveredItemIndex] = useState<number | null>(null);
@@ -74,8 +81,19 @@ export function ElementSelectionOverlay({
   const [bounds, setBounds] = useState<DOMRect | null>(null);
   const [opacity, setOpacity] = useState(0);
 
+  // Track bounds for each branched component
+  const [branchedBounds, setBranchedBounds] = useState<Map<Element, DOMRect>>(
+    new Map()
+  );
+
   // Use selected element if available, otherwise use hovered element
   const targetElement = selectedElement || hoveredElement;
+
+  // Check if target element is a branched component
+  const targetBranchedComponentId = targetElement
+    ? branchedComponentElements.get(targetElement)
+    : undefined;
+  const isTargetBranched = !!targetBranchedComponentId;
 
   // Close dropdown when selection changes
   useEffect(() => {
@@ -84,6 +102,34 @@ export function ElementSelectionOverlay({
       setHoveredItemIndex(null);
     }
   }, [selectedElement]);
+
+  // Update bounds for branched components
+  useEffect(() => {
+    if (!isActive || branchedComponentElements.size === 0) {
+      setBranchedBounds(new Map());
+      return;
+    }
+
+    const updateBranchedBounds = () => {
+      const newBounds = new Map<Element, DOMRect>();
+      branchedComponentElements.forEach((_, element) => {
+        const rect = element.getBoundingClientRect();
+        newBounds.set(element, rect);
+      });
+      setBranchedBounds(newBounds);
+    };
+
+    updateBranchedBounds();
+
+    // Update on scroll/resize
+    window.addEventListener("scroll", updateBranchedBounds, true);
+    window.addEventListener("resize", updateBranchedBounds);
+
+    return () => {
+      window.removeEventListener("scroll", updateBranchedBounds, true);
+      window.removeEventListener("resize", updateBranchedBounds);
+    };
+  }, [isActive, branchedComponentElements]);
 
   // Update bounds and opacity based on active state and target element
   useEffect(() => {
@@ -373,9 +419,56 @@ export function ElementSelectionOverlay({
 
   return createPortal(
     <div className={styles.elementSelectionOverlay}>
+      {/* Branched component overlays - shown for all branched components when in selection mode */}
+      {Array.from(branchedComponentElements.entries()).map(
+        ([element, componentId]) => {
+          const elementBounds = branchedBounds.get(element);
+          if (!elementBounds) return null;
+
+          // Don't show overlay for the currently targeted element (it gets the main highlight)
+          if (element === targetElement) return null;
+
+          const padding = 2;
+          const branchedHighlightBounds = {
+            left: elementBounds.left - padding,
+            top: elementBounds.top - padding,
+            width: elementBounds.width + padding * 2,
+            height: elementBounds.height + padding * 2,
+          };
+
+          return (
+            <React.Fragment key={componentId}>
+              {/* Branched component outline */}
+              <div
+                className={styles.branchedComponentHighlight}
+                style={{
+                  left: `${branchedHighlightBounds.left}px`,
+                  top: `${branchedHighlightBounds.top}px`,
+                  width: `${branchedHighlightBounds.width}px`,
+                  height: `${branchedHighlightBounds.height}px`,
+                }}
+              />
+              {/* Branched component label */}
+              <div
+                className={styles.branchedComponentLabel}
+                style={{
+                  left: `${branchedHighlightBounds.left}px`,
+                  top: `${branchedHighlightBounds.top}px`,
+                }}
+              >
+                <BranchIcon className={styles.branchedComponentLabelIcon} />
+                <span>{componentId}</span>
+              </div>
+            </React.Fragment>
+          );
+        }
+      )}
+
       {/* Highlight box around the selected/hovered element */}
       <div
-        className={styles.elementSelectionHighlight}
+        className={`${styles.elementSelectionHighlight} ${
+          isTargetBranched ? styles.elementSelectionHighlightBranched : ""
+        }`}
         style={{
           left: `${highlightBounds.left}px`,
           top: `${highlightBounds.top}px`,
@@ -385,7 +478,7 @@ export function ElementSelectionOverlay({
         }}
       />
 
-      {/* Button Row: Dropdown trigger + Fork button */}
+      {/* Button Row: Dropdown trigger + Fork/View versions button */}
       {showButtonRow && (
         <div
           className={styles.elementSelectionButtonRow}
@@ -399,7 +492,11 @@ export function ElementSelectionOverlay({
           {/* Dropdown trigger button - shows source info */}
           <button
             ref={showDropdown ? sourceButtonRef : null}
-            className={styles.elementSelectionSourceButton}
+            className={`${styles.elementSelectionSourceButton} ${
+              isTargetBranched
+                ? styles.elementSelectionSourceButtonBranched
+                : ""
+            }`}
             data-element-selection-control
             onClick={
               showDropdown
@@ -410,53 +507,84 @@ export function ElementSelectionOverlay({
                 : undefined
             }
           >
-            {displaySourceInfo?.filePath}
-            {displaySourceInfo?.componentName && (
-              <span className={styles.elementSelectionComponentName}>
-                {" "}
-                ({displaySourceInfo.componentName})
+            {isTargetBranched && (
+              <BranchIcon className={styles.elementSelectionBranchedIcon} />
+            )}
+            {isTargetBranched ? (
+              <span>
+                {targetBranchedComponentId}
               </span>
+            ) : (
+              <>
+                {displaySourceInfo?.filePath}
+                {displaySourceInfo?.componentName && (
+                  <span className={styles.elementSelectionComponentName}>
+                    {" "}
+                    ({displaySourceInfo.componentName})
+                  </span>
+                )}
+              </>
             )}
             <span className={styles.elementSelectionSourceButtonArrow}>
               <SelectorIcon />
             </span>
           </button>
 
-          {/* Fork button - only shown when element is selected */}
-          {showDropdown && selectedSourceInfo?.filePath && (
+          {/* View versions button - shown when selecting a branched component */}
+          {showDropdown && isTargetBranched && targetBranchedComponentId && (
             <button
               ref={forkButtonRef}
-              className={styles.elementSelectionForkButton}
+              className={styles.elementSelectionViewVersionsButton}
               data-element-selection-control
               onClick={(e) => {
                 e.stopPropagation();
-                if (selectedSourceInfo?.filePath && sendMessage) {
-                  // Extract component name from file path (basename without extension)
-                  // This matches how the server extracts it: path.parse(resolvedPath).name
-                  const filePath = selectedSourceInfo.filePath;
-                  const pathParts = filePath.split("/");
-                  const fileName = pathParts[pathParts.length - 1];
-                  const componentName = fileName.replace(/\.[^/.]+$/, ""); // Remove extension
-
-                  // Set component in localStorage immediately (optimistic update)
-                  // The WebSocket ack will confirm and ensure it's set correctly
-                  if (onForkComplete) {
-                    onForkComplete(componentName);
-                  }
-
-                  // Send the init_component message
-                  sendMessage("init_component", {
-                    componentPath: selectedSourceInfo.filePath,
-                  });
-                } else {
-                  console.log(`Fake forking ${selectedSourceInfo?.filePath}`);
+                if (onViewVersions && targetBranchedComponentId) {
+                  onViewVersions(targetBranchedComponentId);
                 }
               }}
-              title={`Fork ${selectedSourceInfo?.filePath}`}
+              title={`View versions of ${targetBranchedComponentId}`}
             >
-              <GitForkIcon className={styles.elementSelectionForkIcon} />
+              View versions
             </button>
           )}
+
+          {/* Fork button - shown when element is selected and NOT a branched component */}
+          {showDropdown &&
+            selectedSourceInfo?.filePath &&
+            !isTargetBranched && (
+              <button
+                ref={forkButtonRef}
+                className={styles.elementSelectionForkButton}
+                data-element-selection-control
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (selectedSourceInfo?.filePath && sendMessage) {
+                    // Extract component name from file path (basename without extension)
+                    // This matches how the server extracts it: path.parse(resolvedPath).name
+                    const filePath = selectedSourceInfo.filePath;
+                    const pathParts = filePath.split("/");
+                    const fileName = pathParts[pathParts.length - 1];
+                    const componentName = fileName.replace(/\.[^/.]+$/, ""); // Remove extension
+
+                    // Set component in localStorage immediately (optimistic update)
+                    // The WebSocket ack will confirm and ensure it's set correctly
+                    if (onForkComplete) {
+                      onForkComplete(componentName);
+                    }
+
+                    // Send the init_component message
+                    sendMessage("init_component", {
+                      componentPath: selectedSourceInfo.filePath,
+                    });
+                  } else {
+                    console.log(`Fake forking ${selectedSourceInfo?.filePath}`);
+                  }
+                }}
+                title={`Fork ${selectedSourceInfo?.filePath}`}
+              >
+                <GitForkIcon className={styles.elementSelectionForkIcon} />
+              </button>
+            )}
         </div>
       )}
 
