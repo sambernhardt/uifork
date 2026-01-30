@@ -3,8 +3,18 @@ import { createPortal } from "react-dom";
 import styles from "./UIFork.module.css";
 import {
   SourceInfo,
-  ComponentStackContext,
+  ComponentStackFrame,
+  findElementFromStackFrame,
+  getSourceFromElement,
+  getComponentStackWithContext,
 } from "../utils/sourceTracing";
+
+export interface ComponentStackContext {
+  above: ComponentStackFrame | null;
+  current: ComponentStackFrame | null;
+  below: ComponentStackFrame | null;
+  all: ComponentStackFrame[];
+}
 
 export interface ElementSelectionOverlayProps {
   /** The element currently being hovered */
@@ -19,6 +29,8 @@ export interface ElementSelectionOverlayProps {
   selectedComponentStack: ComponentStackContext | null;
   /** Whether selection mode is active */
   isActive: boolean;
+  /** Callback when a component in the stack is selected */
+  onStackItemSelect?: (element: Element, frame: ComponentStackFrame) => void;
 }
 
 /**
@@ -31,6 +43,7 @@ export function ElementSelectionOverlay({
   selectedSourceInfo,
   selectedComponentStack,
   isActive,
+  onStackItemSelect,
 }: ElementSelectionOverlayProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -100,38 +113,115 @@ export function ElementSelectionOverlay({
   // Show dropdown when element is selected (replaces the source info)
   const showDropdown = selectedElement && selectedComponentStack;
 
-  // Build stack items for dropdown (above, current, below)
+  // Build stack items for dropdown - show all frames in the stack with hierarchy
   const stackItems: Array<{
     label: string;
     filePath: string | null;
     componentName: string | null;
     isCurrent: boolean;
+    index: number;
+    level: number; // Hierarchy level for indentation
+    isChild: boolean; // Whether this is a child component
+    frame: ComponentStackFrame; // Store the full frame for element lookup
   }> = [];
 
   if (selectedComponentStack) {
-    if (selectedComponentStack.above) {
-      stackItems.push({
-        label: "Above",
-        filePath: selectedComponentStack.above.filePath,
-        componentName: selectedComponentStack.above.componentName,
-        isCurrent: false,
+    // Use the full stack if available, otherwise fall back to above/current/below
+    const allFrames = selectedComponentStack.all || [];
+
+    if (allFrames.length > 0) {
+      // Determine which component is marked as CURRENT (may not be index 0)
+      const currentFrame = selectedComponentStack.current;
+      const currentIndex = currentFrame
+        ? allFrames.findIndex(
+            (f) =>
+              f.componentName === currentFrame.componentName &&
+              f.filePath === currentFrame.filePath
+          )
+        : 0;
+
+      // Reverse the stack to show root -> parents -> current (most indented)
+      // The stack goes from DOM element's component (index 0) to root (last index)
+      // We want to display: root (least indented) -> parents -> current (most indented)
+      const reversedFrames = [...allFrames].reverse();
+
+      // Show all frames, marking the one that matches currentFrame as CURRENT
+      reversedFrames.forEach((frame: ComponentStackFrame, index: number) => {
+        const originalIndex = allFrames.length - 1 - index;
+        // Check if this frame matches the current frame (not just index 0)
+        const isCurrent =
+          currentFrame &&
+          frame.componentName === currentFrame.componentName &&
+          frame.filePath === currentFrame.filePath;
+        const isRoot = index === 0; // The reversed first item is root
+        const isParent = !isCurrent && !isRoot;
+
+        // Calculate hierarchy level based on position in reversed stack
+        // Level 0 = Root (no indent)
+        // Level increases for each parent
+        // Current gets the highest level (most indented)
+        const level = isCurrent
+          ? allFrames.length - 1 // Current is most indented
+          : index; // Others based on their position
+
+        let label = "";
+        if (isCurrent) {
+          label = "CURRENT";
+        } else if (isRoot) {
+          label = "ROOT";
+        } else {
+          label = "PARENT";
+        }
+
+        stackItems.push({
+          label,
+          filePath: frame.filePath,
+          componentName: frame.componentName,
+          isCurrent: !!isCurrent,
+          index: originalIndex,
+          level,
+          isChild: false, // We're showing parents, not children
+          frame, // Store the full frame
+        });
       });
-    }
-    if (selectedComponentStack.current) {
-      stackItems.push({
-        label: "Current",
-        filePath: selectedComponentStack.current.filePath,
-        componentName: selectedComponentStack.current.componentName,
-        isCurrent: true,
-      });
-    }
-    if (selectedComponentStack.below) {
-      stackItems.push({
-        label: "Below",
-        filePath: selectedComponentStack.below.filePath,
-        componentName: selectedComponentStack.below.componentName,
-        isCurrent: false,
-      });
+    } else {
+      // Fallback to the old above/current/below structure
+      if (selectedComponentStack.above) {
+        stackItems.push({
+          label: "PARENT",
+          filePath: selectedComponentStack.above.filePath,
+          componentName: selectedComponentStack.above.componentName,
+          isCurrent: false,
+          index: 1,
+          level: 1,
+          isChild: false,
+          frame: selectedComponentStack.above,
+        });
+      }
+      if (selectedComponentStack.current) {
+        stackItems.push({
+          label: "CURRENT",
+          filePath: selectedComponentStack.current.filePath,
+          componentName: selectedComponentStack.current.componentName,
+          isCurrent: true,
+          index: 0,
+          level: 0,
+          isChild: false,
+          frame: selectedComponentStack.current,
+        });
+      }
+      if (selectedComponentStack.below) {
+        stackItems.push({
+          label: "CHILD",
+          filePath: selectedComponentStack.below.filePath,
+          componentName: selectedComponentStack.below.componentName,
+          isCurrent: false,
+          index: 2,
+          level: 1,
+          isChild: true,
+          frame: selectedComponentStack.below,
+        });
+      }
     }
   }
 
@@ -199,26 +289,62 @@ export function ElementSelectionOverlay({
           </button>
           {isDropdownOpen && stackItems.length > 0 && (
             <div className={styles.elementSelectionStackDropdownContent}>
-              {stackItems.map((item, index) => (
-                <div
-                  key={index}
-                  className={`${styles.elementSelectionStackItem} ${
-                    item.isCurrent ? styles.elementSelectionStackItemCurrent : ""
-                  }`}
-                >
-                  <div className={styles.elementSelectionStackItemLabel}>
-                    {item.label}
-                  </div>
-                  <div className={styles.elementSelectionStackItemPath}>
-                    {item.filePath}
-                  </div>
-                  {item.componentName && (
-                    <div className={styles.elementSelectionStackItemComponent}>
-                      {item.componentName}
+              {stackItems.map((item, index) => {
+                const handleItemClick = async (e: React.MouseEvent) => {
+                  e.stopPropagation();
+
+                  // Find DOM element associated with this component frame
+                  // Pass the currently selected element as context
+                  const element = await findElementFromStackFrame(
+                    item.frame,
+                    selectedElement
+                  );
+
+                  if (element && onStackItemSelect) {
+                    // Call the callback with the new element and target frame
+                    // The hook will update source info and component stack to show
+                    // the clicked component as CURRENT
+                    onStackItemSelect(element, item.frame);
+                  }
+                };
+
+                return (
+                  <div
+                    key={`${item.filePath}-${item.index}`}
+                    className={`${styles.elementSelectionStackItem} ${
+                      item.isCurrent
+                        ? styles.elementSelectionStackItemCurrent
+                        : ""
+                    } ${
+                      item.isChild ? styles.elementSelectionStackItemChild : ""
+                    } ${
+                      !item.isCurrent
+                        ? styles.elementSelectionStackItemClickable
+                        : ""
+                    }`}
+                    style={{
+                      paddingLeft: `${12 + item.level * 20}px`,
+                    }}
+                    onClick={!item.isCurrent ? handleItemClick : undefined}
+                  >
+                    {item.label && (
+                      <div className={styles.elementSelectionStackItemLabel}>
+                        {item.label}
+                      </div>
+                    )}
+                    <div className={styles.elementSelectionStackItemPath}>
+                      {item.filePath}
                     </div>
-                  )}
-                </div>
-              ))}
+                    {item.componentName && (
+                      <div
+                        className={styles.elementSelectionStackItemComponent}
+                      >
+                        {item.componentName}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

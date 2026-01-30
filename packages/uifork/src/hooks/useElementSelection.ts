@@ -17,6 +17,7 @@ export interface ComponentStackContext {
   above: ComponentStackFrame | null;
   current: ComponentStackFrame | null;
   below: ComponentStackFrame | null;
+  all: ComponentStackFrame[];
 }
 
 export interface UseElementSelectionReturn {
@@ -34,6 +35,8 @@ export interface UseElementSelectionReturn {
   selectedComponentStack: ComponentStackContext | null;
   /** Manually toggle selection mode */
   toggleSelectionMode: () => void;
+  /** Programmatically select an element */
+  selectElement: (element: Element) => Promise<void>;
 }
 
 /**
@@ -45,8 +48,9 @@ export function useElementSelection(
   const { activationShortcut, onSelect } = options;
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [hoveredElement, setHoveredElement] = useState<Element | null>(null);
-  const [hoveredSourceInfo, setHoveredSourceInfo] =
-    useState<SourceInfo | null>(null);
+  const [hoveredSourceInfo, setHoveredSourceInfo] = useState<SourceInfo | null>(
+    null
+  );
   const [selectedElement, setSelectedElement] = useState<Element | null>(null);
   const [selectedSourceInfo, setSelectedSourceInfo] =
     useState<SourceInfo | null>(null);
@@ -120,14 +124,17 @@ export function useElementSelection(
             }
 
             // Debounce source info fetching (100ms delay)
-            hoveredSourceInfoTimeoutRef.current = window.setTimeout(async () => {
-              if (element) {
-                const sourceInfo = await getSourceFromElement(element);
-                setHoveredSourceInfo(sourceInfo);
-              } else {
-                setHoveredSourceInfo(null);
-              }
-            }, 100);
+            hoveredSourceInfoTimeoutRef.current = window.setTimeout(
+              async () => {
+                if (element) {
+                  const sourceInfo = await getSourceFromElement(element);
+                  setHoveredSourceInfo(sourceInfo);
+                } else {
+                  setHoveredSourceInfo(null);
+                }
+              },
+              100
+            );
           }
         });
       }
@@ -152,7 +159,7 @@ export function useElementSelection(
         target.classList.contains("elementSelectionStackDropdownTrigger") ||
         target.closest(".elementSelectionStackDropdownTrigger") ||
         target.closest(".elementSelectionStackDropdownContent");
-      
+
       const isInsideUIFork = target.closest("[data-uifork]");
 
       // If there's a selected element and click is outside dropdown/UIFork, clear selection
@@ -185,11 +192,11 @@ export function useElementSelection(
           getComponentStackWithContext(element),
         ]);
 
+        // Log the selected element and its path
         if (sourceInfo.filePath) {
-          console.log("[UIFork] Selected element source:", sourceInfo);
-          console.log("[UIFork] Component stack:", componentStack);
-        } else {
-          console.log("[UIFork] Could not trace element to source file");
+          console.log(
+            `[UIFork] Selected: ${sourceInfo.componentName || "Unknown"} @ ${sourceInfo.filePath}`
+          );
         }
 
         setSelectedSourceInfo(sourceInfo);
@@ -346,6 +353,79 @@ export function useElementSelection(
     });
   }, []);
 
+  /**
+   * Programmatically select an element
+   * This is used when clicking on a component in the stack dropdown
+   */
+  const selectElement = useCallback(
+    async (
+      element: Element,
+      targetFrame?: ComponentStackFrame | null
+    ) => {
+      if (!isSelectionMode) {
+        return;
+      }
+
+      selectedElementRef.current = element;
+      setSelectedElement(element);
+
+      // Get source info and component stack from element
+      const [sourceInfo, componentStack] = await Promise.all([
+        getSourceFromElement(element),
+        getComponentStackWithContext(element),
+      ]);
+
+      // If we have a target frame (component clicked in dropdown), adjust the stack
+      // to show that component as CURRENT, but preserve the original hierarchy order
+      let adjustedStack = componentStack;
+      let finalSourceInfo = sourceInfo;
+      
+      if (targetFrame && targetFrame.componentName) {
+        // Find the target component in the stack
+        const targetIndex = componentStack.all.findIndex(
+          (frame) =>
+            frame.componentName === targetFrame.componentName &&
+            frame.filePath === targetFrame.filePath
+        );
+
+        if (targetIndex !== -1) {
+          // Keep the original stack order (preserves hierarchy)
+          // But mark the target component as CURRENT
+          const preservedStack = [...componentStack.all];
+
+          // Create adjusted stack context with target as current
+          // but keeping the original order
+          adjustedStack = {
+            current: preservedStack[targetIndex] || null,
+            above: targetIndex > 0 ? preservedStack[targetIndex - 1] : null,
+            below: targetIndex < preservedStack.length - 1 ? preservedStack[targetIndex + 1] : null,
+            all: preservedStack, // Keep original order
+          };
+
+          // Update source info to match the target component
+          finalSourceInfo = {
+            filePath: targetFrame.filePath,
+            lineNumber: targetFrame.lineNumber,
+            columnNumber: targetFrame.columnNumber,
+            componentName: targetFrame.componentName,
+          };
+        }
+      }
+
+      // Log the selected element and its path
+      if (finalSourceInfo.filePath) {
+        console.log(
+          `[UIFork] Selected: ${finalSourceInfo.componentName || "Unknown"} @ ${finalSourceInfo.filePath}`
+        );
+      }
+
+      setSelectedSourceInfo(finalSourceInfo);
+      setSelectedComponentStack(adjustedStack);
+      onSelect?.(element, finalSourceInfo);
+    },
+    [isSelectionMode, onSelect]
+  );
+
   return {
     isSelectionMode,
     hoveredElement,
@@ -354,5 +434,6 @@ export function useElementSelection(
     selectedSourceInfo,
     selectedComponentStack,
     toggleSelectionMode,
+    selectElement,
   };
 }

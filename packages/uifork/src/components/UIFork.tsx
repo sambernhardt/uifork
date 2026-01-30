@@ -255,6 +255,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     selectedElement,
     selectedSourceInfo,
     selectedComponentStack,
+    selectElement,
   } = useElementSelection({
     onSelect: (element, sourceInfo) => {
       // Element and source info are already logged in the hook
@@ -999,6 +1000,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         selectedSourceInfo={selectedSourceInfo}
         selectedComponentStack={selectedComponentStack}
         isActive={isSelectionMode}
+        onStackItemSelect={async (element, frame) => {
+          await selectElement(element, frame);
+        }}
       />
     </>,
     portalRoot

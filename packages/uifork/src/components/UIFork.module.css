@@ -855,7 +855,7 @@
 }
 
 .elementSelectionStackDropdownTrigger:hover {
-  background-color: var(--uifork-hover-bg);
+  background-color: var(--uifork-bg-hover);
 }
 
 .elementSelectionStackDropdownArrow {
@@ -877,6 +877,8 @@
 .elementSelectionStackItem {
   padding: 8px 12px;
   border-bottom: 1px solid var(--uifork-border-color);
+  position: relative;
+  transition: background-color 0.15s;
 }
 
 .elementSelectionStackItem:last-child {
@@ -884,6 +886,19 @@
 }
 
 .elementSelectionStackItemCurrent {
+  background-color: var(--uifork-hover-bg);
+}
+
+.elementSelectionStackItemChild {
+  border-left: 2px solid var(--uifork-border-color);
+  margin-left: 0;
+}
+
+.elementSelectionStackItemClickable {
+  cursor: pointer;
+}
+
+.elementSelectionStackItemClickable:hover {
   background-color: var(--uifork-hover-bg);
 }
 
