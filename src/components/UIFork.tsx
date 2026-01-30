@@ -634,7 +634,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   useEffect(() => {
     if (!isMounted) return;
 
-    let rootEl = document.getElementById("uifork-root");
+    let rootEl = document.getElementById(
+      "uifork-root",
+    ) as HTMLDivElement | null;
     if (!rootEl) {
       rootEl = document.createElement("div");
       rootEl.id = "uifork-root";
