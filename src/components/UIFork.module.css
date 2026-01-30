@@ -19,7 +19,8 @@
   --uifork-fg: var(--uifork-text-primary);
   --uifork-fg-secondary: var(--uifork-text-secondary);
   --uifork-hover-bg: rgba(255, 255, 255, 0.1);
-  --uifork-menu-item-height: 36px;
+  --uifork-menu-item-height: 32px;
+  --uifork-trigger-height: 32px;  
 }
 :global(#uifork-root[data-theme=light]) {
   --uifork-bg-dark: #ffffff;
@@ -96,10 +97,16 @@
   background-color: transparent;
   border: none;
   white-space: nowrap;
-  height: 40px;
+  height: var(--uifork-trigger-height); 
 }
 .trigger:hover {
   background-color: var(--uifork-hover-bg);
+}
+.trigger.triggerIconOnly {
+  padding: 4px;
+  width: var(--uifork-trigger-height);
+  height: var(--uifork-trigger-height);
+  justify-content: center;
 }
 .trigger.triggerEmpty {
   padding: 4px;

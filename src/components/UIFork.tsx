@@ -41,7 +41,8 @@ const ANIMATION_EASING = [0.04, 1.02, 0.13, 1.02] as const;
 
 // UI View States
 type ActiveView =
-  | "closed-trigger"
+  | "closed-trigger-icon"
+  | "closed-trigger-label"
   | "opened-version-list"
   | "opened-no-components"
   | "opened-no-connection"
@@ -661,7 +662,18 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   // Determine active view based on current state
   const activeView: ActiveView = React.useMemo(() => {
     if (!isOpen) {
-      return "closed-trigger";
+      // When closed, determine if we show icon-only or icon+label
+      const hasConnection =
+        connectionStatus !== "disconnected" && connectionStatus !== "failed";
+      const hasComponents = mountedComponents.length > 0;
+
+      // Show icon+label when connected and has components
+      if (hasConnection && hasComponents) {
+        return "closed-trigger-label";
+      }
+
+      // Otherwise show icon-only (error, connecting, or no components)
+      return "closed-trigger-icon";
     }
 
     // When dropdown is open, determine which view to show
@@ -678,7 +690,12 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     }
 
     return "opened-version-list";
-  }, [isOpen, connectionStatus, isSettingsOpen, mountedComponents.length]);
+  }, [
+    isOpen,
+    connectionStatus,
+    isSettingsOpen,
+    mountedComponents.length,
+  ]);
 
   // Don't render until mounted on client (prevents hydration mismatch)
   if (!isMounted) {
@@ -729,7 +746,8 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         }}
       >
         <AnimatePresence mode="popLayout" initial={false}>
-          {activeView === "closed-trigger" ? (
+          {activeView === "closed-trigger-icon" ||
+          activeView === "closed-trigger-label" ? (
             <motion.button
               key="trigger"
               suppressHydrationWarning
@@ -747,7 +765,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
               aria-expanded={false}
               aria-haspopup="listbox"
               className={`${styles.trigger} ${
-                mountedComponents.length === 0 ? styles.triggerEmpty : ""
+                activeView === "closed-trigger-icon"
+                  ? styles.triggerIconOnly
+                  : ""
               }`}
               layout
               initial={{ opacity: 0 }}
@@ -759,8 +779,11 @@ export function UIFork({ port = 3001 }: UIForkProps) {
               }}
               draggable={false}
             >
-              {connectionStatus === "disconnected" ||
-              connectionStatus === "failed" ? (
+              {activeView === "closed-trigger-icon" ? (
+                // Icon-only state: error, connecting, or no components
+                <>
+                  {connectionStatus === "disconnected" ||
+                  connectionStatus === "failed" ? (
                 <div className={styles.triggerIconContainer}>
                   <BranchIcon className={styles.triggerIcon} />
                   <div
@@ -768,10 +791,33 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                     title="Disconnected from watch server"
                   />
                 </div>
-              ) : mountedComponents.length === 0 ? (
-                <BranchIcon className={styles.triggerIcon} />
+                  ) : (
+                    <>
+                      {connectionStatus === "connecting" && (
+                        <div
+                          className={`${styles.statusIndicator} ${styles.statusIndicatorConnecting}`}
+                          title="Connecting..."
+                        />
+                      )}
+                      <BranchIcon className={styles.triggerIcon} />
+                    </>
+                  )}
+                </>
               ) : (
+                // Icon+label state: connected with components
                 <>
+                  {connectionStatus === "connecting" && (
+                    <div
+                      className={`${styles.statusIndicator} ${styles.statusIndicatorConnecting}`}
+                      title="Connecting..."
+                    />
+                  )}
+                  {connectionStatus === "connected" && (
+                    <div
+                      className={`${styles.statusIndicator} ${styles.statusIndicatorConnected}`}
+                      title="Connected to watch server"
+                    />
+                  )}
                   <BranchIcon className={styles.triggerIcon} />
                   <motion.span
                     layoutId="component-name"
@@ -920,7 +966,8 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       </motion.div>
 
       {/* Component selector dropdown */}
-      {activeView !== "closed-trigger" && (
+      {activeView !== "closed-trigger-icon" &&
+        activeView !== "closed-trigger-label" && (
         <ComponentSelectorDropdown
           mountedComponents={mountedComponents}
           selectedComponent={selectedComponent}
