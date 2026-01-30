@@ -73,7 +73,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   const [isComponentSelectorOpen, setIsComponentSelectorOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [openPopoverVersion, setOpenPopoverVersion] = useState<string | null>(
-    null,
+    null
   );
   const [componentSelectorPosition, setComponentSelectorPosition] = useState({
     x: 0,
@@ -98,14 +98,14 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   // Settings
   const [theme, setTheme] = useLocalStorage<"light" | "dark" | "system">(
     "uifork-theme",
-    "system",
+    "system"
   );
   const [position, setPosition] = useLocalStorage<
     "top-left" | "top-right" | "bottom-left" | "bottom-right"
   >("uifork-position", "bottom-right");
   const [codeEditor, setCodeEditor] = useLocalStorage<"vscode" | "cursor">(
     "uifork-code-editor",
-    "vscode",
+    "vscode"
   );
 
   // Root ref for theme wrapper
@@ -133,7 +133,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
 
   // Get current component's versions
   const currentComponent = mountedComponents.find(
-    (c) => c.name === selectedComponent,
+    (c) => c.name === selectedComponent
   );
   const versionKeys = currentComponent?.versions || [];
 
@@ -278,7 +278,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         // Check if clicking inside popover elements
         if (openPopoverVersion) {
           const popoverElements = document.querySelectorAll(
-            "[data-popover-dropdown]",
+            "[data-popover-dropdown]"
           );
           for (const el of popoverElements) {
             if (el.contains(target)) return true;
@@ -286,7 +286,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         }
         return false;
       },
-      [openPopoverVersion],
+      [openPopoverVersion]
     ),
   });
 
@@ -299,7 +299,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     )
       return;
     const trigger = containerRef.current.querySelector(
-      "[data-component-selector]",
+      "[data-component-selector]"
     ) as HTMLElement;
     if (!trigger) return;
 
@@ -312,7 +312,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
             placement: "left-start",
             strategy: "fixed",
             middleware: [offset(4), flip(), shift({ padding: 8 })],
-          },
+          }
         );
         setComponentSelectorPosition({ x, y });
         if (componentSelectorRef.current)
@@ -327,7 +327,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     const cleanup = autoUpdate(
       containerRef.current,
       componentSelectorRef.current,
-      updatePosition,
+      updatePosition
     );
     return cleanup;
   }, [isComponentSelectorOpen]);
@@ -368,7 +368,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         });
       }
     },
-    [confirmRename, sendMessage],
+    [confirmRename, sendMessage]
   );
 
   const handlePromoteVersion = (version: string, e: React.MouseEvent) => {
@@ -376,8 +376,8 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     if (
       window.confirm(
         `Are you sure you want to promote version ${formatVersionLabel(
-          version,
-        )}?\n\nThis will:\n- Replace the main component with this version\n- Remove all versioning scaffolding\n- This action cannot be undone`,
+          version
+        )}?\n\nThis will:\n- Replace the main component with this version\n- Remove all versioning scaffolding\n- This action cannot be undone`
       )
     ) {
       sendMessage("promote_version", { version });
@@ -433,7 +433,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   const getNearestCorner = useCallback(
     (
       x: number,
-      y: number,
+      y: number
     ): "top-left" | "top-right" | "bottom-left" | "bottom-right" => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
@@ -450,7 +450,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         return "bottom-right";
       }
     },
-    [],
+    []
   );
 
   // Handle drag end - snap to nearest corner
@@ -485,7 +485,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       // Trigger reset of drag transforms
       setResetDrag(true);
     },
-    [getNearestCorner, setPosition],
+    [getNearestCorner, setPosition]
   );
 
   // Handle pointer down - start tracking for drag threshold
@@ -500,7 +500,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         containerRef.current.setAttribute("data-drag-tracking", "true");
       }
     },
-    [isOpen],
+    [isOpen]
   );
 
   // Global pointer move handler to check threshold
@@ -641,7 +641,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     if (!isMounted) return;
 
     let rootEl = document.getElementById(
-      "uifork-root",
+      "uifork-root"
     ) as HTMLDivElement | null;
     if (!rootEl) {
       rootEl = document.createElement("div");
@@ -706,7 +706,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     <>
       <motion.div
         ref={containerRef}
-        className={`${styles.container} ${!isOpen ? styles.containerClosed : ""}`}
+        className={`${styles.container} ${
+          !isOpen ? styles.containerClosed : ""
+        }`}
         layout
         drag={dragEnabled && !isOpen}
         dragControls={dragControls}
@@ -964,6 +966,6 @@ export function UIFork({ port = 3001 }: UIForkProps) {
           />
         )}
     </>,
-    portalRoot,
+    portalRoot
   );
 }

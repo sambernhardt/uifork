@@ -13,8 +13,8 @@ npm install uifork
 ### 1. Add the UIFork component to your app
 
 ```tsx
-import { UIFork } from "uifork"
-import "uifork/style.css"
+import { UIFork } from "uifork";
+import "uifork/style.css";
 
 function App() {
   return (
@@ -22,7 +22,7 @@ function App() {
       <YourApp />
       {process.env.NODE_ENV === "development" && <UIFork />}
     </>
-  )
+  );
 }
 ```
 
@@ -33,6 +33,7 @@ uifork init src/components/Button.tsx
 ```
 
 This will:
+
 - Convert your component into a branched component that can be versioned
 - Generate a `versions.ts` file to track all versions
 - Start the watch server
@@ -40,10 +41,10 @@ This will:
 ### 3. Use your component as usual
 
 ```tsx
-import Button from './components/Button'
+import Button from "./components/Button";
 
 // Works exactly as before - the active version is controlled by the UIFork widget
-<Button onClick={handleClick}>Click me</Button>
+<Button onClick={handleClick}>Click me</Button>;
 ```
 
 ## CLI Commands
@@ -57,6 +58,7 @@ uifork init src/components/Dropdown.tsx
 ```
 
 Options:
+
 - `--W` - Don't start watching after init
 
 ### `uifork watch [directory]`
@@ -122,6 +124,7 @@ uifork promote Button v2
 ```
 
 This will:
+
 - Replace `Button.tsx` with the content from `Button.v2.tsx`
 - Delete all version files (`Button.v*.tsx`)
 - Delete `Button.versions.ts`
@@ -142,13 +145,14 @@ A floating UI widget that appears in your app during development. It connects to
 - **Open in editor** - Click to open the version file in VS Code or Cursor
 
 ```tsx
-import { UIFork } from "uifork"
-import "uifork/style.css"
+import { UIFork } from "uifork";
+import "uifork/style.css";
 
-<UIFork port={3001} /> // port defaults to 3001
+<UIFork port={3001} />; // port defaults to 3001
 ```
 
 **Features:**
+
 - Draggable to any corner of the screen
 - Keyboard shortcuts: `Cmd/Ctrl + Arrow Up/Down` to cycle through versions
 - Settings panel for theme (light/dark/system), position, and code editor preference
@@ -159,8 +163,8 @@ import "uifork/style.css"
 The wrapper component that renders the active version. This is automatically generated when you run `uifork init`, but you can also use it manually:
 
 ```tsx
-import { BranchedComponent } from "uifork"
-import { VERSIONS } from "./Button.versions"
+import { BranchedComponent } from "uifork";
+import { VERSIONS } from "./Button.versions";
 
 export default function Button(props) {
   return (
@@ -170,7 +174,7 @@ export default function Button(props) {
       props={props}
       defaultVersion="v1" // optional
     />
-  )
+  );
 }
 ```
 
@@ -222,6 +226,16 @@ npm run build
 npm run dev
 ```
 
+# To-dos
+
+- Make local react app for testing
+- Use component file trace for easier initialization
+- Use react lazy imports for versions.ts
+- Named exports
+- Add skills
+
 ## License
 
 MIT
+
+---
