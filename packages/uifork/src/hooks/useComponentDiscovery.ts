@@ -29,8 +29,20 @@ export function useComponentDiscovery({ port }: UseComponentDiscoveryOptions) {
   }>) => {
     setComponents(wsComponents);
 
+    // If we have a selected component, check if it still exists in the list
+    // If it does, keep it selected (don't override)
+    if (selectedComponent) {
+      const stillExists = wsComponents.some((c) => c.name === selectedComponent);
+      if (!stillExists && wsComponents.length > 0) {
+        // Selected component no longer exists, switch to first one
+        setSelectedComponent(wsComponents[0].name);
+      }
+      // If it still exists, keep it selected (don't change)
+      return;
+    }
+
     // If no component selected yet, select the first one
-    if (!selectedComponent && wsComponents.length > 0) {
+    if (wsComponents.length > 0) {
       setSelectedComponent(wsComponents[0].name);
     }
   }, [selectedComponent, setSelectedComponent]);
@@ -55,12 +67,20 @@ export function useComponentDiscovery({ port }: UseComponentDiscoveryOptions) {
       mountedComponentIds.length > 0 &&
       !mountedComponentIds.includes(selectedComponent)
     ) {
-      // Current selection is not mounted, switch to first mounted component
-      const firstMounted = components.find((c) =>
-        mountedComponentIds.includes(c.name),
-      );
-      if (firstMounted) {
-        setSelectedComponent(firstMounted.name);
+      // Check if the selected component exists in the components list
+      // (even if not mounted yet - it might be newly initialized)
+      const componentExists = components.some((c) => c.name === selectedComponent);
+      
+      // Only switch if the component doesn't exist in the list at all
+      // If it exists but isn't mounted yet, keep it selected (it will mount soon)
+      if (!componentExists) {
+        // Current selection doesn't exist, switch to first mounted component
+        const firstMounted = components.find((c) =>
+          mountedComponentIds.includes(c.name),
+        );
+        if (firstMounted) {
+          setSelectedComponent(firstMounted.name);
+        }
       }
     } else if (
       !selectedComponent &&

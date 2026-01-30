@@ -46,6 +46,8 @@ export interface ElementSelectionOverlayProps {
     type: WebSocketMessageType,
     payload: Record<string, unknown>
   ) => void;
+  /** Callback to clear selection and exit selection mode */
+  onForkComplete?: (componentName: string) => void;
 }
 
 /**
@@ -60,6 +62,7 @@ export function ElementSelectionOverlay({
   isActive,
   onStackItemSelect,
   sendMessage,
+  onForkComplete,
 }: ElementSelectionOverlayProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [hoveredItemIndex, setHoveredItemIndex] = useState<number | null>(null);
@@ -428,6 +431,20 @@ export function ElementSelectionOverlay({
               onClick={(e) => {
                 e.stopPropagation();
                 if (selectedSourceInfo?.filePath && sendMessage) {
+                  // Extract component name from file path (basename without extension)
+                  // This matches how the server extracts it: path.parse(resolvedPath).name
+                  const filePath = selectedSourceInfo.filePath;
+                  const pathParts = filePath.split("/");
+                  const fileName = pathParts[pathParts.length - 1];
+                  const componentName = fileName.replace(/\.[^/.]+$/, ""); // Remove extension
+
+                  // Set component in localStorage immediately (optimistic update)
+                  // The WebSocket ack will confirm and ensure it's set correctly
+                  if (onForkComplete) {
+                    onForkComplete(componentName);
+                  }
+
+                  // Send the init_component message
                   sendMessage("init_component", {
                     componentPath: selectedSourceInfo.filePath,
                   });

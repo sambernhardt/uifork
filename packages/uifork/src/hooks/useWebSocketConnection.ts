@@ -23,7 +23,7 @@ interface UseWebSocketConnectionOptions {
       name: string;
       path: string;
       versions: string[];
-    }>,
+    }>
   ) => void;
   onVersionAck?: (payload: {
     version: string;
@@ -31,6 +31,7 @@ interface UseWebSocketConnectionOptions {
     newVersion?: string;
   }) => void;
   onPromoted?: (componentName: string) => void;
+  onInitComponent?: (componentName: string) => void;
   onError?: (message: string) => void;
 }
 
@@ -41,6 +42,7 @@ export function useWebSocketConnection({
   onComponentsUpdate,
   onVersionAck,
   onPromoted,
+  onInitComponent,
   onError,
 }: UseWebSocketConnectionOptions) {
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
@@ -53,9 +55,10 @@ export function useWebSocketConnection({
   const onComponentsUpdateRef = useRef(onComponentsUpdate);
   const onVersionAckRef = useRef(onVersionAck);
   const onPromotedRef = useRef(onPromoted);
+  const onInitComponentRef = useRef(onInitComponent);
   const onErrorRef = useRef(onError);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
+    null
   );
   const isConnectingRef = useRef(false);
   const wsConnectionRef = useRef<WebSocket | null>(null);
@@ -77,8 +80,16 @@ export function useWebSocketConnection({
     onComponentsUpdateRef.current = onComponentsUpdate;
     onVersionAckRef.current = onVersionAck;
     onPromotedRef.current = onPromoted;
+    onInitComponentRef.current = onInitComponent;
     onErrorRef.current = onError;
-  }, [onFileChanged, onComponentsUpdate, onVersionAck, onPromoted, onError]);
+  }, [
+    onFileChanged,
+    onComponentsUpdate,
+    onVersionAck,
+    onPromoted,
+    onInitComponent,
+    onError,
+  ]);
 
   // WebSocket connection function
   const connectWebSocket = useCallback(() => {
@@ -92,7 +103,7 @@ export function useWebSocketConnection({
 
     const wsUrl = `ws://localhost:${port}/ws`;
     isConnectingRef.current = true;
-    
+
     // Only show "connecting" status on first attempt or if we've successfully connected before
     // This prevents animation flashes during retry loops
     if (retryCountRef.current === 0 || hasEverConnectedRef.current) {
@@ -163,22 +174,34 @@ export function useWebSocketConnection({
           onComponentsUpdateRef.current?.(data.payload.components);
         } else if (data.type === "file_changed") {
           onFileChangedRef.current?.();
-        } else if (data.type === "ack" && data.payload?.version) {
-          const message = data.payload.message || "";
-          const newVersion = data.payload.newVersion;
+        } else if (data.type === "ack") {
+          const message = data.payload?.message || "";
 
-          if (message.includes("promoted")) {
-            const promotedComponent =
-              data.payload.component || selectedComponentRef.current;
-            onPromotedRef.current?.(promotedComponent);
+          // Handle init_component ack (has component but no version)
+          if (data.payload?.component && !data.payload?.version) {
+            if (message.includes("initialized component")) {
+              onInitComponentRef.current?.(data.payload.component);
+            }
             return;
           }
 
-          onVersionAckRef.current?.({
-            version: data.payload.version,
-            message,
-            newVersion,
-          });
+          // Handle version-related acks (has version field)
+          if (data.payload?.version) {
+            const newVersion = data.payload.newVersion;
+
+            if (message.includes("promoted")) {
+              const promotedComponent =
+                data.payload.component || selectedComponentRef.current;
+              onPromotedRef.current?.(promotedComponent);
+              return;
+            }
+
+            onVersionAckRef.current?.({
+              version: data.payload.version,
+              message,
+              newVersion,
+            });
+          }
         } else if (data.type === "error") {
           onErrorRef.current?.(data.payload?.message || "Unknown error");
         }
@@ -228,13 +251,13 @@ export function useWebSocketConnection({
           JSON.stringify({
             type,
             payload: { ...payload, component: selectedComponentRef.current },
-          }),
+          })
         );
       } else {
         // WebSocket not connected, cannot send message
       }
     },
-    [wsConnection],
+    [wsConnection]
   );
 
   return {

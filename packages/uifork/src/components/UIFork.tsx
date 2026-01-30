@@ -175,6 +175,10 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         storePendingVersion(versionToActivate);
       }
     },
+    onInitComponent: (componentName) => {
+      // Set the selected component when init_component completes
+      setSelectedComponent(componentName);
+    },
     onPromoted: (promotedComponent) => {
       // Always check localStorage directly and remove if it matches the promoted component
       // This handles cases where state might be stale but localStorage has the value
@@ -257,6 +261,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     selectedComponentStack,
     branchedComponentElements,
     selectElement,
+    toggleSelectionMode,
   } = useElementSelection({
     onSelect: (element, sourceInfo) => {
       // Element and source info are already logged in the hook
@@ -1005,8 +1010,15 @@ export function UIFork({ port = 3001 }: UIForkProps) {
           await selectElement(element, frame);
         }}
         sendMessage={sendMessage}
+        onForkComplete={(componentName) => {
+          // Clear the selected element and exit element select mode
+          if (isSelectionMode) {
+            toggleSelectionMode();
+          }
+          // Set the selected component in UIFork
+          setSelectedComponent(componentName);
+        }}
       />
-
     </>,
     portalRoot
   );
