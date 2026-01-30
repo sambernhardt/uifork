@@ -21,11 +21,8 @@
     "lib"
   ],
   "scripts": {
-    "build:css": "sass src/components/UIFork.module.scss src/components/UIFork.module.css --no-source-map",
-    "watch:css": "sass --watch src/components/UIFork.module.scss:src/components/UIFork.module.css --no-source-map",
-    "build": "npm run build:css && tsup",
-    "dev": "npm run build:css && tsup --watch",
-    "dev:css": "npm run watch:css",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -68,7 +65,6 @@
     "@types/react-dom": "^18.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "sass": "^1.77.0",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0"
   },
