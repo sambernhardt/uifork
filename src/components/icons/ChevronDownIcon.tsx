@@ -1,3 +1,4 @@
+import { IconChevronDown } from "@tabler/icons-react";
 import React from "react";
 
 interface ChevronDownIconProps {
@@ -5,15 +6,5 @@ interface ChevronDownIconProps {
 }
 
 export function ChevronDownIcon({ className }: ChevronDownIconProps) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 16 16">
-      <path
-        d="M4 6l4 4 4-4"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <IconChevronDown className={className} size={16} stroke={2} />;
 }
