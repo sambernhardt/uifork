@@ -5,11 +5,13 @@ Local development environment for testing UIFork components directly from source
 ## Setup
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 Or from the root directory:
+
 ```bash
 cd sandbox && npm install
 ```
@@ -17,11 +19,13 @@ cd sandbox && npm install
 ## Development
 
 Run the dev server:
+
 ```bash
 npm run dev
 ```
 
 Or from the root directory:
+
 ```bash
 npm run sandbox
 ```
@@ -41,6 +45,7 @@ resolve: {
 ```
 
 This allows you to import components like:
+
 ```ts
 import { UIFork, BranchedComponent } from "uifork";
 ```
