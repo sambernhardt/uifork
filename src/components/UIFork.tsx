@@ -7,7 +7,7 @@ import {
 } from "@floating-ui/dom";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useDragControls } from "motion/react";
 import type { UIForkProps } from "../types";
 import styles from "./UIFork.module.css";
 import { PlusIcon } from "./icons/PlusIcon";
@@ -71,6 +71,20 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     y: 0,
   });
   const [copied, setCopied] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [resetDrag, setResetDrag] = useState(false);
+  const [dragEnabled, setDragEnabled] = useState(false);
+  const [pointerStart, setPointerStart] = useState<{
+    x: number;
+    y: number;
+    event: PointerEvent | null;
+  } | null>(null);
+
+  // Drag controls for manual drag initiation
+  const dragControls = useDragControls();
+
+  // Drag threshold in pixels
+  const DRAG_THRESHOLD = 5;
 
   // Settings
   const [theme, setTheme] = useLocalStorage<"light" | "dark" | "system">(
@@ -402,6 +416,174 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     }
   }, []);
 
+  // Calculate nearest corner based on position
+  const getNearestCorner = useCallback(
+    (
+      x: number,
+      y: number,
+    ): "top-left" | "top-right" | "bottom-left" | "bottom-right" => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const centerX = viewportWidth / 2;
+      const centerY = viewportHeight / 2;
+
+      if (x < centerX && y < centerY) {
+        return "top-left";
+      } else if (x >= centerX && y < centerY) {
+        return "top-right";
+      } else if (x < centerX && y >= centerY) {
+        return "bottom-left";
+      } else {
+        return "bottom-right";
+      }
+    },
+    [],
+  );
+
+  // Handle drag end - snap to nearest corner
+  const handleDragEnd = useCallback(
+    (event: PointerEvent, info: { point: { x: number; y: number } }) => {
+      setIsDragging(false);
+      setDragEnabled(false);
+      setPointerStart(null);
+
+      // Reset cursor on document body and container
+      document.body.style.removeProperty("cursor");
+      document.body.style.userSelect = "";
+      if (containerRef.current) {
+        containerRef.current.style.removeProperty("cursor");
+        containerRef.current.removeAttribute("data-drag-tracking");
+        containerRef.current.removeAttribute("data-dragging");
+      }
+
+      // Get current container position (includes drag transforms)
+      if (!containerRef.current) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      // Calculate nearest corner based on center of container
+      const nearestCorner = getNearestCorner(centerX, centerY);
+
+      // Update position (will save to localStorage automatically)
+      setPosition(nearestCorner);
+
+      // Trigger reset of drag transforms
+      setResetDrag(true);
+    },
+    [getNearestCorner, setPosition],
+  );
+
+  // Handle pointer down - start tracking for drag threshold
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (isOpen) return; // Don't allow dragging when open
+      const pointerEvent = e.nativeEvent as PointerEvent;
+      setPointerStart({ x: e.clientX, y: e.clientY, event: pointerEvent });
+      setDragEnabled(false);
+      // Add data attribute to container for CSS targeting
+      if (containerRef.current) {
+        containerRef.current.setAttribute("data-drag-tracking", "true");
+      }
+    },
+    [isOpen],
+  );
+
+  // Global pointer move handler to check threshold
+  useEffect(() => {
+    if (!pointerStart || isOpen) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const deltaX = Math.abs(e.clientX - pointerStart.x);
+      const deltaY = Math.abs(e.clientY - pointerStart.y);
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      if (distance > DRAG_THRESHOLD && !dragEnabled) {
+        setDragEnabled(true);
+        setResetDrag(false);
+        // Start drag manually using the current pointer event
+        // This ensures drag starts from the current position, not causing a jump
+        dragControls.start(e, { snapToCursor: true });
+      }
+    };
+
+    const handlePointerUp = () => {
+      if (!dragEnabled) {
+        // If drag wasn't enabled, reset everything
+        setPointerStart(null);
+        setDragEnabled(false);
+        // Reset cursor on document body and container
+        document.body.style.removeProperty("cursor");
+        if (containerRef.current) {
+          containerRef.current.style.removeProperty("cursor");
+          containerRef.current.removeAttribute("data-drag-tracking");
+        }
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [pointerStart, isOpen, dragEnabled, dragControls]);
+
+  // Handle drag start (only called after threshold is crossed)
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+    setResetDrag(false);
+    // Set cursor on document body and container to ensure it stays grabbing
+    // Use !important to override any CSS cursor styles
+    document.body.style.setProperty("cursor", "grabbing", "important");
+    document.body.style.userSelect = "none";
+    if (containerRef.current) {
+      containerRef.current.style.setProperty("cursor", "grabbing", "important");
+      containerRef.current.setAttribute("data-dragging", "true");
+    }
+  }, []);
+
+  // Reset drag transforms after position update
+  useEffect(() => {
+    if (resetDrag && !isDragging) {
+      // Reset flag after animation completes
+      const timer = setTimeout(
+        () => {
+          setResetDrag(false);
+        },
+        ANIMATION_DURATION * 1000 + 50,
+      );
+      return () => clearTimeout(timer);
+    }
+  }, [resetDrag, isDragging]);
+
+  // Cleanup: Reset cursor when dropdown opens or component unmounts
+  useEffect(() => {
+    if (isOpen && (isDragging || dragEnabled)) {
+      // Reset drag state when dropdown opens
+      setIsDragging(false);
+      setDragEnabled(false);
+      setPointerStart(null);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    }
+  }, [isOpen, isDragging, dragEnabled]);
+
+  // Cleanup: Reset cursor on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.removeProperty("cursor");
+      document.body.style.userSelect = "";
+      if (containerRef.current) {
+        containerRef.current.style.removeProperty("cursor");
+        containerRef.current.removeAttribute("data-drag-tracking");
+        containerRef.current.removeAttribute("data-dragging");
+      }
+    };
+  }, []);
+
   // Calculate container position based on settings
   const containerPosition = React.useMemo(() => {
     const offset = 20;
@@ -481,14 +663,33 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         ref={containerRef}
         className={styles.container}
         layout
+        drag={dragEnabled && !isOpen}
+        dragControls={dragControls}
+        dragMomentum={false}
+        dragElastic={0}
+        dragListener={false}
+        onPointerDown={handlePointerDown}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        animate={resetDrag ? { x: 0, y: 0 } : {}}
         style={{
           borderRadius: 12,
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           ...containerPosition,
           transformOrigin,
+          // Don't set cursor here - we handle it on document.body to override CSS
+          touchAction: !isOpen ? "none" : "auto",
         }}
         transition={{
           layout: {
+            duration: ANIMATION_DURATION,
+            ease: ANIMATION_EASING,
+          },
+          x: {
+            duration: ANIMATION_DURATION,
+            ease: ANIMATION_EASING,
+          },
+          y: {
             duration: ANIMATION_DURATION,
             ease: ANIMATION_EASING,
           },
@@ -500,7 +701,12 @@ export function UIFork({ port = 3001 }: UIForkProps) {
               key="trigger"
               suppressHydrationWarning
               ref={triggerRef}
-              onClick={() => {
+              onClick={(e) => {
+                // Prevent opening if we just finished dragging
+                if (isDragging) {
+                  e.preventDefault();
+                  return;
+                }
                 setIsOpen(true);
                 setIsSettingsOpen(false);
               }}
@@ -518,6 +724,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                 duration: ANIMATION_DURATION,
                 ease: ANIMATION_EASING,
               }}
+              draggable={false}
             >
               {mountedComponents.length === 0 ? (
                 <BranchIcon className={styles.triggerIcon} />
