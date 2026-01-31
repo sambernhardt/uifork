@@ -341,12 +341,17 @@ export function useExistingDevToolPositions(enabled: boolean = true): DevToolPos
       updateFixedElements();
     };
 
-    // Initial scan with delay
-    const timeoutId = setTimeout(() => {
+    const performScan = () => {
+      if (!isMounted) return;
       const fixed = findFixedPositionElements();
       fixedElementsRef.current = fixed;
       setFixedElements(fixed);
       setupObservers(fixed);
+    };
+
+    // Initial scan with delay
+    const timeoutId1 = setTimeout(() => {
+      performScan();
 
       // Observe the document body for new fixed position elements
       mutationObserver = new MutationObserver(() => {
@@ -366,10 +371,16 @@ export function useExistingDevToolPositions(enabled: boolean = true): DevToolPos
       window.addEventListener("resize", handleResize);
     }, 50);
 
+    // Second initial scan with delay
+    const timeoutId2 = setTimeout(() => {
+      performScan();
+    }, 250);
+
     // Cleanup function
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
       if (updateTimeout) {
         clearTimeout(updateTimeout);
       }
