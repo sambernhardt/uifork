@@ -20,7 +20,7 @@ export function EmptyStateNoComponents({ onCopyCommand, copied }: EmptyStateNoCo
         title="Copy command"
         aria-label="Copy command to clipboard"
       >
-        <code className={styles.emptyStateCommand}>uifork init &lt;path to file&gt;</code>
+        <code className={styles.emptyStateCommand}>npx uifork init &lt;path to file&gt;</code>
         {copied ? (
           <CheckmarkIcon className={styles.emptyStateCopyIcon} />
         ) : (

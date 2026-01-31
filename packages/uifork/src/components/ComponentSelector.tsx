@@ -120,7 +120,7 @@ export function ComponentSelectorDropdown({
       <div className={styles.componentSelectorDropdownHint}>
         <InfoIcon className={styles.componentSelectorDropdownHintIcon} />
         <span>
-          Use <code className={styles.componentSelectorDropdownHintCode}>uifork init</code> to
+          Use <code className={styles.componentSelectorDropdownHintCode}>npx uifork init</code> to
           iterate on more components
         </span>
       </div>

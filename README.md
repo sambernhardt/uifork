@@ -128,7 +128,7 @@ function App() {
 ### 2. Initialize a component for versioning
 
 ```bash
-uifork init src/components/Button.tsx
+npx uifork init src/components/Button.tsx
 ```
 
 This will:
@@ -148,78 +148,100 @@ import Button from "./components/Button";
 
 ## CLI Commands
 
-### `uifork init <component-path>`
+After installing `uifork` locally, use `npx` to run the CLI commands:
+
+### `npx uifork init <component-path>`
 
 Initialize versioning for an existing component.
 
 ```bash
-uifork init src/components/Dropdown.tsx
+npx uifork init src/components/Dropdown.tsx
 ```
 
 Options:
 
 - `--W` - Don't start watching after init
 
-### `uifork watch [directory]`
+### `npx uifork watch [directory]`
 
 Start the watch server. This enables the UI widget to communicate with your codebase.
 
 ```bash
 # Watch current directory (default)
-uifork watch
+npx uifork watch
 
 # Watch a specific directory
-uifork watch ./src
+npx uifork watch ./src
 ```
 
-### `uifork new <component-path> [version-id]`
+### `npx uifork new <component-path> [version-id]`
 
 Create a new empty version file.
 
 ```bash
 # Auto-increment version number
-uifork new Button
+npx uifork new Button
 
 # Specify version explicitly
-uifork new Button v3
+npx uifork new Button v3
 ```
 
-### `uifork fork <component-path> <version-id> [target-version]`
+### `npx uifork fork <component-path> <version-id> [target-version]`
 
 Fork an existing version to create a new one.
 
 ```bash
 # Fork v1 to auto-incremented version
-uifork fork Button v1
+npx uifork fork Button v1
 
 # Fork v1 to specific version
-uifork fork Button v1 v2
+npx uifork fork Button v1 v2
 ```
 
-Alias: `uifork duplicate`
+Alias: `npx uifork duplicate`
 
-### `uifork rename <component-path> <version-id> <new-version-id>`
+### `npx uifork rename <component-path> <version-id> <new-version-id>`
 
 Rename a version.
 
 ```bash
-uifork rename Button v1 v2
+npx uifork rename Button v1 v2
 ```
 
-### `uifork delete <component-path> <version-id>`
+### `npx uifork delete <component-path> <version-id>`
 
 Delete a version (must have at least one version remaining).
 
 ```bash
-uifork delete Button v2
+npx uifork delete Button v2
 ```
 
-### `uifork promote <component-path> <version-id>`
+### `npx uifork promote <component-path> <version-id>`
 
 Promote a version to be the main component and remove all versioning scaffolding.
 
 ```bash
-uifork promote Button v2
+npx uifork promote Button v2
+```
+
+**Alternative:** You can also add scripts to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "uifork:watch": "uifork watch",
+    "uifork:init": "uifork init"
+  }
+}
+```
+
+Then run: `npm run uifork:watch`
+
+**Or install globally** (optional):
+
+```bash
+npm install -g uifork
+# Then use directly: uifork init ...
 ```
 
 This will:
@@ -283,7 +305,7 @@ You can configure UIFork via HTML data attributes:
 
 ### `BranchedComponent`
 
-The wrapper component that renders the active version. This is automatically generated when you run `uifork init`, but you can also use it manually:
+The wrapper component that renders the active version. This is automatically generated when you run `npx uifork init`, but you can also use it manually:
 
 ```tsx
 import { BranchedComponent } from "uifork";
@@ -303,7 +325,7 @@ export default function Button(props) {
 
 ## File Structure
 
-After running `uifork init src/components/Button.tsx`:
+After running `npx uifork init src/components/Button.tsx`:
 
 ```
 src/components/

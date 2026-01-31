@@ -328,7 +328,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
 
   // Copy command to clipboard
   const handleCopyCommand = useCallback(async () => {
-    const command = "uifork init ";
+    const command = "npx uifork init ";
     try {
       await navigator.clipboard.writeText(command);
       setCopied(true);

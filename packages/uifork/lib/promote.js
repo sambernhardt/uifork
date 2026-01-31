@@ -242,7 +242,7 @@ class VersionPromoter {
     // Validate that wrapper file exists
     if (!fs.existsSync(this.wrapperFile)) {
       throw new Error(
-        `Wrapper file not found: ${this.wrapperFile}. Make sure you've run 'uifork init' first.`,
+        `Wrapper file not found: ${this.wrapperFile}. Make sure you've run 'npx uifork init' first.`,
       );
     }
 
