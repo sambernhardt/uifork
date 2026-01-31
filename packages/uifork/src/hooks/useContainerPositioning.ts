@@ -156,6 +156,8 @@ interface DevToolPosition {
     left: number;
     right: number;
   };
+  /** Whether this element is the Next.js dev tools indicator */
+  isNextJSDevTools: boolean;
 }
 
 /**
@@ -211,6 +213,116 @@ function findNextJSDevToolsIndicator(): HTMLElement | null {
 }
 
 /**
+ * Parse the CSS translate property value.
+ * Handles formats like "10px 20px", "10px", or "none"
+ * Returns { x: number, y: number } with pixel values, or { x: 0, y: 0 } if not found.
+ */
+function parseTranslateValue(translateValue: string): { x: number; y: number } {
+  if (!translateValue || translateValue === "none") return { x: 0, y: 0 };
+  
+  // CSS translate property format: "Xpx Ypx" or "Xpx"
+  const parts = translateValue.trim().split(/\s+/);
+  
+  const x = parseFloat(parts[0]) || 0;
+  const y = parseFloat(parts[1]) || 0;
+  
+  return { x, y };
+}
+
+/**
+ * Get the translate offset for a Next.js dev tools indicator.
+ * Looks for a child element with class "dev-tools-grabbing" and reads its translate style.
+ */
+function getNextJSDevToolsTranslate(indicator: HTMLElement): { x: number; y: number } {
+  // Look for the dev-tools-grabbing element within the indicator
+  const grabbingElement = indicator.querySelector(".dev-tools-grabbing");
+  
+  if (grabbingElement instanceof HTMLElement) {
+    const translateValue = grabbingElement.style.translate;
+    return parseTranslateValue(translateValue);
+  }
+  
+  return { x: 0, y: 0 };
+}
+
+/**
+ * Calculate the DevToolPosition data for a single fixed element.
+ * Returns null if the element is not in fixed position or should be skipped.
+ */
+function calculateElementPosition(
+  element: HTMLElement,
+  uiforkRoot: HTMLElement | null,
+  viewportWidth: number,
+  viewportHeight: number,
+  viewportCenterX: number,
+  viewportCenterY: number,
+  isNextJSDevTools: boolean = false
+): DevToolPosition | null {
+  // Skip elements inside #uifork-root
+  if (uiforkRoot && uiforkRoot.contains(element)) {
+    return null;
+  }
+
+  const computedStyle = window.getComputedStyle(element);
+  if (computedStyle.position !== "fixed") {
+    return null;
+  }
+
+  const rect = element.getBoundingClientRect();
+  
+  // For Next.js dev tools, get any translate offset from the dev-tools-grabbing child
+  const translate = isNextJSDevTools ? getNextJSDevToolsTranslate(element) : { x: 0, y: 0 };
+  
+  // Apply translate to get the effective position
+  const effectiveRect = {
+    top: rect.top + translate.y,
+    bottom: rect.bottom + translate.y,
+    left: rect.left + translate.x,
+    right: rect.right + translate.x,
+  };
+  
+  const elementCenterX = effectiveRect.left + rect.width / 2;
+  const elementCenterY = effectiveRect.top + rect.height / 2;
+
+  // Determine corner position
+  let position: CornerPosition;
+  if (elementCenterY < viewportCenterY) {
+    // Top half
+    position = elementCenterX < viewportCenterX ? "top-left" : "top-right";
+  } else {
+    // Bottom half
+    position = elementCenterX < viewportCenterX ? "bottom-left" : "bottom-right";
+  }
+
+  // Calculate offset from nearest edge (max of x and y offsets)
+  let offset: number;
+  switch (position) {
+    case "top-left":
+      offset = Math.max(effectiveRect.left, effectiveRect.top);
+      break;
+    case "top-right":
+      offset = Math.max(viewportWidth - effectiveRect.right, effectiveRect.top);
+      break;
+    case "bottom-left":
+      offset = Math.max(effectiveRect.left, viewportHeight - effectiveRect.bottom);
+      break;
+    case "bottom-right":
+      offset = Math.max(viewportWidth - effectiveRect.right, viewportHeight - effectiveRect.bottom);
+      break;
+  }
+
+  return {
+    element,
+    position,
+    offset,
+    width: rect.width,
+    height: rect.height,
+    rect: effectiveRect,
+    isNextJSDevTools,
+  };
+}
+
+/**
  * Helper function to process a fixed position element and add it to the results.
  */
 function processFixedElement(
@@ -220,59 +332,20 @@ function processFixedElement(
   viewportHeight: number,
   viewportCenterX: number,
   viewportCenterY: number,
-  fixed: DevToolPosition[]
+  fixed: DevToolPosition[],
+  isNextJSDevTools: boolean = false
 ): void {
-  // Skip elements inside #uifork-root
-  if (uiforkRoot && uiforkRoot.contains(element)) {
-    return;
-  }
-
-  const computedStyle = window.getComputedStyle(element);
-  if (computedStyle.position === "fixed") {
-    const rect = element.getBoundingClientRect();
-    const elementCenterX = rect.left + rect.width / 2;
-    const elementCenterY = rect.top + rect.height / 2;
-
-    // Determine corner position
-    let position: CornerPosition;
-    if (elementCenterY < viewportCenterY) {
-      // Top half
-      position = elementCenterX < viewportCenterX ? "top-left" : "top-right";
-    } else {
-      // Bottom half
-      position = elementCenterX < viewportCenterX ? "bottom-left" : "bottom-right";
-    }
-
-    // Calculate offset from nearest edge (max of x and y offsets)
-    let offset: number;
-    switch (position) {
-      case "top-left":
-        offset = Math.max(rect.left, rect.top);
-        break;
-      case "top-right":
-        offset = Math.max(viewportWidth - rect.right, rect.top);
-        break;
-      case "bottom-left":
-        offset = Math.max(rect.left, viewportHeight - rect.bottom);
-        break;
-      case "bottom-right":
-        offset = Math.max(viewportWidth - rect.right, viewportHeight - rect.bottom);
-        break;
-    }
-
-    fixed.push({
-      element,
-      position,
-      offset,
-      width: rect.width,
-      height: rect.height,
-      rect: {
-        top: rect.top,
-        bottom: rect.bottom,
-        left: rect.left,
-        right: rect.right,
-      },
-    });
+  const result = calculateElementPosition(
+    element,
+    uiforkRoot,
+    viewportWidth,
+    viewportHeight,
+    viewportCenterX,
+    viewportCenterY,
+    isNextJSDevTools
+  );
+  if (result) {
+    fixed.push(result);
   }
 }
 
@@ -316,7 +389,8 @@ function findFixedPositionElements(): DevToolPosition[] {
       viewportHeight,
       viewportCenterX,
       viewportCenterY,
-      fixed
+      fixed,
+      true // isNextJSDevTools
     );
   }
 
@@ -326,158 +400,133 @@ function findFixedPositionElements(): DevToolPosition[] {
 /**
  * Hook that finds all fixed position elements in the document body,
  * determines their corner position, calculates offset from edge,
- * returns them, and logs them to the console.
- * Sets up observers to detect when elements move or change position.
+ * and returns them. Sets up mutation observers on tracked elements
+ * to detect style changes and re-calculate positions.
  */
 export function useExistingDevToolPositions(enabled: boolean = true): DevToolPosition[] {
   const [fixedElements, setFixedElements] = useState<DevToolPosition[]>([]);
-  const fixedElementsRef = useRef<DevToolPosition[]>([]);
+  const mutationObserversRef = useRef<Map<HTMLElement, MutationObserver>>(new Map());
 
   useEffect(() => {
     if (!enabled) {
       setFixedElements([]);
-      fixedElementsRef.current = [];
+      // Clean up any existing mutation observers
+      mutationObserversRef.current.forEach((observer) => observer.disconnect());
+      mutationObserversRef.current.clear();
       return;
     }
 
-    let resizeObservers: ResizeObserver[] = [];
-    let mutationObserver: MutationObserver | null = null;
     let isMounted = true;
-    let isSettingUpObservers = false;
-    let updateTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    // Helper to check if two arrays have the same elements
-    const elementsEqual = (a: DevToolPosition[], b: DevToolPosition[]): boolean => {
-      if (a.length !== b.length) return false;
-      return a.every((elA, idx) => {
-        const elB = b[idx];
-        return (
-          elA.element === elB.element &&
-          elA.position === elB.position &&
-          elA.offset === elB.offset &&
-          elA.width === elB.width &&
-          elA.height === elB.height &&
-          elA.rect.top === elB.rect.top &&
-          elA.rect.bottom === elB.rect.bottom &&
-          elA.rect.left === elB.rect.left &&
-          elA.rect.right === elB.rect.right
-        );
-      });
-    };
+    // Re-process a single element and update its data in state
+    const reprocessElement = (element: HTMLElement, isNextJSDevTools: boolean) => {
+      if (!isMounted) return;
 
-    const setupObservers = (fixed: DevToolPosition[]) => {
-      if (isSettingUpObservers) return; // Prevent recursive calls
-      isSettingUpObservers = true;
+      const uiforkRoot = document.getElementById("uifork-root");
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const viewportCenterX = viewportWidth / 2;
+      const viewportCenterY = viewportHeight / 2;
 
-      // Clean up existing resize observers
-      resizeObservers.forEach((observer) => observer.disconnect());
-      resizeObservers = [];
+      const updatedData = calculateElementPosition(
+        element,
+        uiforkRoot,
+        viewportWidth,
+        viewportHeight,
+        viewportCenterX,
+        viewportCenterY,
+        isNextJSDevTools
+      );
 
-      // Set up ResizeObserver for each fixed element to detect position/size changes
-      fixed.forEach(({ element }) => {
-        const resizeObserver = new ResizeObserver(() => {
-          if (!isMounted || isSettingUpObservers) return;
-          
-          // Debounce updates
-          if (updateTimeout) {
-            clearTimeout(updateTimeout);
-          }
-          
-          updateTimeout = setTimeout(() => {
-            if (!isMounted) return;
-            // Element size or position changed, update positions
-            const updated = findFixedPositionElements();
-            
-            // Only update if something actually changed
-            const current = fixedElementsRef.current;
-            if (!elementsEqual(updated, current)) {
-              fixedElementsRef.current = updated;
-              setFixedElements(updated);
-              // Re-setup observers for potentially new elements
-              setupObservers(updated);
-            }
-          }, 100);
-        });
-        resizeObserver.observe(element);
-        resizeObservers.push(resizeObserver);
-      });
-
-      isSettingUpObservers = false;
-    };
-
-    const updateFixedElements = () => {
-      if (!isMounted || isSettingUpObservers) return;
-      
-      // Debounce updates
-      if (updateTimeout) {
-        clearTimeout(updateTimeout);
-      }
-      
-      updateTimeout = setTimeout(() => {
-        if (!isMounted) return;
-        const fixed = findFixedPositionElements();
-        
-        // Only update if something actually changed
-        if (!elementsEqual(fixed, fixedElementsRef.current)) {
-          fixedElementsRef.current = fixed;
-          setFixedElements(fixed);
-          setupObservers(fixed);
+      if (!updatedData) {
+        // Element is no longer fixed or should be skipped, remove it from tracking
+        setFixedElements((prev) => prev.filter((el) => el.element !== element));
+        const observer = mutationObserversRef.current.get(element);
+        if (observer) {
+          observer.disconnect();
+          mutationObserversRef.current.delete(element);
         }
-      }, 100);
+        return;
+      }
+
+      // Update the element in state
+      setFixedElements((prev) => {
+        const index = prev.findIndex((el) => el.element === element);
+        if (index === -1) return prev;
+        const updated = [...prev];
+        updated[index] = updatedData;
+        return updated;
+      });
     };
 
+    // Set up a MutationObserver for a tracked element
+    const setupMutationObserver = (element: HTMLElement, isNextJSDevTools: boolean) => {
+      // Skip if we already have an observer for this element
+      if (mutationObserversRef.current.has(element)) return;
+
+      const observer = new MutationObserver(() => {
+        if (!isMounted) return;
+        reprocessElement(element, isNextJSDevTools);
+      });
+
+      observer.observe(element, {
+        attributes: true,
+        attributeFilter: ["style"],
+        subtree: true,
+      });
+
+      mutationObserversRef.current.set(element, observer);
+    };
+
+    // Handle viewport resize - re-process all tracked elements
     const handleResize = () => {
       if (!isMounted) return;
-      updateFixedElements();
+
+      const uiforkRoot = document.getElementById("uifork-root");
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const viewportCenterX = viewportWidth / 2;
+      const viewportCenterY = viewportHeight / 2;
+
+      setFixedElements((prev) => {
+        return prev
+          .map(({ element, isNextJSDevTools }) =>
+            calculateElementPosition(
+              element,
+              uiforkRoot,
+              viewportWidth,
+              viewportHeight,
+              viewportCenterX,
+              viewportCenterY,
+              isNextJSDevTools
+            )
+          )
+          .filter((el): el is DevToolPosition => el !== null);
+      });
     };
 
-    const performScan = () => {
+    // Perform initial scan after delay to allow page to load
+    const timeoutId = setTimeout(() => {
       if (!isMounted) return;
+
       const fixed = findFixedPositionElements();
-      fixedElementsRef.current = fixed;
       setFixedElements(fixed);
-      setupObservers(fixed);
-    };
 
-    // Initial scan with delay
-    const timeoutId1 = setTimeout(() => {
-      performScan();
-
-      // Observe the document body for new fixed position elements
-      mutationObserver = new MutationObserver(() => {
-        if (!isMounted) return;
-        // When DOM changes, rescan for new fixed elements
-        updateFixedElements();
+      // Set up mutation observers for each found element
+      fixed.forEach(({ element, isNextJSDevTools }) => {
+        setupMutationObserver(element, isNextJSDevTools);
       });
-
-      mutationObserver.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["style", "class"],
-      });
-
-      // Handle viewport resize which affects corner calculations
-      window.addEventListener("resize", handleResize);
-    }, 50);
-
-    // Second initial scan with delay
-    const timeoutId2 = setTimeout(() => {
-      performScan();
     }, 250);
+
+    // Set up resize listener
+    window.addEventListener("resize", handleResize);
 
     // Cleanup function
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId1);
-      clearTimeout(timeoutId2);
-      if (updateTimeout) {
-        clearTimeout(updateTimeout);
-      }
-      resizeObservers.forEach((observer) => observer.disconnect());
-      if (mutationObserver) {
-        mutationObserver.disconnect();
-      }
+      clearTimeout(timeoutId);
+      mutationObserversRef.current.forEach((observer) => observer.disconnect());
+      mutationObserversRef.current.clear();
       window.removeEventListener("resize", handleResize);
     };
   }, [enabled]);
