@@ -83,13 +83,11 @@ class VersionSync {
           const match = file.match(/^v([\d_]+)/);
           return match ? `v${match[1]}` : null;
         })
-        .filter(Boolean)
+        .filter(Boolean),
     );
 
     if (versionFiles.length === 0) {
-      console.log(
-        "No version files found matching pattern v{number}[_{number}].(ts|tsx|js|jsx)"
-      );
+      console.log("No version files found matching pattern v{number}[_{number}].(ts|tsx|js|jsx)");
       return;
     }
 
@@ -108,9 +106,7 @@ class VersionSync {
         const importName = this.generateImportName(file);
         const key = this.generateVersionKey(file, index);
         const versionStr = key.substring(1); // Remove 'v' prefix
-        const label = this.versionToId(`v${versionStr}`)
-          .substring(1)
-          .toUpperCase(); // Remove extra 'v'
+        const label = this.versionToId(`v${versionStr}`).substring(1).toUpperCase(); // Remove extra 'v'
 
         return `  "${key}": {
     render: ${importName},
@@ -127,17 +123,13 @@ ${versions},
 `;
 
     fs.writeFileSync(this.versionsFile, content, "utf8");
-    console.log(
-      `Generated ${this.versionsFile} with ${versionFiles.length} versions`
-    );
+    console.log(`Generated ${this.versionsFile} with ${versionFiles.length} versions`);
   }
 
   parseVersionsFile() {
     try {
       const content = fs.readFileSync(this.versionsFile, "utf8");
-      const versionsMatch = content.match(
-        /export const VERSIONS = \{([\s\S]*)\}/
-      );
+      const versionsMatch = content.match(/export const VERSIONS = \{([\s\S]*)\}/);
       if (!versionsMatch) return new Set();
 
       const versionsContent = versionsMatch[1];
@@ -163,9 +155,7 @@ ${versions},
 
     // Find files that were added or removed
     const added = currentFiles.filter((file) => !previousSet.has(file));
-    const removed = Array.from(previousSet).filter(
-      (file) => !currentSet.has(file)
-    );
+    const removed = Array.from(previousSet).filter((file) => !currentSet.has(file));
 
     if (added.length > 0 || removed.length > 0) {
       console.log("File rename detected:");
@@ -183,17 +173,12 @@ ${versions},
     const previousKeys = this.currentVersionKeys;
 
     // Find keys that were added or removed
-    const added = Array.from(currentKeys).filter(
-      (key) => !previousKeys.has(key)
-    );
-    const removed = Array.from(previousKeys).filter(
-      (key) => !currentKeys.has(key)
-    );
+    const added = Array.from(currentKeys).filter((key) => !previousKeys.has(key));
+    const removed = Array.from(previousKeys).filter((key) => !currentKeys.has(key));
 
     if (added.length > 0 || removed.length > 0) {
       console.log("VERSIONS key change detected:");
-      if (removed.length > 0)
-        console.log(`  Removed keys: ${removed.join(", ")}`);
+      if (removed.length > 0) console.log(`  Removed keys: ${removed.join(", ")}`);
       if (added.length > 0) console.log(`  Added keys: ${added.join(", ")}`);
 
       // Handle 1:1 renames (one removed, one added)
@@ -227,40 +212,36 @@ ${versions},
   startWatching() {
     console.log("Watching for file changes...");
 
-    const watcher = fs.watch(
-      this.watchDir,
-      { persistent: true },
-      (eventType, filename) => {
-        if (!filename) return;
+    const watcher = fs.watch(this.watchDir, { persistent: true }, (eventType, filename) => {
+      if (!filename) return;
 
-        const isVersionFile = /^v[\d_]+\.(tsx?|jsx?)$/.test(filename);
-        const isVersionsFile = filename === "versions.ts";
+      const isVersionFile = /^v[\d_]+\.(tsx?|jsx?)$/.test(filename);
+      const isVersionsFile = filename === "versions.ts";
 
-        if (isVersionFile) {
-          console.log(`Detected change: ${eventType} ${filename}`);
+      if (isVersionFile) {
+        console.log(`Detected change: ${eventType} ${filename}`);
 
-          // Small delay to ensure file operations are complete
-          setTimeout(() => {
-            // Check if this is a rename operation
-            if (!this.handleFileRename()) {
-              // If not a rename, just regenerate
-              this.generateVersionsFile();
-            }
-          }, 100);
-        } else if (isVersionsFile && eventType === "change") {
-          // Handle changes to versions.ts file
-          console.log(`Detected change: ${eventType} ${filename}`);
-          setTimeout(() => {
-            this.handleVersionsKeyChange();
-          }, 100);
-        } else if (!isVersionsFile && eventType === "rename") {
-          // Handle potential renames of version files
-          setTimeout(() => {
-            this.handleFileRename();
-          }, 100);
-        }
+        // Small delay to ensure file operations are complete
+        setTimeout(() => {
+          // Check if this is a rename operation
+          if (!this.handleFileRename()) {
+            // If not a rename, just regenerate
+            this.generateVersionsFile();
+          }
+        }, 100);
+      } else if (isVersionsFile && eventType === "change") {
+        // Handle changes to versions.ts file
+        console.log(`Detected change: ${eventType} ${filename}`);
+        setTimeout(() => {
+          this.handleVersionsKeyChange();
+        }, 100);
+      } else if (!isVersionsFile && eventType === "rename") {
+        // Handle potential renames of version files
+        setTimeout(() => {
+          this.handleFileRename();
+        }, 100);
       }
-    );
+    });
 
     // Handle process termination
     process.on("SIGINT", () => {
@@ -283,9 +264,7 @@ const watchDir = args[0];
 
 if (!watchDir) {
   console.error("Usage: node version-sync.js <directory-to-watch>");
-  console.error(
-    "Example: node version-sync.js ./frontend/src/SomeDropdownComponent"
-  );
+  console.error("Example: node version-sync.js ./frontend/src/SomeDropdownComponent");
   process.exit(1);
 }
 

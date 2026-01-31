@@ -1,25 +1,15 @@
 import { useEffect, useRef } from "react";
-import {
-  autoUpdate,
-  computePosition,
-  flip,
-  offset,
-  shift,
-} from "@floating-ui/dom";
+import { autoUpdate, computePosition, flip, offset, shift } from "@floating-ui/dom";
 import styles from "../components/UIFork.module.css";
 
 interface UsePopoverPositionOptions {
   openPopoverVersion: string | null;
 }
 
-export function usePopoverPosition({
-  openPopoverVersion,
-}: UsePopoverPositionOptions) {
+export function usePopoverPosition({ openPopoverVersion }: UsePopoverPositionOptions) {
   const popoverTriggerRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const popoverDropdownRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const popoverPositions = useRef<Map<string, { x: number; y: number }>>(
-    new Map(),
-  );
+  const popoverPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   // Position popover menus
   useEffect(() => {
@@ -87,18 +77,12 @@ export function usePopoverPosition({
     };
   }, [openPopoverVersion]);
 
-  const setPopoverTriggerRef = (
-    version: string,
-    el: HTMLButtonElement | null,
-  ) => {
+  const setPopoverTriggerRef = (version: string, el: HTMLButtonElement | null) => {
     if (el) popoverTriggerRefs.current.set(version, el);
     else popoverTriggerRefs.current.delete(version);
   };
 
-  const setPopoverDropdownRef = (
-    version: string,
-    el: HTMLDivElement | null,
-  ) => {
+  const setPopoverDropdownRef = (version: string, el: HTMLDivElement | null) => {
     if (el) popoverDropdownRefs.current.set(version, el);
     else popoverDropdownRefs.current.delete(version);
   };

@@ -27,15 +27,15 @@ function initUIFork(port: number = 3001) {
     (typeof process !== "undefined" && process.env?.NODE_ENV === "production") ||
     (typeof import.meta !== "undefined" && import.meta.env?.DEV === false) ||
     (typeof import.meta !== "undefined" && import.meta.env?.MODE === "production") ||
-    (typeof window !== "undefined" && 
-     window.location?.hostname !== "localhost" && 
-     !window.location?.hostname?.startsWith("127.0.0.1") && 
-     !window.location?.hostname?.startsWith("192.168.") &&
-     window.location?.protocol !== "file:");
+    (typeof window !== "undefined" &&
+      window.location?.hostname !== "localhost" &&
+      !window.location?.hostname?.startsWith("127.0.0.1") &&
+      !window.location?.hostname?.startsWith("192.168.") &&
+      window.location?.protocol !== "file:");
 
   // Allow override via data attribute
   const forceEnable = document.documentElement.getAttribute("data-uifork-enable") === "true";
-  
+
   if (isProduction && !forceEnable) {
     return;
   }
@@ -52,9 +52,7 @@ function initUIFork(port: number = 3001) {
 
   // Mount UIFork component
   const reactRoot = createRoot(root);
-  reactRoot.render(
-    React.createElement(UIFork, { port })
-  );
+  reactRoot.render(React.createElement(UIFork, { port }));
 }
 
 // Expose to window for manual initialization

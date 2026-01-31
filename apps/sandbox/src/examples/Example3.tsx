@@ -8,37 +8,21 @@ function Example3() {
           JD
         </div>
         <div className="text-center">
-          <h3 className="font-semibold text-xl text-card-foreground">
-            John Doe
-          </h3>
-          <p className="text-muted-foreground text-sm mt-1">
-            Software Engineer
-          </p>
+          <h3 className="font-semibold text-xl text-card-foreground">John Doe</h3>
+          <p className="text-muted-foreground text-sm mt-1">Software Engineer</p>
         </div>
         <div className="flex gap-8 pt-4">
           <div className="text-center">
-            <div className="text-xl font-semibold text-card-foreground">
-              127
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Projects
-            </div>
+            <div className="text-xl font-semibold text-card-foreground">127</div>
+            <div className="text-xs text-muted-foreground mt-1">Projects</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-semibold text-card-foreground">
-              89
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Followers
-            </div>
+            <div className="text-xl font-semibold text-card-foreground">89</div>
+            <div className="text-xs text-muted-foreground mt-1">Followers</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-semibold text-card-foreground">
-              42
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Following
-            </div>
+            <div className="text-xl font-semibold text-card-foreground">42</div>
+            <div className="text-xs text-muted-foreground mt-1">Following</div>
           </div>
         </div>
       </div>

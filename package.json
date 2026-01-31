@@ -3,6 +3,21 @@
   "version": "0.0.3",
   "private": true,
   "description": "Monorepo for uifork - CLI tool and React components for managing UI component versions",
+  "keywords": [
+    "ab-testing",
+    "cli",
+    "components",
+    "monorepo",
+    "react",
+    "switcher",
+    "ui",
+    "versioning"
+  ],
+  "license": "MIT",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -13,24 +28,12 @@
     "dev:uifork": "turbo run dev --filter=uifork",
     "test": "turbo run test",
     "lint": "oxlint",
-    "lint:fix": "oxlint --fix"
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
   },
-  "keywords": [
-    "ui",
-    "components",
-    "versioning",
-    "cli",
-    "switcher",
-    "react",
-    "ab-testing",
-    "monorepo"
-  ],
-  "license": "MIT",
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
   "devDependencies": {
+    "oxfmt": "^0.27.0",
     "oxlint": "^1.42.0",
     "turbo": "^2.8.0"
   },

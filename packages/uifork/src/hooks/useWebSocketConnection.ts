@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export type ConnectionStatus =
-  | "connected"
-  | "disconnected"
-  | "connecting"
-  | "failed";
+export type ConnectionStatus = "connected" | "disconnected" | "connecting" | "failed";
 
 export type WebSocketMessageType =
   | "duplicate_version"
@@ -24,11 +20,7 @@ interface UseWebSocketConnectionOptions {
       versions: string[];
     }>,
   ) => void;
-  onVersionAck?: (payload: {
-    version: string;
-    message?: string;
-    newVersion?: string;
-  }) => void;
+  onVersionAck?: (payload: { version: string; message?: string; newVersion?: string }) => void;
   onPromoted?: (componentName: string) => void;
   onError?: (message: string) => void;
 }
@@ -43,8 +35,7 @@ export function useWebSocketConnection({
   onError,
 }: UseWebSocketConnectionOptions) {
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
-  const [connectionStatus, setConnectionStatus] =
-    useState<ConnectionStatus>("disconnected");
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
 
   // Keep refs for callbacks to avoid reconnection on callback changes
   const selectedComponentRef = useRef(selectedComponent);
@@ -53,9 +44,7 @@ export function useWebSocketConnection({
   const onVersionAckRef = useRef(onVersionAck);
   const onPromotedRef = useRef(onPromoted);
   const onErrorRef = useRef(onError);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isConnectingRef = useRef(false);
   const wsConnectionRef = useRef<WebSocket | null>(null);
   const shouldReconnectRef = useRef(true);
@@ -88,22 +77,21 @@ export function useWebSocketConnection({
   // WebSocket connection function
   const connectWebSocket = useCallback(() => {
     // Don't create a new connection if we're already connected or connecting
-    if (
-      wsConnectionRef.current?.readyState === WebSocket.OPEN ||
-      isConnectingRef.current
-    ) {
+    if (wsConnectionRef.current?.readyState === WebSocket.OPEN || isConnectingRef.current) {
       return;
     }
 
     const wsUrl = `ws://localhost:${port}/ws`;
     isConnectingRef.current = true;
-    
+
     // Only show "connecting" status on first attempt or if we've successfully connected before
     // This prevents animation flashes during retry loops
     // Also, don't change status if we're already in a failed state to prevent jitter
     // during retry attempts when viewing the empty state
-    if ((retryCountRef.current === 0 || hasEverConnectedRef.current) && 
-        connectionStatusRef.current !== "failed") {
+    if (
+      (retryCountRef.current === 0 || hasEverConnectedRef.current) &&
+      connectionStatusRef.current !== "failed"
+    ) {
       setConnectionStatus("connecting");
     }
     retryCountRef.current++;
@@ -182,8 +170,7 @@ export function useWebSocketConnection({
           const newVersion = data.payload.newVersion;
 
           if (message.includes("promoted")) {
-            const promotedComponent =
-              data.payload.component || selectedComponentRef.current;
+            const promotedComponent = data.payload.component || selectedComponentRef.current;
             onPromotedRef.current?.(promotedComponent);
             return;
           }

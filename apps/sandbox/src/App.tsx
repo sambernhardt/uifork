@@ -14,9 +14,7 @@ function App() {
           <h1 className="text-sm font-medium text-muted-foreground">uifork</h1>
           <select
             value={theme}
-            onChange={(e) =>
-              setTheme(e.target.value as "light" | "dark" | "system")
-            }
+            onChange={(e) => setTheme(e.target.value as "light" | "dark" | "system")}
             className="text-xs px-2 py-1 rounded border border-input bg-card text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="light">Light</option>

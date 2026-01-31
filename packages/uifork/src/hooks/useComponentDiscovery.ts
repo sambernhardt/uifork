@@ -17,23 +17,26 @@ export function useComponentDiscovery({ port: _port }: UseComponentDiscoveryOpti
   );
 
   // Filter components to only show mounted ones
-  const mountedComponents = components.filter((c) =>
-    mountedComponentIds.includes(c.name),
-  );
+  const mountedComponents = components.filter((c) => mountedComponentIds.includes(c.name));
 
   // Handle components update from WebSocket
-  const handleComponentsUpdate = useCallback((wsComponents: Array<{
-    name: string;
-    path: string;
-    versions: string[];
-  }>) => {
-    setComponents(wsComponents);
+  const handleComponentsUpdate = useCallback(
+    (
+      wsComponents: Array<{
+        name: string;
+        path: string;
+        versions: string[];
+      }>,
+    ) => {
+      setComponents(wsComponents);
 
-    // If no component selected yet, select the first one
-    if (!selectedComponent && wsComponents.length > 0) {
-      setSelectedComponent(wsComponents[0].name);
-    }
-  }, [selectedComponent, setSelectedComponent]);
+      // If no component selected yet, select the first one
+      if (!selectedComponent && wsComponents.length > 0) {
+        setSelectedComponent(wsComponents[0].name);
+      }
+    },
+    [selectedComponent, setSelectedComponent],
+  );
 
   // Subscribe to component registry changes
   useEffect(() => {
@@ -56,31 +59,18 @@ export function useComponentDiscovery({ port: _port }: UseComponentDiscoveryOpti
       !mountedComponentIds.includes(selectedComponent)
     ) {
       // Current selection is not mounted, switch to first mounted component
-      const firstMounted = components.find((c) =>
-        mountedComponentIds.includes(c.name),
-      );
+      const firstMounted = components.find((c) => mountedComponentIds.includes(c.name));
       if (firstMounted) {
         setSelectedComponent(firstMounted.name);
       }
-    } else if (
-      !selectedComponent &&
-      mountedComponentIds.length > 0 &&
-      components.length > 0
-    ) {
+    } else if (!selectedComponent && mountedComponentIds.length > 0 && components.length > 0) {
       // No selection yet, select first mounted component
-      const firstMounted = components.find((c) =>
-        mountedComponentIds.includes(c.name),
-      );
+      const firstMounted = components.find((c) => mountedComponentIds.includes(c.name));
       if (firstMounted) {
         setSelectedComponent(firstMounted.name);
       }
     }
-  }, [
-    selectedComponent,
-    mountedComponentIds,
-    components,
-    setSelectedComponent,
-  ]);
+  }, [selectedComponent, mountedComponentIds, components, setSelectedComponent]);
 
   return {
     components,

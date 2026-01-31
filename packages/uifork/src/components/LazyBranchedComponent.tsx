@@ -1,9 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import {
-  registerComponent,
-  unregisterComponent,
-} from "../utils/componentRegistry";
+import { registerComponent, unregisterComponent } from "../utils/componentRegistry";
 import type { BranchedComponentProps } from "../types";
 
 /**

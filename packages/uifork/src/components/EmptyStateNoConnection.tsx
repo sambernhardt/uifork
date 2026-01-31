@@ -7,16 +7,11 @@ type EmptyStateNoConnectionProps = {
   copied: boolean;
 };
 
-export function EmptyStateNoConnection({
-  onCopyCommand,
-  copied,
-}: EmptyStateNoConnectionProps) {
+export function EmptyStateNoConnection({ onCopyCommand, copied }: EmptyStateNoConnectionProps) {
   return (
     <div className={styles.emptyStateContainer}>
       <h3 className={styles.emptyStateHeading}>Start the uifork server</h3>
-      <p className={styles.emptyStateText}>
-        Run the watch command in your project root to connect
-      </p>
+      <p className={styles.emptyStateText}>Run the watch command in your project root to connect</p>
       <button
         onClick={onCopyCommand}
         className={styles.emptyStateCommandContainer}

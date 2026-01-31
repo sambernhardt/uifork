@@ -7,10 +7,7 @@ type EmptyStateNoComponentsProps = {
   copied: boolean;
 };
 
-export function EmptyStateNoComponents({
-  onCopyCommand,
-  copied,
-}: EmptyStateNoComponentsProps) {
+export function EmptyStateNoComponents({ onCopyCommand, copied }: EmptyStateNoComponentsProps) {
   return (
     <div className={styles.emptyStateContainer}>
       <h3 className={styles.emptyStateHeading}>Get started with uifork</h3>
@@ -23,9 +20,7 @@ export function EmptyStateNoComponents({
         title="Copy command"
         aria-label="Copy command to clipboard"
       >
-        <code className={styles.emptyStateCommand}>
-          uifork init &lt;path to file&gt;
-        </code>
+        <code className={styles.emptyStateCommand}>uifork init &lt;path to file&gt;</code>
         {copied ? (
           <CheckmarkIcon className={styles.emptyStateCopyIcon} />
         ) : (

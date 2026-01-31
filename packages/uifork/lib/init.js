@@ -16,18 +16,10 @@ class UISwitcherScaffold {
     this.componentName = parsedPath.name;
     this.parentDir = parsedPath.dir;
     this.originalExtension = parsedPath.ext; // Preserve .tsx or .ts
-    this.v1File = path.join(
-      this.parentDir,
-      `${this.componentName}.v1${this.originalExtension}`,
-    );
-    this.versionsFile = path.join(
-      this.parentDir,
-      `${this.componentName}.versions.ts`,
-    );
+    this.v1File = path.join(this.parentDir, `${this.componentName}.v1${this.originalExtension}`);
+    this.versionsFile = path.join(this.parentDir, `${this.componentName}.versions.ts`);
 
-    console.log(
-      `Scaffolding branched component from: ${this.originalFilePath}`,
-    );
+    console.log(`Scaffolding branched component from: ${this.originalFilePath}`);
     console.log(`Component name: ${this.componentName}`);
     console.log(`Target directory: ${this.parentDir}`);
   }
@@ -35,9 +27,7 @@ class UISwitcherScaffold {
   moveOriginalToV1() {
     // Move the original file to ComponentName.v1.tsx in the same directory
     fs.renameSync(this.originalFilePath, this.v1File);
-    console.log(
-      `Moved: ${path.basename(this.originalFilePath)} → ${path.basename(this.v1File)}`,
-    );
+    console.log(`Moved: ${path.basename(this.originalFilePath)} → ${path.basename(this.v1File)}`);
   }
 
   createVersionsFile() {
@@ -86,10 +76,7 @@ export default function ${this.componentName}(props: any) {
 export { VERSIONS }
 `;
 
-    const wrapperFile = path.join(
-      this.parentDir,
-      `${this.componentName}${this.originalExtension}`,
-    );
+    const wrapperFile = path.join(this.parentDir, `${this.componentName}${this.originalExtension}`);
     fs.writeFileSync(wrapperFile, wrapperContent);
     console.log(`Created wrapper: ${path.basename(wrapperFile)}`);
   }

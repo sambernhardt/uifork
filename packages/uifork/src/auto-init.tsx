@@ -9,26 +9,17 @@ import { UIFork } from "./components/UIFork";
 function initUIFork(port: number = 3001) {
   // Only run in development
   // Check Node.js environment
-  if (
-    typeof process !== "undefined" &&
-    process.env?.NODE_ENV === "production"
-  ) {
+  if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") {
     return;
   }
 
   // Check for development mode in Vite (import.meta.env.DEV is true in dev)
-  if (
-    typeof import.meta !== "undefined" &&
-    import.meta.env?.DEV === false
-  ) {
+  if (typeof import.meta !== "undefined" && import.meta.env?.DEV === false) {
     return;
   }
 
   // Check for production mode in Vite (import.meta.env.MODE)
-  if (
-    typeof import.meta !== "undefined" &&
-    import.meta.env?.MODE === "production"
-  ) {
+  if (typeof import.meta !== "undefined" && import.meta.env?.MODE === "production") {
     return;
   }
 
@@ -44,9 +35,7 @@ function initUIFork(port: number = 3001) {
 
   // Mount UIFork component
   const reactRoot = createRoot(root);
-  reactRoot.render(
-    React.createElement(UIFork, { port })
-  );
+  reactRoot.render(React.createElement(UIFork, { port }));
 }
 
 // Auto-initialize if this is a direct import (not a library import)

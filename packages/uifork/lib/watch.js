@@ -35,9 +35,7 @@ class ComponentManager {
 
   getVersionFiles() {
     const files = fs.readdirSync(this.watchDir);
-    const versionPattern = new RegExp(
-      `^${this.componentName}\\.v([\\d_]+)\\.(tsx?|jsx?)$`,
-    );
+    const versionPattern = new RegExp(`^${this.componentName}\\.v([\\d_]+)\\.(tsx?|jsx?)$`);
     const matchedFiles = files
       .filter((file) => {
         const match = file.match(versionPattern);
@@ -55,12 +53,8 @@ class ComponentManager {
       });
 
     if (matchedFiles.length === 0) {
-      console.log(
-        `[${this.componentName}] No version files found in ${this.watchDir}`,
-      );
-      console.log(
-        `[${this.componentName}] Looking for pattern: ${versionPattern}`,
-      );
+      console.log(`[${this.componentName}] No version files found in ${this.watchDir}`);
+      console.log(`[${this.componentName}] Looking for pattern: ${versionPattern}`);
       console.log(
         `[${this.componentName}] Files in directory: ${
           files.filter((f) => f.includes(this.componentName)).join(", ") ||
@@ -126,10 +120,7 @@ class ComponentManager {
     const fileVersion = this.versionKeyToFileVersion(versionKey);
     const extensions = [".tsx", ".ts", ".jsx", ".js"];
     for (const ext of extensions) {
-      const filePath = path.join(
-        this.watchDir,
-        `${this.componentName}.v${fileVersion}${ext}`,
-      );
+      const filePath = path.join(this.watchDir, `${this.componentName}.v${fileVersion}${ext}`);
       if (fs.existsSync(filePath)) {
         return ext;
       }
@@ -140,10 +131,7 @@ class ComponentManager {
   getVersionFilePath(versionKey) {
     const fileVersion = this.versionKeyToFileVersion(versionKey);
     const extension = this.detectFileExtension(versionKey);
-    return path.join(
-      this.watchDir,
-      `${this.componentName}.v${fileVersion}${extension}`,
-    );
+    return path.join(this.watchDir, `${this.componentName}.v${fileVersion}${extension}`);
   }
 
   getNextVersionNumber() {
@@ -184,9 +172,7 @@ class ComponentManager {
       extensions[ext] = (extensions[ext] || 0) + 1;
     });
 
-    return Object.keys(extensions).reduce((a, b) =>
-      extensions[a] > extensions[b] ? a : b,
-    );
+    return Object.keys(extensions).reduce((a, b) => (extensions[a] > extensions[b] ? a : b));
   }
 
   versionNumberToKey(versionNumber) {
@@ -203,9 +189,7 @@ class ComponentManager {
   parseVersionsFile() {
     try {
       const content = fs.readFileSync(this.versionsFile, "utf8");
-      const versionsMatch = content.match(
-        /export const VERSIONS = \{([\s\S]*)\}/,
-      );
+      const versionsMatch = content.match(/export const VERSIONS = \{([\s\S]*)\}/);
       if (!versionsMatch) return { keys: new Set(), versions: {} };
 
       const versionsContent = versionsMatch[1];
@@ -230,9 +214,7 @@ class ComponentManager {
       const keyMatch = trimmed.match(/^["']?(v[^"':s]*)["']?\s*:\s*\{/);
       if (keyMatch) {
         if (currentKey && currentBlock.length > 0) {
-          versions[currentKey] = this.parseVersionBlock(
-            currentBlock.join("\n"),
-          );
+          versions[currentKey] = this.parseVersionBlock(currentBlock.join("\n"));
         }
         currentKey = keyMatch[1];
         currentBlock = [line];
@@ -247,9 +229,7 @@ class ComponentManager {
           if (char === "}") braceDepth--;
         }
         if (braceDepth === 0) {
-          versions[currentKey] = this.parseVersionBlock(
-            currentBlock.join("\n"),
-          );
+          versions[currentKey] = this.parseVersionBlock(currentBlock.join("\n"));
           currentKey = null;
           currentBlock = [];
         }
@@ -273,9 +253,7 @@ class ComponentManager {
     if (labelMatch) {
       version.label = labelMatch[1];
     }
-    const descriptionMatch = blockContent.match(
-      /description:\s*["']([^"']*)["']/,
-    );
+    const descriptionMatch = blockContent.match(/description:\s*["']([^"']*)["']/);
     if (descriptionMatch) {
       version.description = descriptionMatch[1];
     }
@@ -307,18 +285,14 @@ class ComponentManager {
       .map((file) => {
         const key = this.generateVersionKey(file);
         const versionStr = key.substring(1);
-        const defaultLabel = this.versionToId(`v${versionStr}`)
-          .substring(1)
-          .toUpperCase();
+        const defaultLabel = this.versionToId(`v${versionStr}`).substring(1).toUpperCase();
 
         let existingVersion = existingVersions[key] || {};
 
         if (this.pendingDescriptionTransfers.has(key)) {
           const sourceKey = this.pendingDescriptionTransfers.get(key);
           const sourceVersion =
-            this.previousVersionsData[sourceKey] ||
-            existingVersions[sourceKey] ||
-            {};
+            this.previousVersionsData[sourceKey] || existingVersions[sourceKey] || {};
           existingVersion = {
             ...existingVersion,
             description: sourceVersion.description,
@@ -403,9 +377,7 @@ ${versions},
     const previousSet = this.currentVersionFiles;
 
     const added = currentFiles.filter((file) => !previousSet.has(file));
-    const removed = Array.from(previousSet).filter(
-      (file) => !currentSet.has(file),
-    );
+    const removed = Array.from(previousSet).filter((file) => !currentSet.has(file));
 
     if (added.length > 0 || removed.length > 0) {
       console.log(`[${this.componentName}] File rename detected:`);
@@ -415,12 +387,8 @@ ${versions},
       if (removed.length === 1 && added.length === 1) {
         const oldFile = removed[0];
         const newFile = added[0];
-        const oldMatch = oldFile.match(
-          new RegExp(`^${this.componentName}\\.v([\\d_]+)`),
-        );
-        const newMatch = newFile.match(
-          new RegExp(`^${this.componentName}\\.v([\\d_]+)`),
-        );
+        const oldMatch = oldFile.match(new RegExp(`^${this.componentName}\\.v([\\d_]+)`));
+        const newMatch = newFile.match(new RegExp(`^${this.componentName}\\.v([\\d_]+)`));
         if (oldMatch && newMatch) {
           const oldKey = `v${oldMatch[1]}`;
           const newKey = `v${newMatch[1]}`;
@@ -441,17 +409,12 @@ ${versions},
     const currentKeys = parsed.keys;
     const previousKeys = this.currentVersionKeys;
 
-    const added = Array.from(currentKeys).filter(
-      (key) => !previousKeys.has(key),
-    );
-    const removed = Array.from(previousKeys).filter(
-      (key) => !currentKeys.has(key),
-    );
+    const added = Array.from(currentKeys).filter((key) => !previousKeys.has(key));
+    const removed = Array.from(previousKeys).filter((key) => !currentKeys.has(key));
 
     if (added.length > 0 || removed.length > 0) {
       console.log(`[${this.componentName}] VERSIONS key change detected:`);
-      if (removed.length > 0)
-        console.log(`  Removed keys: ${removed.join(", ")}`);
+      if (removed.length > 0) console.log(`  Removed keys: ${removed.join(", ")}`);
       if (added.length > 0) console.log(`  Added keys: ${added.join(", ")}`);
 
       if (removed.length === 1 && added.length === 1) {
@@ -512,9 +475,7 @@ class VersionSync {
     } else {
       console.log(`\nFound ${this.components.size} versioned component(s):`);
       for (const [name, manager] of this.components) {
-        console.log(
-          `  - ${name} (${manager.getVersionKeys().length} versions)`,
-        );
+        console.log(`  - ${name} (${manager.getVersionKeys().length} versions)`);
       }
     }
 
@@ -558,9 +519,7 @@ class VersionSync {
         }
       }
     } catch (error) {
-      console.warn(
-        `  Warning: Could not read directory ${dir}: ${error.message}`,
-      );
+      console.warn(`  Warning: Could not read directory ${dir}: ${error.message}`);
     }
 
     return results;
@@ -592,14 +551,10 @@ class VersionSync {
     // GET /components - List all discovered components
     app.get("/components", (req, res) => {
       const componentsInfo = this.getComponentsInfo();
-      console.log(
-        `[Server] GET /components - returning ${componentsInfo.length} components:`,
-      );
+      console.log(`[Server] GET /components - returning ${componentsInfo.length} components:`);
       componentsInfo.forEach((c) => {
         console.log(
-          `  - ${c.name}: ${c.versions.length} versions (${
-            c.versions.join(", ") || "none"
-          })`,
+          `  - ${c.name}: ${c.versions.length} versions (${c.versions.join(", ") || "none"})`,
         );
       });
       res.json({
@@ -661,9 +616,7 @@ class VersionSync {
             console.error(`[Server] Error opening file: ${error.message}`);
             exec(`open "${filePath}"`, (openError) => {
               if (openError) {
-                console.error(
-                  `[Server] Error opening with system default: ${openError.message}`,
-                );
+                console.error(`[Server] Error opening with system default: ${openError.message}`);
                 return res.status(500).json({
                   error: "Failed to open file in editor",
                 });
@@ -688,9 +641,7 @@ class VersionSync {
 
     this.wss.on("connection", (ws) => {
       this.wsClients.add(ws);
-      console.log(
-        `[WebSocket] Client connected (${this.wsClients.size} total)`,
-      );
+      console.log(`[WebSocket] Client connected (${this.wsClients.size} total)`);
 
       ws.send(
         JSON.stringify({
@@ -719,9 +670,7 @@ class VersionSync {
 
       ws.on("close", () => {
         this.wsClients.delete(ws);
-        console.log(
-          `[WebSocket] Client disconnected (${this.wsClients.size} total)`,
-        );
+        console.log(`[WebSocket] Client disconnected (${this.wsClients.size} total)`);
       });
 
       ws.on("error", (error) => {
@@ -731,12 +680,8 @@ class VersionSync {
     });
 
     this.server.listen(port, () => {
-      console.log(
-        `\n[Server] Express server running on http://localhost:${port}`,
-      );
-      console.log(
-        `[Server] WebSocket server running on ws://localhost:${port}/ws`,
-      );
+      console.log(`\n[Server] Express server running on http://localhost:${port}`);
+      console.log(`[Server] WebSocket server running on ws://localhost:${port}/ws`);
     });
   }
 
@@ -745,14 +690,7 @@ class VersionSync {
     const componentName = payload?.component;
 
     // Validate component for operations that need it
-    if (
-      [
-        "duplicate_version",
-        "delete_version",
-        "new_version",
-        "rename_version",
-      ].includes(type)
-    ) {
+    if (["duplicate_version", "delete_version", "new_version", "rename_version"].includes(type)) {
       if (!componentName) {
         ws.send(
           JSON.stringify({
@@ -847,9 +785,7 @@ class VersionSync {
 
       fs.writeFileSync(finalTargetPath, sourceContent, "utf8");
 
-      console.log(
-        `[WebSocket] Duplicate version: ${version} → ${targetVersion}`,
-      );
+      console.log(`[WebSocket] Duplicate version: ${version} → ${targetVersion}`);
       console.log(`  Timestamp: ${timestamp}`);
       console.log(`  Component: ${manager.componentName}`);
       console.log(`  Source: ${path.basename(sourceFilePath)}`);
@@ -963,10 +899,7 @@ class VersionSync {
         `${manager.componentName}.v${fileVersion}${extension}`,
       );
 
-      const displayVersion = targetVersion
-        .replace(/^v/, "")
-        .replace(/_/g, ".")
-        .toUpperCase();
+      const displayVersion = targetVersion.replace(/^v/, "").replace(/_/g, ".").toUpperCase();
 
       const importSuffix = manager.versionToImportSuffix(fileVersion);
       const componentName = `${manager.componentName}${importSuffix}`;
@@ -1287,9 +1220,7 @@ export default function ${componentName}() {
         this.components.set(manager.componentName, manager);
         manager.generateVersionsFile();
         manager.updatePreviousVersionsData();
-        console.log(
-          `[Watch] New component discovered: ${manager.componentName}`,
-        );
+        console.log(`[Watch] New component discovered: ${manager.componentName}`);
         this.broadcastFileChange(manager.componentName);
       }
       return;
@@ -1310,12 +1241,9 @@ export default function ${componentName}() {
 
     // Find which component this file belongs to
     for (const [name, manager] of this.components) {
-      const versionPattern = new RegExp(
-        `^${manager.componentName}\\.v([\\d_]+)\\.(tsx?|jsx?)$`,
-      );
+      const versionPattern = new RegExp(`^${manager.componentName}\\.v([\\d_]+)\\.(tsx?|jsx?)$`);
       const isVersionFile = versionPattern.test(filename);
-      const isVersionsFile =
-        filename === `${manager.componentName}.versions.ts`;
+      const isVersionsFile = filename === `${manager.componentName}.versions.ts`;
 
       // Check if file is in the same directory as the versions file
       const fileDir = path.dirname(filePath);

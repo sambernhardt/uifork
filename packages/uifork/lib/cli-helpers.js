@@ -25,10 +25,7 @@ function findComponentManager(componentPath) {
     } else if (stat.isFile()) {
       // If it's a component file, look in the same directory
       const dir = path.dirname(resolvedPath);
-      const componentName = path.basename(
-        resolvedPath,
-        path.extname(resolvedPath),
-      );
+      const componentName = path.basename(resolvedPath, path.extname(resolvedPath));
       const versionsFile = path.join(dir, `${componentName}.versions.ts`);
       if (fs.existsSync(versionsFile)) {
         return new ComponentManager(versionsFile);
@@ -59,10 +56,7 @@ function recursiveSearchVersionsFile(dir, componentName) {
         }
       } else if (entry.isDirectory()) {
         if (!entry.name.startsWith(".") && entry.name !== "node_modules") {
-          const found = recursiveSearchVersionsFile(
-            path.join(dir, entry.name),
-            componentName,
-          );
+          const found = recursiveSearchVersionsFile(path.join(dir, entry.name), componentName);
           if (found) return found;
         }
       }

@@ -2,11 +2,7 @@ import { autoUpdate, computePosition, offset, shift } from "@floating-ui/dom";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import styles from "./UIFork.module.css";
-import {
-  registerTooltipHide,
-  registerTooltipShow,
-  shouldSkipDelay,
-} from "../utils/tooltipManager";
+import { registerTooltipHide, registerTooltipShow, shouldSkipDelay } from "../utils/tooltipManager";
 
 interface TooltipProps {
   label: string;
@@ -40,15 +36,11 @@ export function Tooltip({ label, children, placement = "top" }: TooltipProps) {
     const updatePosition = async () => {
       if (cancelled || !triggerRef.current || !tooltipRef.current) return;
       try {
-        const { x, y } = await computePosition(
-          triggerRef.current,
-          tooltipRef.current,
-          {
-            placement,
-            strategy: "fixed",
-            middleware: [offset(8), shift({ padding: 8 })],
-          },
-        );
+        const { x, y } = await computePosition(triggerRef.current, tooltipRef.current, {
+          placement,
+          strategy: "fixed",
+          middleware: [offset(8), shift({ padding: 8 })],
+        });
         if (!cancelled) {
           setPosition({ x, y });
           if (tooltipRef.current) {
@@ -69,11 +61,7 @@ export function Tooltip({ label, children, placement = "top" }: TooltipProps) {
 
     // Auto-update position
     if (triggerRef.current && tooltipRef.current) {
-      cleanup = autoUpdate(
-        triggerRef.current,
-        tooltipRef.current,
-        updatePosition,
-      );
+      cleanup = autoUpdate(triggerRef.current, tooltipRef.current, updatePosition);
     }
 
     return () => {
@@ -172,9 +160,7 @@ export function Tooltip({ label, children, placement = "top" }: TooltipProps) {
   } as any);
 
   const portalRoot =
-    portalRootRef.current ||
-    document.getElementById("uifork-root") ||
-    document.body;
+    portalRootRef.current || document.getElementById("uifork-root") || document.body;
 
   return (
     <>

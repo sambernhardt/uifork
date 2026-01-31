@@ -20,9 +20,9 @@
   --uifork-fg-secondary: var(--uifork-text-secondary);
   --uifork-hover-bg: rgba(255, 255, 255, 0.1);
   --uifork-menu-item-height: 32px;
-  --uifork-trigger-height: 32px;  
+  --uifork-trigger-height: 32px;
 }
-:global(#uifork-root[data-theme=light]) {
+:global(#uifork-root[data-theme="light"]) {
   --uifork-bg-dark: #ffffff;
   --uifork-bg-hover: #f5f5f5;
   --uifork-button-hover: #e5e5e5;
@@ -36,7 +36,7 @@
   --uifork-hover-bg: rgba(0, 0, 0, 0.08);
 }
 @media (prefers-color-scheme: light) {
-  :global(#uifork-root[data-theme=system]) {
+  :global(#uifork-root[data-theme="system"]) {
     --uifork-bg-dark: #ffffff;
     --uifork-bg-hover: #f5f5f5;
     --uifork-bg-input: #e5e5e5;
@@ -73,7 +73,18 @@
   display: flex;
   flex-direction: column;
   border-radius: 12px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
 }
 
 .container.containerClosed {
@@ -81,11 +92,11 @@
 }
 
 /* Override cursor when dragging */
-.container[data-dragging=true] {
+.container[data-dragging="true"] {
   cursor: grabbing !important;
 }
 
-.container[data-dragging=true] * {
+.container[data-dragging="true"] * {
   cursor: grabbing !important;
 }
 
@@ -101,7 +112,7 @@
   background-color: transparent;
   border: none;
   white-space: nowrap;
-  height: var(--uifork-trigger-height); 
+  height: var(--uifork-trigger-height);
 }
 .trigger:hover {
   background-color: var(--uifork-hover-bg);
@@ -144,7 +155,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -492,7 +504,18 @@
   box-shadow: var(--uifork-shadow-md);
   border: 1px solid var(--uifork-border-color);
   padding: 4px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   transform-origin: left center;
   animation: popoverFadeIn 0.2s cubic-bezier(0.04, 1.02, 0.13, 1.02);
 }
@@ -599,7 +622,18 @@
   box-shadow: var(--uifork-shadow-md);
   border: 1px solid var(--uifork-border-color);
   padding: 4px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   transform-origin: right center;
   animation: popoverFadeIn 0.2s cubic-bezier(0.04, 1.02, 0.13, 1.02);
 }
@@ -619,7 +653,8 @@
   text-align: left;
   width: 100%;
 }
-.componentSelectorItem:hover, .componentSelectorItem.componentSelectorItemSelected {
+.componentSelectorItem:hover,
+.componentSelectorItem.componentSelectorItemSelected {
   background-color: var(--uifork-hover-bg);
 }
 
@@ -737,7 +772,9 @@
   border-radius: 8px;
   cursor: pointer;
   outline: none;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23a3a3a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -776,7 +813,18 @@
   white-space: nowrap;
   opacity: 0;
   transition: opacity 0.15s ease-in-out;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
 }
 
 .tooltipVisible {

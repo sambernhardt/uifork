@@ -28,10 +28,7 @@ export function VersionNameEditor({
   }, []);
 
   return (
-    <div
-      className={styles.versionItemEditing}
-      onClick={(e) => e.stopPropagation()}
-    >
+    <div className={styles.versionItemEditing} onClick={(e) => e.stopPropagation()}>
       <input
         ref={inputRef}
         type="text"

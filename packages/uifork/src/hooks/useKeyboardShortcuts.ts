@@ -21,16 +21,12 @@ export function useVersionKeyboardShortcuts({
       if (e.key === "ArrowDown") {
         e.preventDefault();
         const prevIndex = currentIndex - 1;
-        setActiveVersion(
-          versionKeys[prevIndex >= 0 ? prevIndex : versionKeys.length - 1],
-        );
+        setActiveVersion(versionKeys[prevIndex >= 0 ? prevIndex : versionKeys.length - 1]);
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
         const nextIndex = currentIndex + 1;
-        setActiveVersion(
-          versionKeys[nextIndex < versionKeys.length ? nextIndex : 0],
-        );
+        setActiveVersion(versionKeys[nextIndex < versionKeys.length ? nextIndex : 0]);
       }
     };
     window.addEventListener("keydown", handleKeyDown);

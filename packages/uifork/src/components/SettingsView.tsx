@@ -7,9 +7,7 @@ interface SettingsViewProps {
   theme: "light" | "dark" | "system";
   setTheme: (theme: "light" | "dark" | "system") => void;
   position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
-  setPosition: (
-    position: "top-left" | "top-right" | "bottom-left" | "bottom-right",
-  ) => void;
+  setPosition: (position: "top-left" | "top-right" | "bottom-left" | "bottom-right") => void;
   codeEditor: "vscode" | "cursor";
   setCodeEditor: (editor: "vscode" | "cursor") => void;
 }
@@ -36,9 +34,7 @@ export function SettingsView({
           <label className={styles.settingsLabel}>Theme</label>
           <select
             value={theme}
-            onChange={(e) =>
-              setTheme(e.target.value as "light" | "dark" | "system")
-            }
+            onChange={(e) => setTheme(e.target.value as "light" | "dark" | "system")}
             className={styles.settingsSelect}
           >
             <option value="light">Light</option>
@@ -53,11 +49,7 @@ export function SettingsView({
             value={position}
             onChange={(e) =>
               setPosition(
-                e.target.value as
-                  | "top-left"
-                  | "top-right"
-                  | "bottom-left"
-                  | "bottom-right",
+                e.target.value as "top-left" | "top-right" | "bottom-left" | "bottom-right",
               )
             }
             className={styles.settingsSelect}
@@ -73,9 +65,7 @@ export function SettingsView({
           <label className={styles.settingsLabel}>Code Editor</label>
           <select
             value={codeEditor}
-            onChange={(e) =>
-              setCodeEditor(e.target.value as "vscode" | "cursor")
-            }
+            onChange={(e) => setCodeEditor(e.target.value as "vscode" | "cursor")}
             className={styles.settingsSelect}
           >
             <option value="vscode">VSCode</option>

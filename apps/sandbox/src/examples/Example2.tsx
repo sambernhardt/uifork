@@ -5,9 +5,7 @@ function Example2() {
     <Card className="w-[400px]">
       <div className="space-y-4 h-full flex flex-col">
         <div>
-          <label className="block text-sm text-muted-foreground mb-2">
-            Name
-          </label>
+          <label className="block text-sm text-muted-foreground mb-2">Name</label>
           <input
             type="text"
             placeholder="John Doe"
@@ -15,9 +13,7 @@ function Example2() {
           />
         </div>
         <div>
-          <label className="block text-sm text-muted-foreground mb-2">
-            Email
-          </label>
+          <label className="block text-sm text-muted-foreground mb-2">Email</label>
           <input
             type="email"
             placeholder="john@example.com"

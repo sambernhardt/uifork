@@ -112,14 +112,10 @@ switch (command) {
 
   case "promote":
     if (!argument) {
-      console.error(
-        "Error: Component path and version ID are required for promote command",
-      );
+      console.error("Error: Component path and version ID are required for promote command");
       console.error("Usage: uifork promote <component-path> <version-id>");
       console.error("Example: uifork promote SomeDropdownComponent v2");
-      console.error(
-        "Example: uifork promote frontend/src/SomeDropdownComponent.tsx v1_2",
-      );
+      console.error("Example: uifork promote frontend/src/SomeDropdownComponent.tsx v1_2");
       process.exit(1);
     }
 
@@ -128,9 +124,7 @@ switch (command) {
       console.error("Error: Version ID is required for promote command");
       console.error("Usage: uifork promote <component-path> <version-id>");
       console.error("Example: uifork promote SomeDropdownComponent v2");
-      console.error(
-        "Example: uifork promote frontend/src/SomeDropdownComponent.tsx v1_2",
-      );
+      console.error("Example: uifork promote frontend/src/SomeDropdownComponent.tsx v1_2");
       process.exit(1);
     }
 
@@ -180,10 +174,7 @@ switch (command) {
         `${manager.componentName}.v${fileVersion}${extension}`,
       );
 
-      const displayVersion = targetVersion
-        .replace(/^v/, "")
-        .replace(/_/g, ".")
-        .toUpperCase();
+      const displayVersion = targetVersion.replace(/^v/, "").replace(/_/g, ".").toUpperCase();
 
       const importSuffix = manager.versionToImportSuffix(fileVersion);
       const componentName = `${manager.componentName}${importSuffix}`;
@@ -225,9 +216,7 @@ export default function ${componentName}() {
   case "duplicate":
     if (!argument) {
       console.error("Error: Component path and version ID are required");
-      console.error(
-        "Usage: uifork fork <component-path> <version-id> [target-version]",
-      );
+      console.error("Usage: uifork fork <component-path> <version-id> [target-version]");
       console.error("Example: uifork fork SomeDropdownComponent v1");
       console.error("Example: uifork fork SomeDropdownComponent v1 v2");
       process.exit(1);
@@ -236,9 +225,7 @@ export default function ${componentName}() {
     const sourceVersion = args[2];
     if (!sourceVersion) {
       console.error("Error: Source version ID is required");
-      console.error(
-        "Usage: uifork fork <component-path> <version-id> [target-version]",
-      );
+      console.error("Usage: uifork fork <component-path> <version-id> [target-version]");
       process.exit(1);
     }
 
@@ -294,12 +281,8 @@ export default function ${componentName}() {
 
   case "rename":
     if (!argument) {
-      console.error(
-        "Error: Component path, version ID, and new version ID are required",
-      );
-      console.error(
-        "Usage: uifork rename <component-path> <version-id> <new-version-id>",
-      );
+      console.error("Error: Component path, version ID, and new version ID are required");
+      console.error("Usage: uifork rename <component-path> <version-id> <new-version-id>");
       console.error("Example: uifork rename SomeDropdownComponent v1 v2");
       process.exit(1);
     }
@@ -309,9 +292,7 @@ export default function ${componentName}() {
 
     if (!oldVersion || !newVersionId) {
       console.error("Error: Both version ID and new version ID are required");
-      console.error(
-        "Usage: uifork rename <component-path> <version-id> <new-version-id>",
-      );
+      console.error("Usage: uifork rename <component-path> <version-id> <new-version-id>");
       process.exit(1);
     }
 

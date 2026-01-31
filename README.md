@@ -23,18 +23,18 @@ Add to your `index.html` `<head>`:
 ```html
 <!doctype html>
 <html lang="en">
-<head>
-  <script type="module">
-    // Only load in development
-    if (import.meta.env.DEV) {
-      import("uifork/auto-init");
-    }
-  </script>
-</head>
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
-</body>
+  <head>
+    <script type="module">
+      // Only load in development
+      if (import.meta.env.DEV) {
+        import("uifork/auto-init");
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
 ```
 

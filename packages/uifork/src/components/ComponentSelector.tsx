@@ -79,9 +79,7 @@ export function ComponentSelectorDropdown({
         visibility: "hidden",
       }}
     >
-      <div className={styles.componentSelectorDropdownTitle}>
-        Branched components
-      </div>
+      <div className={styles.componentSelectorDropdownTitle}>Branched components</div>
       {mountedComponents.length === 0 ? (
         <div className={styles.emptyState}>No mounted components found</div>
       ) : (
@@ -90,22 +88,16 @@ export function ComponentSelectorDropdown({
             key={component.name}
             onClick={() => onSelect(component.name)}
             className={`${styles.componentSelectorItem} ${styles.menuItem} ${
-              component.name === selectedComponent
-                ? styles.componentSelectorItemSelected
-                : ""
+              component.name === selectedComponent ? styles.componentSelectorItemSelected : ""
             }`}
           >
             <div className={styles.componentSelectorItemCheckmarkContainer}>
               {component.name === selectedComponent && (
-                <CheckmarkIcon
-                  className={styles.componentSelectorItemCheckmark}
-                />
+                <CheckmarkIcon className={styles.componentSelectorItemCheckmark} />
               )}
             </div>
             <span className={styles.componentSelectorItemName}>{component.name}</span>
-            <span className={styles.componentSelectorItemCount}>
-              {component.versions.length}
-            </span>
+            <span className={styles.componentSelectorItemCount}>{component.versions.length}</span>
           </button>
         ))
       )}

@@ -25,8 +25,7 @@ export function useLocalStorage<T>(
     (value: T | ((val: T) => T)) => {
       try {
         setStoredValue((currentValue) => {
-          const valueToStore =
-            value instanceof Function ? value(currentValue) : value;
+          const valueToStore = value instanceof Function ? value(currentValue) : value;
           if (typeof window !== "undefined") {
             // Remove the key if value is empty string (for string types)
             if (valueToStore === "" && typeof initialValue === "string") {

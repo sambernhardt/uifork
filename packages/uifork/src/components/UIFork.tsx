@@ -1,19 +1,10 @@
-import {
-  autoUpdate,
-  computePosition,
-  flip,
-  offset,
-  shift,
-} from "@floating-ui/dom";
+import { autoUpdate, computePosition, flip, offset, shift } from "@floating-ui/dom";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
 import type { UIForkProps } from "../types";
 import styles from "./UIFork.module.css";
-import {
-  ComponentSelector,
-  ComponentSelectorDropdown,
-} from "./ComponentSelector";
+import { ComponentSelector, ComponentSelectorDropdown } from "./ComponentSelector";
 import { VersionsList } from "./VersionsList";
 import { SettingsView } from "./SettingsView";
 import { EmptyStateNoConnection } from "./EmptyStateNoConnection";
@@ -27,10 +18,7 @@ import { useVersionManagement } from "../hooks/useVersionManagement";
 import { usePopoverPosition } from "../hooks/usePopoverPosition";
 import { useClickOutside } from "../hooks/useClickOutside";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import {
-  useVersionKeyboardShortcuts,
-  useDropdownKeyboard,
-} from "../hooks/useKeyboardShortcuts";
+import { useVersionKeyboardShortcuts, useDropdownKeyboard } from "../hooks/useKeyboardShortcuts";
 import { ANIMATION_DURATION, ANIMATION_EASING } from "./constants";
 import TriggerContent from "./TriggerContent";
 import { ActiveView } from "./types";
@@ -59,9 +47,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isComponentSelectorOpen, setIsComponentSelectorOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [openPopoverVersion, setOpenPopoverVersion] = useState<string | null>(
-    null
-  );
+  const [openPopoverVersion, setOpenPopoverVersion] = useState<string | null>(null);
   const [componentSelectorPosition, setComponentSelectorPosition] = useState({
     x: 0,
     y: 0,
@@ -83,16 +69,13 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   const DRAG_THRESHOLD = 5;
 
   // Settings
-  const [theme, setTheme] = useLocalStorage<"light" | "dark" | "system">(
-    "uifork-theme",
-    "system"
-  );
+  const [theme, setTheme] = useLocalStorage<"light" | "dark" | "system">("uifork-theme", "system");
   const [position, setPosition] = useLocalStorage<
     "top-left" | "top-right" | "bottom-left" | "bottom-right"
   >("uifork-position", "bottom-right");
   const [codeEditor, setCodeEditor] = useLocalStorage<"vscode" | "cursor">(
     "uifork-code-editor",
-    "vscode"
+    "vscode",
   );
 
   // Root ref for theme wrapper
@@ -106,12 +89,8 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   const selectedComponentRef = useRef<string>("");
 
   // Component discovery hook
-  const {
-    mountedComponents,
-    selectedComponent,
-    setSelectedComponent,
-    onComponentsUpdate,
-  } = useComponentDiscovery({ port });
+  const { mountedComponents, selectedComponent, setSelectedComponent, onComponentsUpdate } =
+    useComponentDiscovery({ port });
 
   // Keep ref updated with current selected component
   useEffect(() => {
@@ -119,9 +98,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   }, [selectedComponent]);
 
   // Get current component's versions
-  const currentComponent = mountedComponents.find(
-    (c) => c.name === selectedComponent
-  );
+  const currentComponent = mountedComponents.find((c) => c.name === selectedComponent);
   const versionKeys = currentComponent?.versions || [];
 
   // Version management hook
@@ -146,10 +123,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     onVersionAck: ({ version, message, newVersion }) => {
       let versionToActivate: string | null = null;
 
-      if (
-        message?.includes("duplicated") ||
-        message?.includes("created new version")
-      ) {
+      if (message?.includes("duplicated") || message?.includes("created new version")) {
         versionToActivate = version;
       } else if (message?.includes("renamed") && newVersion) {
         versionToActivate = newVersion;
@@ -167,10 +141,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       const currentSelected = selectedComponentRef.current;
 
       // Remove if either state or localStorage matches the promoted component
-      if (
-        currentSelected === promotedComponent ||
-        storedComponent === promotedComponent
-      ) {
+      if (currentSelected === promotedComponent || storedComponent === promotedComponent) {
         // Directly remove from localStorage immediately
         localStorage.removeItem("uifork-selected-component");
         // Clear state (hook should also handle removal, but we've already done it)
@@ -204,8 +175,9 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   });
 
   // Popover positioning hook
-  const { popoverPositions, setPopoverTriggerRef, setPopoverDropdownRef } =
-    usePopoverPosition({ openPopoverVersion });
+  const { popoverPositions, setPopoverTriggerRef, setPopoverDropdownRef } = usePopoverPosition({
+    openPopoverVersion,
+  });
 
   // Keyboard shortcuts for version switching
   useVersionKeyboardShortcuts({
@@ -262,30 +234,21 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       (target: Node) => {
         // Check if clicking inside popover elements
         if (openPopoverVersion) {
-          const popoverElements = document.querySelectorAll(
-            "[data-popover-dropdown]"
-          );
+          const popoverElements = document.querySelectorAll("[data-popover-dropdown]");
           for (const el of popoverElements) {
             if (el.contains(target)) return true;
           }
         }
         return false;
       },
-      [openPopoverVersion]
+      [openPopoverVersion],
     ),
   });
 
   // Position component selector dropdown
   useEffect(() => {
-    if (
-      !isComponentSelectorOpen ||
-      !containerRef.current ||
-      !componentSelectorRef.current
-    )
-      return;
-    const trigger = containerRef.current.querySelector(
-      "[data-component-selector]"
-    ) as HTMLElement;
+    if (!isComponentSelectorOpen || !containerRef.current || !componentSelectorRef.current) return;
+    const trigger = containerRef.current.querySelector("[data-component-selector]") as HTMLElement;
     if (!trigger) return;
 
     const updatePosition = async () => {
@@ -297,23 +260,17 @@ export function UIFork({ port = 3001 }: UIForkProps) {
             placement: "left-start",
             strategy: "fixed",
             middleware: [offset(4), flip(), shift({ padding: 8 })],
-          }
+          },
         );
         setComponentSelectorPosition({ x, y });
-        if (componentSelectorRef.current)
-          componentSelectorRef.current.style.visibility = "visible";
+        if (componentSelectorRef.current) componentSelectorRef.current.style.visibility = "visible";
       } catch {
         // Error positioning component selector
       }
     };
-    if (componentSelectorRef.current)
-      componentSelectorRef.current.style.visibility = "hidden";
+    if (componentSelectorRef.current) componentSelectorRef.current.style.visibility = "hidden";
     updatePosition();
-    const cleanup = autoUpdate(
-      containerRef.current,
-      componentSelectorRef.current,
-      updatePosition
-    );
+    const cleanup = autoUpdate(containerRef.current, componentSelectorRef.current, updatePosition);
     return cleanup;
   }, [isComponentSelectorOpen]);
 
@@ -353,7 +310,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         });
       }
     },
-    [confirmRename, sendMessage]
+    [confirmRename, sendMessage],
   );
 
   const handlePromoteVersion = (version: string, e: React.MouseEvent) => {
@@ -361,8 +318,8 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     if (
       window.confirm(
         `Are you sure you want to promote version ${formatVersionLabel(
-          version
-        )}?\n\nThis will:\n- Replace the main component with this version\n- Remove all versioning scaffolding\n- This action cannot be undone`
+          version,
+        )}?\n\nThis will:\n- Replace the main component with this version\n- Remove all versioning scaffolding\n- This action cannot be undone`,
       )
     ) {
       sendMessage("promote_version", { version });
@@ -427,10 +384,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
 
   // Calculate nearest corner based on position
   const getNearestCorner = useCallback(
-    (
-      x: number,
-      y: number
-    ): "top-left" | "top-right" | "bottom-left" | "bottom-right" => {
+    (x: number, y: number): "top-left" | "top-right" | "bottom-left" | "bottom-right" => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const centerX = viewportWidth / 2;
@@ -446,7 +400,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         return "bottom-right";
       }
     },
-    []
+    [],
   );
 
   // Handle drag end - snap to nearest corner
@@ -481,7 +435,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       // Trigger reset of drag transforms
       setResetDrag(true);
     },
-    [getNearestCorner, setPosition]
+    [getNearestCorner, setPosition],
   );
 
   // Handle pointer down - start tracking for drag threshold
@@ -496,7 +450,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         containerRef.current.setAttribute("data-drag-tracking", "true");
       }
     },
-    [isOpen]
+    [isOpen],
   );
 
   // Global pointer move handler to check threshold
@@ -558,9 +512,12 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   useEffect(() => {
     if (resetDrag && !isDragging) {
       // Reset flag after animation completes
-      const timer = setTimeout(() => {
-        setResetDrag(false);
-      }, ANIMATION_DURATION * 1000 + 50);
+      const timer = setTimeout(
+        () => {
+          setResetDrag(false);
+        },
+        ANIMATION_DURATION * 1000 + 50,
+      );
       return () => clearTimeout(timer);
     }
   }, [resetDrag, isDragging]);
@@ -636,9 +593,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   useEffect(() => {
     if (!isMounted) return;
 
-    let rootEl = document.getElementById(
-      "uifork-root"
-    ) as HTMLDivElement | null;
+    let rootEl = document.getElementById("uifork-root") as HTMLDivElement | null;
     if (!rootEl) {
       rootEl = document.createElement("div");
       rootEl.id = "uifork-root";
@@ -659,8 +614,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   const activeView: ActiveView = React.useMemo(() => {
     if (!isOpen) {
       // When closed, determine if we show icon-only or icon+label
-      const hasConnection =
-        connectionStatus !== "disconnected" && connectionStatus !== "failed";
+      const hasConnection = connectionStatus !== "disconnected" && connectionStatus !== "failed";
       const hasComponents = mountedComponents.length > 0;
 
       // Show icon+label when connected and has components
@@ -702,9 +656,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     <>
       <motion.div
         ref={containerRef}
-        className={`${styles.container} ${
-          !isOpen ? styles.containerClosed : ""
-        }`}
+        className={`${styles.container} ${!isOpen ? styles.containerClosed : ""}`}
         layout
         drag={dragEnabled && !isOpen}
         dragControls={dragControls}
@@ -739,8 +691,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
         }}
       >
         <AnimatePresence mode="popLayout" initial={false}>
-          {activeView === "closed-trigger-icon" ||
-          activeView === "closed-trigger-label" ? (
+          {activeView === "closed-trigger-icon" || activeView === "closed-trigger-label" ? (
             <motion.button
               key="trigger"
               suppressHydrationWarning
@@ -758,9 +709,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
               aria-expanded={false}
               aria-haspopup="listbox"
               className={`${styles.trigger} ${
-                activeView === "closed-trigger-icon"
-                  ? styles.triggerIconOnly
-                  : ""
+                activeView === "closed-trigger-icon" ? styles.triggerIconOnly : ""
               }`}
               layout
               initial={{ opacity: 0 }}
@@ -797,17 +746,11 @@ export function UIFork({ port = 3001 }: UIForkProps) {
               }}
             >
               {activeView === "opened-no-connection" && (
-                <EmptyStateNoConnection
-                  onCopyCommand={handleCopyWatchCommand}
-                  copied={copied}
-                />
+                <EmptyStateNoConnection onCopyCommand={handleCopyWatchCommand} copied={copied} />
               )}
 
               {activeView === "opened-no-components" && (
-                <EmptyStateNoComponents
-                  onCopyCommand={handleCopyCommand}
-                  copied={copied}
-                />
+                <EmptyStateNoComponents onCopyCommand={handleCopyCommand} copied={copied} />
               )}
 
               {activeView === "opened-settings" && (
@@ -827,9 +770,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                   {/* Component selector */}
                   <ComponentSelector
                     selectedComponent={selectedComponent}
-                    onToggle={() =>
-                      setIsComponentSelectorOpen(!isComponentSelectorOpen)
-                    }
+                    onToggle={() => setIsComponentSelectorOpen(!isComponentSelectorOpen)}
                     onSettingsClick={(e) => {
                       e.stopPropagation();
                       setIsSettingsOpen(true);
@@ -875,21 +816,20 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       </motion.div>
 
       {/* Component selector dropdown */}
-      {activeView !== "closed-trigger-icon" &&
-        activeView !== "closed-trigger-label" && (
-          <ComponentSelectorDropdown
-            mountedComponents={mountedComponents}
-            selectedComponent={selectedComponent}
-            isOpen={isComponentSelectorOpen}
-            position={componentSelectorPosition}
-            onSelect={(componentName) => {
-              setSelectedComponent(componentName);
-              setIsComponentSelectorOpen(false);
-            }}
-            componentSelectorRef={componentSelectorRef}
-          />
-        )}
+      {activeView !== "closed-trigger-icon" && activeView !== "closed-trigger-label" && (
+        <ComponentSelectorDropdown
+          mountedComponents={mountedComponents}
+          selectedComponent={selectedComponent}
+          isOpen={isComponentSelectorOpen}
+          position={componentSelectorPosition}
+          onSelect={(componentName) => {
+            setSelectedComponent(componentName);
+            setIsComponentSelectorOpen(false);
+          }}
+          componentSelectorRef={componentSelectorRef}
+        />
+      )}
     </>,
-    portalRoot
+    portalRoot,
   );
 }

@@ -53,11 +53,7 @@ export function VersionItem({
       </div>
       <div className={styles.versionLabel}>{formatVersionLabel(version)}</div>
       {/* Action buttons */}
-      <div
-        data-actions
-        className={styles.actions}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div data-actions className={styles.actions} onClick={(e) => e.stopPropagation()}>
         <Tooltip label="Fork version" placement="top">
           <button
             onClick={(e) => {

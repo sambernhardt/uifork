@@ -27,18 +27,9 @@ class VersionPromoter {
     this.extension = this.detectFileExtension(versionId);
 
     // Set up file paths
-    this.wrapperFile = path.join(
-      this.watchDir,
-      `${this.componentName}${this.extension}`,
-    );
-    this.versionsFilePath = path.join(
-      this.watchDir,
-      `${this.componentName}.versions.ts`,
-    );
-    this.uiSwitcherFile = path.join(
-      this.watchDir,
-      `${this.componentName}.UISwitcher.tsx`,
-    );
+    this.wrapperFile = path.join(this.watchDir, `${this.componentName}${this.extension}`);
+    this.versionsFilePath = path.join(this.watchDir, `${this.componentName}.versions.ts`);
+    this.uiSwitcherFile = path.join(this.watchDir, `${this.componentName}.UISwitcher.tsx`);
     this.versionFile = this.getVersionFilePath(versionId);
 
     console.log(`Promoting version: ${versionId}`);
@@ -82,10 +73,7 @@ class VersionPromoter {
       } else if (stat.isFile()) {
         // If it's a component file, look in the same directory
         const dir = path.dirname(resolvedPath);
-        const componentName = path.basename(
-          resolvedPath,
-          path.extname(resolvedPath),
-        );
+        const componentName = path.basename(resolvedPath, path.extname(resolvedPath));
         const versionsFile = path.join(dir, `${componentName}.versions.ts`);
         if (fs.existsSync(versionsFile)) {
           return versionsFile;
@@ -139,10 +127,7 @@ class VersionPromoter {
     const extensions = [".tsx", ".ts", ".jsx", ".js"];
 
     for (const ext of extensions) {
-      const filePath = path.join(
-        this.watchDir,
-        `${this.componentName}.v${fileVersion}${ext}`,
-      );
+      const filePath = path.join(this.watchDir, `${this.componentName}.v${fileVersion}${ext}`);
       if (fs.existsSync(filePath)) {
         return ext;
       }
@@ -155,17 +140,12 @@ class VersionPromoter {
   getVersionFilePath(versionId) {
     const fileVersion = this.versionIdToFileVersion(versionId);
     const extension = this.detectFileExtension(versionId);
-    return path.join(
-      this.watchDir,
-      `${this.componentName}.v${fileVersion}${extension}`,
-    );
+    return path.join(this.watchDir, `${this.componentName}.v${fileVersion}${extension}`);
   }
 
   getAllVersionFiles() {
     const files = fs.readdirSync(this.watchDir);
-    const versionPattern = new RegExp(
-      `^${this.componentName}\\.v([\\d_]+)\\.(tsx?|jsx?)$`,
-    );
+    const versionPattern = new RegExp(`^${this.componentName}\\.v([\\d_]+)\\.(tsx?|jsx?)$`);
     return files
       .filter((file) => {
         const match = file.match(versionPattern);
@@ -210,9 +190,7 @@ class VersionPromoter {
     // Clean up the version content - remove version-specific naming if needed
     // The component name in the version file might be like ComponentNameV2
     // We want to replace it with just ComponentName
-    const importSuffix = this.versionToImportSuffix(
-      this.versionIdToFileVersion(this.versionId),
-    );
+    const importSuffix = this.versionToImportSuffix(this.versionIdToFileVersion(this.versionId));
     const versionedComponentName = `${this.componentName}${importSuffix}`;
 
     let cleanedContent = versionContent;
