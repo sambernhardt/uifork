@@ -12,6 +12,11 @@ interface UseContainerPositioningProps {
   isComponentSelectorOpen: boolean;
   containerRef: RefObject<HTMLDivElement | null>;
   componentSelectorRef: RefObject<HTMLDivElement | null>;
+  /**
+   * If true, will detect and position relative to other fixed position dev tools
+   * in the same corner. Defaults to false.
+   */
+  enableElementAwarePositioning?: boolean;
 }
 
 interface UseContainerPositioningReturn {
@@ -30,6 +35,7 @@ export function useContainerPositioning({
   isComponentSelectorOpen,
   containerRef,
   componentSelectorRef,
+  enableElementAwarePositioning = true,
 }: UseContainerPositioningProps): UseContainerPositioningReturn {
   const [componentSelectorPosition, setComponentSelectorPosition] = useState({
     x: 0,
@@ -37,14 +43,19 @@ export function useContainerPositioning({
   });
 
   // Find existing fixed position dev tools
-  const foundElements = useExistingDevToolPositions();
+  const foundElements = useExistingDevToolPositions(enableElementAwarePositioning);
 
   // Calculate container position based on settings, adjusting for found elements
   const containerPosition = useMemo(() => {
     const basePosition = getContainerPosition(position);
     
+    // Only apply element-aware positioning if enabled
+    if (!enableElementAwarePositioning) {
+      return basePosition;
+    }
+    
     // Filter elements to only include those within the corner offset threshold
-    const elementsInCorner = foundElements.filter(
+    const elementsInCorner = (foundElements || []).filter(
       (el) => el.position === position && el.offset <= CORNER_OFFSET_THRESHOLD
     );
     
@@ -89,7 +100,7 @@ export function useContainerPositioning({
     }
     
     return basePosition;
-  }, [position, foundElements]);
+  }, [position, foundElements, enableElementAwarePositioning]);
   
   const transformOrigin = useMemo(() => getTransformOrigin(position), [position]);
 
@@ -228,11 +239,17 @@ function findFixedPositionElements(): DevToolPosition[] {
  * returns them, and logs them to the console.
  * Sets up observers to detect when elements move or change position.
  */
-export function useExistingDevToolPositions(): DevToolPosition[] {
+export function useExistingDevToolPositions(enabled: boolean = true): DevToolPosition[] {
   const [fixedElements, setFixedElements] = useState<DevToolPosition[]>([]);
   const fixedElementsRef = useRef<DevToolPosition[]>([]);
 
   useEffect(() => {
+    if (!enabled) {
+      setFixedElements([]);
+      fixedElementsRef.current = [];
+      return;
+    }
+
     let resizeObservers: ResizeObserver[] = [];
     let mutationObserver: MutationObserver | null = null;
     let isMounted = true;
@@ -362,7 +379,7 @@ export function useExistingDevToolPositions(): DevToolPosition[] {
       }
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [enabled]);
 
   return fixedElements;
 }

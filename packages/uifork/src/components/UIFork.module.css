@@ -3,7 +3,7 @@
   --uifork-bg-hover: #303030;
   --uifork-button-hover: #404040;
   --uifork-bg-input: #404040;
-  --uifork-border-color: #404040;
+  --uifork-border-color: #2f2f2f;
   --uifork-text-primary: white;
   --uifork-text-secondary: #a3a3a3;
   --uifork-text-muted: #a3a3a3;
@@ -40,7 +40,7 @@
     --uifork-bg-dark: #ffffff;
     --uifork-bg-hover: #f5f5f5;
     --uifork-bg-input: #e5e5e5;
-    --uifork-border-color: #d4d4d4;
+    --uifork-border-color: #f0f0f0;
     --uifork-text-primary: #171717;
     --uifork-text-secondary: #525252;
     --uifork-text-muted: #737373;
@@ -699,24 +699,40 @@
 .settingsView {
   display: flex;
   flex-direction: column;
+  gap: 12px;
   min-height: 200px;
+  padding: 12px;
 }
 
 .settingsBackButton {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 4px;
+  padding: 0;
   font-size: 14px;
   color: var(--uifork-fg);
   background-color: transparent;
   border: none;
-  border-radius: 8px;
   cursor: pointer;
   text-align: left;
-  transition: background-color 0.15s;
+  z-index: 1;
 }
-.settingsBackButton:hover {
+
+.settingsBackButton::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -10px;
+  bottom: -6px;
+  background-color: transparent;
+  border-radius: 8px;
+  transition: background-color 0.15s;
+  z-index: -1;
+}
+
+.settingsBackButton:hover::before {
   background-color: var(--uifork-hover-bg);
 }
 
@@ -724,11 +740,14 @@
   width: 16px;
   height: 16px;
   transform: rotate(180deg);
+  margin-left: -2px;
 }
 
 .settingsContent {
-  padding: 12px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .settingsTitle {
@@ -746,7 +765,6 @@
 }
 
 .settingsGroup {
-  margin-bottom: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -764,7 +782,8 @@
 
 .settingsSelect {
   flex: 1;
-  padding: 8px 12px;
+  padding: 0 12px;
+  height: var(--uifork-trigger-height);
   font-size: 14px;
   color: var(--uifork-fg);
   background-color: var(--uifork-bg-input);
@@ -796,6 +815,69 @@
 .settingsSelect option {
   background-color: var(--uifork-bg-dark);
   color: var(--uifork-fg);
+}
+
+.settingsCheckboxGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.settingsCheckboxLabel {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  width: 100%;
+  cursor: pointer;
+  align-items: flex-start;
+}
+
+.settingsCheckboxInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.settingsCheckboxVisual {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1.5px solid var(--uifork-border-color);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.settingsCheckboxVisualChecked {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.settingsCheckboxContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+}
+
+.settingsCheckboxLabelText {
+  width: auto;
+  margin: 0;
+  font-size: 14px;
+}
+
+.settingsCheckboxDescription {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.8;
 }
 
 /* Tooltip */

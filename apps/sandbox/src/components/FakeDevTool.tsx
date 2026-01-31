@@ -58,7 +58,10 @@ function getNearestCorner(x: number, y: number): Position {
 }
 
 export function FakeDevTool() {
-  const [position, setPosition] = useLocalStorage<Position>("fake-dev-tool-position", "bottom-left");
+  const [position, setPosition] = useLocalStorage<Position>(
+    "fake-dev-tool-position",
+    "bottom-left",
+  );
   const [isDragging, setIsDragging] = useState(false);
   const [resetDrag, setResetDrag] = useState(false);
   const [dragEnabled, setDragEnabled] = useState(false);
@@ -157,9 +160,12 @@ export function FakeDevTool() {
 
   useEffect(() => {
     if (resetDrag && !isDragging) {
-      const timer = setTimeout(() => {
-        setResetDrag(false);
-      }, ANIMATION_DURATION * 1000 + 50);
+      const timer = setTimeout(
+        () => {
+          setResetDrag(false);
+        },
+        ANIMATION_DURATION * 1000 + 50,
+      );
       return () => clearTimeout(timer);
     }
   }, [resetDrag, isDragging]);
