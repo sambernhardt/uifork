@@ -159,6 +159,124 @@ interface DevToolPosition {
 }
 
 /**
+ * Helper function to find Next.js devtools indicator in shadow DOM.
+ * Looks for elements with data-nextjs-dev-overlay="true" and traverses
+ * their children (nextjs-portal) to find shadow roots containing #devtools-indicator.
+ */
+function findNextJSDevToolsIndicator(): HTMLElement | null {
+  // Find all elements with data-nextjs-dev-overlay="true"
+  const overlayElements = document.querySelectorAll('[data-nextjs-dev-overlay="true"]');
+  
+  for (const overlayElement of overlayElements) {
+    if (overlayElement instanceof HTMLElement) {
+      // Check if this element has a shadow root
+      const overlayShadowRoot = overlayElement.shadowRoot;
+      
+      // Look for nextjs-portal as a child element (not in shadow root)
+      const portal = overlayElement.querySelector("nextjs-portal");
+      
+      if (portal instanceof HTMLElement) {
+        // The shadow root is on the portal element
+        const portalShadowRoot = portal.shadowRoot;
+        
+        if (portalShadowRoot) {
+          // Look for #devtools-indicator inside the portal's shadow root
+          const indicator = portalShadowRoot.getElementById("devtools-indicator");
+          
+          if (indicator instanceof HTMLElement) {
+            return indicator;
+          }
+          
+          // Also try querySelector as fallback
+          const indicatorByQuery = portalShadowRoot.querySelector("#devtools-indicator");
+          
+          if (indicatorByQuery instanceof HTMLElement) {
+            return indicatorByQuery;
+          }
+        }
+      }
+      
+      // Fallback: check if overlay element itself has shadow root
+      if (overlayShadowRoot) {
+        const indicator = overlayShadowRoot.getElementById("devtools-indicator");
+        
+        if (indicator instanceof HTMLElement) {
+          return indicator;
+        }
+      }
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Helper function to process a fixed position element and add it to the results.
+ */
+function processFixedElement(
+  element: HTMLElement,
+  uiforkRoot: HTMLElement | null,
+  viewportWidth: number,
+  viewportHeight: number,
+  viewportCenterX: number,
+  viewportCenterY: number,
+  fixed: DevToolPosition[]
+): void {
+  // Skip elements inside #uifork-root
+  if (uiforkRoot && uiforkRoot.contains(element)) {
+    return;
+  }
+
+  const computedStyle = window.getComputedStyle(element);
+  if (computedStyle.position === "fixed") {
+    const rect = element.getBoundingClientRect();
+    const elementCenterX = rect.left + rect.width / 2;
+    const elementCenterY = rect.top + rect.height / 2;
+
+    // Determine corner position
+    let position: CornerPosition;
+    if (elementCenterY < viewportCenterY) {
+      // Top half
+      position = elementCenterX < viewportCenterX ? "top-left" : "top-right";
+    } else {
+      // Bottom half
+      position = elementCenterX < viewportCenterX ? "bottom-left" : "bottom-right";
+    }
+
+    // Calculate offset from nearest edge (max of x and y offsets)
+    let offset: number;
+    switch (position) {
+      case "top-left":
+        offset = Math.max(rect.left, rect.top);
+        break;
+      case "top-right":
+        offset = Math.max(viewportWidth - rect.right, rect.top);
+        break;
+      case "bottom-left":
+        offset = Math.max(rect.left, viewportHeight - rect.bottom);
+        break;
+      case "bottom-right":
+        offset = Math.max(viewportWidth - rect.right, viewportHeight - rect.bottom);
+        break;
+    }
+
+    fixed.push({
+      element,
+      position,
+      offset,
+      width: rect.width,
+      height: rect.height,
+      rect: {
+        top: rect.top,
+        bottom: rect.bottom,
+        left: rect.left,
+        right: rect.right,
+      },
+    });
+  }
+}
+
+/**
  * Core function that finds all fixed position elements and calculates their positions.
  * Returns all fixed elements regardless of their offset from corners.
  * This can be called multiple times when positions change.
@@ -173,62 +291,34 @@ function findFixedPositionElements(): DevToolPosition[] {
   const viewportCenterY = viewportHeight / 2;
   const fixed: DevToolPosition[] = [];
 
+  // Process all regular fixed position elements
   allElements.forEach((element) => {
     if (element instanceof HTMLElement) {
-      // Skip elements inside #uifork-root
-      if (uiforkRoot && uiforkRoot.contains(element)) {
-        return;
-      }
-
-      const computedStyle = window.getComputedStyle(element);
-      if (computedStyle.position === "fixed") {
-        const rect = element.getBoundingClientRect();
-        const elementCenterX = rect.left + rect.width / 2;
-        const elementCenterY = rect.top + rect.height / 2;
-
-        // Determine corner position
-        let position: CornerPosition;
-        if (elementCenterY < viewportCenterY) {
-          // Top half
-          position = elementCenterX < viewportCenterX ? "top-left" : "top-right";
-        } else {
-          // Bottom half
-          position = elementCenterX < viewportCenterX ? "bottom-left" : "bottom-right";
-        }
-
-        // Calculate offset from nearest edge (max of x and y offsets)
-        let offset: number;
-        switch (position) {
-          case "top-left":
-            offset = Math.max(rect.left, rect.top);
-            break;
-          case "top-right":
-            offset = Math.max(viewportWidth - rect.right, rect.top);
-            break;
-          case "bottom-left":
-            offset = Math.max(rect.left, viewportHeight - rect.bottom);
-            break;
-          case "bottom-right":
-            offset = Math.max(viewportWidth - rect.right, viewportHeight - rect.bottom);
-            break;
-        }
-
-        fixed.push({
-          element,
-          position,
-          offset,
-          width: rect.width,
-          height: rect.height,
-          rect: {
-            top: rect.top,
-            bottom: rect.bottom,
-            left: rect.left,
-            right: rect.right,
-          },
-        });
-      }
+      processFixedElement(
+        element,
+        uiforkRoot,
+        viewportWidth,
+        viewportHeight,
+        viewportCenterX,
+        viewportCenterY,
+        fixed
+      );
     }
   });
+
+  // Specifically look for Next.js devtools indicator in shadow DOM
+  const nextjsIndicator = findNextJSDevToolsIndicator();
+  if (nextjsIndicator) {
+    processFixedElement(
+      nextjsIndicator,
+      uiforkRoot,
+      viewportWidth,
+      viewportHeight,
+      viewportCenterX,
+      viewportCenterY,
+      fixed
+    );
+  }
 
   return fixed;
 }
