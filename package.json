@@ -11,7 +11,9 @@
     "sandbox:full": "turbo run dev --filter=uifork --filter=sandbox",
     "sandbox:watch": "cd apps/sandbox && npm run watch",
     "dev:uifork": "turbo run dev --filter=uifork",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix"
   },
   "keywords": [
     "ui",
@@ -29,6 +31,7 @@
     "apps/*"
   ],
   "devDependencies": {
+    "oxlint": "^1.42.0",
     "turbo": "^2.8.0"
   },
   "packageManager": "npm@10.9.0"
