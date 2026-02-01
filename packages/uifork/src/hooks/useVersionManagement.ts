@@ -89,8 +89,8 @@ export function useVersionManagement({
       const newLabel = renameValue.trim();
       const currentLabel = getVersionLabel(version) || "";
 
-      // If label hasn't changed or is empty, cancel
-      if (!newLabel || newLabel === currentLabel) {
+      // If label hasn't changed, cancel
+      if (newLabel === currentLabel) {
         setEditingVersion(null);
         setRenameValue("");
         return null;

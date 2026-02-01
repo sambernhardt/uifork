@@ -63,7 +63,7 @@ export function useDropdownKeyboard({
   onClose,
 }: UseDropdownKeyboardOptions) {
   useEffect(() => {
-    if (!isOpen || !containerRef.current) return;
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (openPopoverVersion) {
@@ -76,14 +76,14 @@ export function useDropdownKeyboard({
         }
         if (editingVersion) {
           onCancelRename();
+          return;
         }
         onClose();
         triggerRef.current?.focus();
       }
     };
-    containerRef.current.addEventListener("keydown", handleKeyDown);
-    const container = containerRef.current;
-    return () => container?.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [
     isOpen,
     containerRef,

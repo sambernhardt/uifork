@@ -277,7 +277,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
   const handleConfirmRename = useCallback(
     (version: string) => {
       const newLabel = confirmRename(version);
-      if (newLabel) {
+      if (newLabel !== null) {
         sendMessage("rename_label", {
           version,
           newLabel,

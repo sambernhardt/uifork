@@ -1081,7 +1081,7 @@ export default function ${componentName}() {
         throw new Error("Missing version parameter");
       }
 
-      if (!newLabel || typeof newLabel !== "string") {
+      if (typeof newLabel !== "string") {
         throw new Error("Missing or invalid newLabel parameter");
       }
 
