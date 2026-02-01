@@ -572,7 +572,6 @@ export function UIFork({ port = 3001 }: UIForkProps) {
           )}
         </AnimatePresence>
       </motion.div>
-
       {/* Component selector dropdown */}
       {activeView !== "closed-trigger-icon" && activeView !== "closed-trigger-label" && (
         <ComponentSelectorDropdown

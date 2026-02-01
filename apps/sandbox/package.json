@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "UIFORK_LOCAL=true vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "watch": "node ../../packages/uifork/cli.js watch ./src"
@@ -26,7 +27,7 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
     "tw-animate-css": "^1.4.0",
-    "uifork": "^0.0.7-beta.4"
+    "uifork": "*"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",

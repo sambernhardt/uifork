@@ -3,20 +3,26 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
+// When UIFORK_LOCAL=true, point directly to source for HMR during active development
+const useLocalSource = process.env.UIFORK_LOCAL === "true";
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      // Alias the package to the source directory for direct imports
-      // This allows HMR to work with changes in the uifork package
-      // uifork: resolve(__dirname, "../../packages/uifork/src"),
       "@": path.resolve(__dirname, "./src"),
+      // When developing the uifork package, alias to source for HMR
+      ...(useLocalSource && {
+        uifork: path.resolve(__dirname, "../../packages/uifork/src"),
+      }),
     },
   },
   server: {
     watch: {
-      // Watch the uifork source directory for changes
-      ignored: ["!**/node_modules/**", "!**/packages/uifork/src/**"],
+      // Watch the uifork source directory for changes when using local source
+      ignored: useLocalSource
+        ? ["!**/node_modules/**", "!**/packages/uifork/src/**"]
+        : undefined,
     },
   },
 });

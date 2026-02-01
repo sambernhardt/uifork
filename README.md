@@ -1,6 +1,8 @@
 # uifork
 
-A CLI tool and React component library for managing UI component versions. Create multiple versions of your components, switch between them in real-time during development, and promote the best one when you're ready.
+A CLI tool and React component library for managing UI component versions. Create multiple versions of your components, let stakeholders switch between them to test and gather feedback, and promote the best one when you're ready.
+
+UIFork is designed for **testing and feedback** - use it locally during development, or deploy it to preview/staging environments so team members and stakeholders can compare UI variations before going to production.
 
 ## Installation
 
@@ -8,122 +10,30 @@ A CLI tool and React component library for managing UI component versions. Creat
 npm install uifork
 ```
 
+Or use yarn, pnpm, or bun.
+
 ## Quick Start
 
 ### 1. Add UIFork to your app
 
-UIFork can be automatically initialized by importing it in your HTML or app entry point. Choose the method that works best for your setup:
-
-#### Option A: Auto-initialization (Recommended)
-
-**For Vite projects:**
-
-Add to your `index.html` `<head>`:
-
-```html
-<!doctype html>
-<html lang="en">
-  <head>
-    <script type="module">
-      // Only load in development
-      if (import.meta.env.DEV) {
-        import("uifork/auto-init");
-      }
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
-```
-
-**For Next.js (App Router):**
-
-Add to your `app/layout.tsx`:
-
-```tsx
-import Script from "next/script";
-
-export default function RootLayout({ children }) {
-  return (
-    <html>
-      <head>
-        {process.env.NODE_ENV === "development" && (
-          <Script
-            src="//unpkg.com/uifork/dist/index.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
-          <link rel="stylesheet" href="//unpkg.com/uifork/dist/index.global.css" />
-        )}
-      </head>
-      <body>{children}</body>
-    </html>
-  );
-}
-```
-
-**For Next.js (Pages Router):**
-
-Add to your `pages/_document.tsx`:
-
-```tsx
-import { Html, Head, Main, NextScript } from "next/document";
-import Script from "next/script";
-
-export default function Document() {
-  return (
-    <Html>
-      <Head>
-        {process.env.NODE_ENV === "development" && (
-          <>
-            <Script
-              src="//unpkg.com/uifork/dist/index.global.js"
-              crossOrigin="anonymous"
-              strategy="beforeInteractive"
-            />
-            <link rel="stylesheet" href="//unpkg.com/uifork/dist/index.global.css" />
-          </>
-        )}
-      </Head>
-      <body>
-        <Main />
-        <NextScript />
-      </body>
-    </Html>
-  );
-}
-```
-
-**For Webpack/Other bundlers:**
-
-Import in your app entry point:
-
-```tsx
-// In your main.tsx or index.tsx
-if (process.env.NODE_ENV === "development") {
-  import("uifork/auto-init");
-}
-```
-
-#### Option B: Manual initialization
-
-If you prefer to manually add the component:
+Add the component anywhere in your React app, ideally at the root level. You control when it's shown - typically in local development and preview/staging environments (but not production).
 
 ```tsx
 import { UIFork } from "uifork";
-import "uifork/style.css";
+
+const showUIFork = process.env.NODE_ENV !== "production";
 
 function App() {
   return (
     <>
       <YourApp />
-      {process.env.NODE_ENV === "development" && <UIFork />}
+      {showUIFork && <UIFork />}
     </>
   );
 }
 ```
+
+No separate CSS import is needed - styles are automatically included.
 
 ### 2. Initialize a component for versioning
 
@@ -145,6 +55,95 @@ import Button from "./components/Button";
 // Works exactly as before - the active version is controlled by the UIFork widget
 <Button onClick={handleClick}>Click me</Button>;
 ```
+
+## Framework Examples
+
+### Vite
+
+```tsx
+import { UIFork } from "uifork";
+
+// Show in dev and preview, hide in production
+const showUIFork = import.meta.env.MODE !== "production";
+
+function App() {
+  return (
+    <>
+      <YourApp />
+      {showUIFork && <UIFork />}
+    </>
+  );
+}
+```
+
+### Next.js (App Router)
+
+```tsx
+// components/UIForkProvider.tsx
+"use client";
+import { UIFork } from "uifork";
+
+export function UIForkProvider() {
+  // Show in dev and preview, hide in production
+  if (process.env.NODE_ENV === "production") return null;
+  return <UIFork />;
+}
+
+// app/layout.tsx
+import { UIForkProvider } from "@/components/UIForkProvider";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <UIForkProvider />
+      </body>
+    </html>
+  );
+}
+```
+
+### Next.js (Pages Router)
+
+```tsx
+// pages/_app.tsx
+import { UIFork } from "uifork";
+
+export default function App({ Component, pageProps }) {
+  return (
+    <>
+      <Component {...pageProps} />
+      {process.env.NODE_ENV !== "production" && <UIFork />}
+    </>
+  );
+}
+```
+
+### Custom Environment Gating
+
+For more control over when UIFork appears, use custom environment variables:
+
+```tsx
+// Enable via NEXT_PUBLIC_ENABLE_UIFORK=true or VITE_ENABLE_UIFORK=true
+const showUIFork =
+  process.env.NODE_ENV !== "production" ||
+  process.env.NEXT_PUBLIC_ENABLE_UIFORK === "true";
+
+function App() {
+  return (
+    <>
+      <YourApp />
+      {showUIFork && <UIFork />}
+    </>
+  );
+}
+```
+
+This is useful when you want to:
+- Show UIFork on specific preview branches
+- Enable it for internal stakeholders on a staging domain
+- Gate it behind a feature flag
 
 ## CLI Commands
 
@@ -224,26 +223,6 @@ Promote a version to be the main component and remove all versioning scaffolding
 npx uifork promote Button v2
 ```
 
-**Alternative:** You can also add scripts to your `package.json`:
-
-```json
-{
-  "scripts": {
-    "uifork:watch": "uifork watch",
-    "uifork:init": "uifork init"
-  }
-}
-```
-
-Then run: `npm run uifork:watch`
-
-**Or install globally** (optional):
-
-```bash
-npm install -g uifork
-# Then use directly: uifork init ...
-```
-
 This will:
 
 - Replace `Button.tsx` with the content from `Button.v2.tsx`
@@ -255,7 +234,7 @@ This will:
 
 ### `UIFork`
 
-A floating UI widget that appears in your app during development. It connects to the watch server via WebSocket and allows you to:
+A floating UI widget for testing and gathering feedback on component variations. It connects to the watch server via WebSocket and allows you and your stakeholders to:
 
 - **Switch versions** - Click on any version to switch to it
 - **Create new versions** - Click the "+" button to create a blank version
@@ -265,35 +244,10 @@ A floating UI widget that appears in your app during development. It connects to
 - **Promote versions** - When satisfied, promote a version to become the main component
 - **Open in editor** - Click to open the version file in VS Code or Cursor
 
-**Auto-initialization:**
-
-UIFork automatically mounts itself when imported via `uifork/auto-init` or loaded via the global script. No manual component rendering needed!
-
-**Manual usage:**
-
-If you prefer manual control:
-
 ```tsx
 import { UIFork } from "uifork";
-import "uifork/style.css";
 
 <UIFork port={3001} />; // port defaults to 3001
-```
-
-**Configuration:**
-
-You can configure UIFork via HTML data attributes:
-
-```html
-<!-- Set custom port -->
-<html data-uifork-port="3002">
-  <!-- ... -->
-</html>
-
-<!-- Force enable in production (not recommended) -->
-<html data-uifork-enable="true">
-  <!-- ... -->
-</html>
 ```
 
 **Features:**
@@ -351,12 +305,34 @@ Versions follow a simple naming convention:
 3. When you select a version in the UI, it updates localStorage, which triggers `ForkedComponent` to re-render with the new version
 4. The watch server monitors your file system for new version files and automatically updates the `versions.ts` file
 
+## Potential Future Options
+
+These are not currently supported but may be considered in the future:
+
+### Auto-init (side-effect import)
+
+```html
+<script type="module">
+  if (import.meta.env.DEV) {
+    import("uifork/auto-init");
+  }
+</script>
+```
+
+### Script tag (global bundle)
+
+```html
+<script src="https://unpkg.com/uifork/dist/index.global.js"></script>
+<script>
+  window.uifork.init();
+</script>
+```
+
 ## Development Setup
 
 This is a monorepo managed by Turborepo with the following packages:
 
 - **`packages/uifork`** - React components library (the main package)
-- **`packages/cli`** - CLI tool (`@uifork/cli`)
 - **`apps/sandbox`** - Development sandbox for testing components
 
 For local development:
@@ -370,27 +346,13 @@ npm install
 # Build all packages
 npm run build
 
-# Run dev mode (watches for changes)
-npm run dev
+# Run sandbox with HMR from package source
+cd apps/sandbox && npm run dev:local
 
-# Run sandbox app
-npm run sandbox
-
-# Link CLI globally for testing
-cd packages/cli
-npm link
+# Run sandbox with built package
+cd apps/sandbox && npm run dev
 ```
-
-# To-dos
-
-- ~~Make local react app for testing~~
-- Use component file trace for easier initialization
-- ~~Use react lazy imports for versions.ts~~
-- Named exports
-- Add skills
 
 ## License
 
 MIT
-
----

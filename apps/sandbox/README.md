@@ -1,10 +1,10 @@
 # UIFork Sandbox
 
-Local development environment for testing UIFork components directly from source.
+Local development environment for testing UIFork components.
 
 ## Setup
 
-1. Install dependencies:
+Install dependencies:
 
 ```bash
 npm install
@@ -13,57 +13,64 @@ npm install
 Or from the root directory:
 
 ```bash
-cd sandbox && npm install
+cd apps/sandbox && npm install
 ```
 
-## Development
+## Development Modes
 
-Run the dev server:
+### Mode 1: Local Development with HMR (`dev:local`)
+
+For actively developing the uifork package with hot module replacement. Changes to the package source will be reflected immediately.
 
 ```bash
-npm run dev
+npm run dev:local
 ```
 
-Or from the root directory:
+This uses a Vite alias to point directly to `packages/uifork/src`, enabling full HMR when editing the package.
+
+### Mode 2: Built Package Testing (`dev`)
+
+For testing against the built workspace package (simulates how consumers will use it):
 
 ```bash
-npm run sandbox
+# Build the uifork package first
+cd ../../packages/uifork && npm run build
+
+# Then run sandbox
+cd ../../apps/sandbox && npm run dev
 ```
 
-The sandbox is configured to import the UIFork package directly from the `../../packages/uifork/src` directory, so any changes you make to the source code will be reflected immediately in the sandbox.
+### Mode 3: Published Version Testing
 
-## How it works
+For testing against an actual npm-published version:
 
-The `vite.config.ts` uses an alias to map `uifork` imports to the parent `src` directory:
+1. Change `package.json`: `"uifork": "^x.x.x"` (replace `*` with version)
+2. Run `npm install`
+3. Run `npm run build && npm run preview`
 
-```ts
-resolve: {
-  alias: {
-    uifork: resolve(__dirname, "../../packages/uifork/src"),
-  },
+## How UIFork is Used
+
+The sandbox uses the component-first approach:
+
+```tsx
+import { UIFork } from "uifork";
+
+function App() {
+  return (
+    <>
+      <YourApp />
+      {import.meta.env.MODE !== "production" && <UIFork />}
+    </>
+  );
 }
 ```
 
-This allows you to import components like:
+This shows UIFork in both local development and preview/staging builds, but hides it in production. No separate CSS import is needed - styles are automatically injected.
 
-```ts
-import { UIFork, ForkedComponent } from "uifork";
-```
+## Summary
 
-And they'll be loaded directly from the source files, enabling hot module replacement during development.
-
-## Development
-
-To use the development version of the UIFork package, install uifork with a local link:
-
-```json
-"uifork": "file:../../uifork/packages/uifork"
-```
-
-Uncomment the alias in the `vite.config.ts` file to use the development version of the UIFork package.
-
-```ts
-alias: {
-  // uifork: resolve(__dirname, "../../packages/uifork/src"),
-}
-```
+| Command                            | What it does                                              |
+| ---------------------------------- | --------------------------------------------------------- |
+| `npm run dev:local`                | HMR from source - edit package, see changes instantly     |
+| `npm run dev`                      | Uses built workspace version - test actual package output |
+| `npm run build && npm run preview` | Production build and preview                              |

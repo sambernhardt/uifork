@@ -15,12 +15,14 @@ import {
 import { TooltipProvider } from "./components/ui/tooltip";
 import { FakeDevTool } from "./components/FakeDevTool";
 import { ChevronDown } from "lucide-react";
+import { UIFork } from "uifork";
 
 function App() {
   const { theme, setTheme } = useTheme();
 
   return (
     <TooltipProvider>
+      {import.meta.env.MODE !== "production" && <UIFork />}
       <div className="min-h-screen p-8 pb-24">
         <div className="max-w-4xl mx-auto space-y-16">
           <header className="flex items-center justify-between">
