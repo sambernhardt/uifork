@@ -2,17 +2,10 @@ import { useState, useCallback } from "react";
 import { CopyIcon } from "./icons/CopyIcon";
 import { CheckmarkIcon } from "./icons/CheckmarkIcon";
 import styles from "./UIFork.module.css";
+import { isDevelopment } from "../utils/environment";
 
 export function OfflineMessage() {
   const [copied, setCopied] = useState(false);
-
-  // Check if we're in development (localhost)
-  const isDevelopment =
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" ||
-      window.location.hostname.startsWith("127.0.0.1") ||
-      window.location.hostname.startsWith("192.168.") ||
-      window.location.protocol === "file:");
 
   const handleCopyCommand = useCallback(async () => {
     const command = "npx uifork watch";
@@ -25,7 +18,7 @@ export function OfflineMessage() {
     }
   }, []);
 
-  if (!isDevelopment) {
+  if (!isDevelopment()) {
     return null;
   }
 

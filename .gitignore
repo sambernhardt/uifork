@@ -7,3 +7,4 @@ docs
 
 # Turborepo
 .turbo
+.vercel

@@ -23,6 +23,7 @@ import { useVersionKeyboardShortcuts, useDropdownKeyboard } from "../hooks/useKe
 import { useDragToCorner } from "../hooks/useDragToCorner";
 import { useContainerPositioning } from "../hooks/useContainerPositioning";
 import type { Position } from "../utils/positioning";
+import { isDevelopment } from "../utils/environment";
 import { ANIMATION_DURATION, ANIMATION_EASING } from "./constants";
 import TriggerContent from "./TriggerContent";
 import { ActiveView } from "./types";
@@ -558,13 +559,17 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                     setPopoverDropdownRef={setPopoverDropdownRef}
                   />
 
-                  <div className={styles.divider} />
+                  {isDevelopment() && (
+                    <>
+                      <div className={styles.divider} />
 
-                  {/* New version button or offline message */}
-                  {isConnected ? (
-                    <NewVersionButton onClick={handleNewVersion} />
-                  ) : (
-                    <OfflineMessage />
+                      {/* New version button or offline message */}
+                      {isConnected ? (
+                        <NewVersionButton onClick={handleNewVersion} />
+                      ) : (
+                        <OfflineMessage />
+                      )}
+                    </>
                   )}
                 </>
               )}
