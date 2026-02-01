@@ -440,6 +440,16 @@
 /* Version label */
 .versionLabel {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.versionId {
+}
+
+.versionLabelText {
+  opacity: 0.5;
 }
 
 /* Editing state */

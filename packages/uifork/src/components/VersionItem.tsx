@@ -43,8 +43,7 @@ export function VersionItem({
   setPopoverTriggerRef,
   setPopoverDropdownRef,
 }: VersionItemProps) {
-  // Display the custom label if available, otherwise format the version key
-  const displayLabel = label || formatVersionLabel(version);
+  const formattedVersion = formatVersionLabel(version);
 
   return (
     <div
@@ -58,7 +57,10 @@ export function VersionItem({
       <div className={styles.checkmarkContainer}>
         {isSelected && <CheckmarkIcon className={styles.checkmarkIcon} />}
       </div>
-      <div className={styles.versionLabel}>{displayLabel}</div>
+      <div className={styles.versionLabel}>
+        <span className={styles.versionId}>{formattedVersion}</span>
+        {label && <span className={styles.versionLabelText}>{label}</span>}
+      </div>
       {/* Action buttons - only show when connected */}
       {isConnected && (
         <div data-actions className={styles.actions} onClick={(e) => e.stopPropagation()}>
