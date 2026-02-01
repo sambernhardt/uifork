@@ -59,3 +59,11 @@ To use the development version of the UIFork package, install uifork with a loca
 ```json
 "uifork": "file:../../uifork/packages/uifork"
 ```
+
+Uncomment the alias in the `vite.config.ts` file to use the development version of the UIFork package.
+
+```ts
+alias: {
+  // uifork: resolve(__dirname, "../../packages/uifork/src"),
+}
+```
