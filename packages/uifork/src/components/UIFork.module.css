@@ -435,6 +435,7 @@
 .checkmarkIcon {
   width: 16px;
   height: 16px;
+  opacity: 0.5;
 }
 
 /* Version label */
@@ -446,30 +447,38 @@
 }
 
 .versionId {
+  color: var(--uifork-fg);
 }
 
 .versionLabelText {
   opacity: 0.5;
 }
 
-/* Editing state */
+/* Editing state - matches versionItem layout */
 .versionItemEditing {
+  padding: 8px 4px 8px 8px;
+  font-size: 14px;
+  color: var(--uifork-fg);
+  background-color: var(--uifork-hover-bg);
+  border: none;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 8px;
 }
 
 /* Rename input */
 .renameInput {
   flex: 1;
-  border-radius: 4px;
-  background-color: var(--uifork-bg-input);
-  padding: 4px 8px;
+  background-color: transparent;
+  padding: 0;
   font-size: 14px;
   color: var(--uifork-fg);
   border: none;
   outline: none;
+}
+.renameInput::placeholder {
+  color: var(--uifork-text-muted);
 }
 
 /* Action buttons */
@@ -552,7 +561,7 @@
   width: 100%;
   align-items: center;
   gap: 8px;
-  padding: 8px 8px;
+  padding: 8px 4px 8px 8px;
   font-size: 14px;
   color: var(--uifork-fg);
   background-color: transparent;
@@ -600,7 +609,7 @@
 
 /* New version button */
 .newVersionButton {
-  padding: 8px 8px;
+  padding: 8px 4px 8px 8px;
   font-size: 14px;
   color: var(--uifork-fg);
   background-color: transparent;

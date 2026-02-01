@@ -70,6 +70,7 @@ export function VersionsList({
                 version={key}
                 value={renameValue}
                 onChange={onRenameValueChange}
+                formatVersionLabel={formatVersionLabel}
                 onConfirm={onConfirmRename}
                 onCancel={onCancelRename}
               />
