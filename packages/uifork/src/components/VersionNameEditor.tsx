@@ -4,6 +4,7 @@ import { CheckmarkIcon } from "./icons/CheckmarkIcon";
 import { CancelIcon } from "./icons/CancelIcon";
 import { RenameIcon } from "./icons/RenameIcon";
 import { Tooltip } from "./Tooltip";
+import { AutoWidthInput } from "./AutoWidthInput";
 
 interface VersionNameEditorProps {
   version: string;
@@ -43,9 +44,8 @@ export function VersionNameEditor({
       </div>
       <div className={styles.versionLabel}>
         <span className={styles.versionId}>{formattedVersion}</span>
-        <input
+        <AutoWidthInput
           ref={inputRef}
-          type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
@@ -62,6 +62,7 @@ export function VersionNameEditor({
           onClick={(e) => e.stopPropagation()}
           className={styles.renameInput}
           placeholder="Add label"
+          containerStyle={{ minWidth: 60, maxWidth: 220 }}
         />
       </div>
       <div className={styles.actions} style={{ opacity: 1 }}>

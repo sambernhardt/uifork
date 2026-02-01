@@ -5,7 +5,6 @@
  */
 import Example1V1 from "./Example1.v1"
 import Example1V2 from "./Example1.v2"
-import Example1V3 from "./Example1.v3"
 export const VERSIONS = {
   "v1": {
     render: Example1V1,
@@ -13,10 +12,6 @@ export const VERSIONS = {
   },
   "v2": {
     render: Example1V2,
-    label: "Bigger",
-  },
-  "v3": {
-    render: Example1V3,
-    label: "",
+    label: "This is my label for v2 and this one is great",
   },
 }
