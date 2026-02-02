@@ -59,15 +59,15 @@ export function SettingsView({
             }
             className={styles.settingsSelect}
           >
-            <option value="top-left">Top Left</option>
-            <option value="top-right">Top Right</option>
-            <option value="bottom-left">Bottom Left</option>
-            <option value="bottom-right">Bottom Right</option>
+            <option value="top-left">Top left</option>
+            <option value="top-right">Top right</option>
+            <option value="bottom-left">Bottom left</option>
+            <option value="bottom-right">Bottom right</option>
           </select>
         </div>
 
         <div className={styles.settingsGroup}>
-          <label className={styles.settingsLabel}>Code Editor</label>
+          <label className={styles.settingsLabel}>Code editor</label>
           <select
             value={codeEditor}
             onChange={(e) => setCodeEditor(e.target.value as "vscode" | "cursor")}
