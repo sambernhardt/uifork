@@ -35,7 +35,7 @@ export function useContainerPositioning({
   isComponentSelectorOpen,
   containerRef,
   componentSelectorRef,
-  enableElementAwarePositioning = true,
+  enableElementAwarePositioning = false,
 }: UseContainerPositioningProps): UseContainerPositioningReturn {
   const [componentSelectorPosition, setComponentSelectorPosition] = useState({
     x: 0,

@@ -72,8 +72,8 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     "uifork-code-editor",
     "vscode",
   );
-  const [enableElementAwarePositioning, setEnableElementAwarePositioning] =
-    useLocalStorage<boolean>("uifork-element-aware-positioning", true);
+  // const [enableElementAwarePositioning, setEnableElementAwarePositioning] =
+  //   useLocalStorage<boolean>("uifork-element-aware-positioning", false);
 
   // Container and component selector positioning hook
   const { containerPosition, transformOrigin, componentSelectorPosition } = useContainerPositioning(
@@ -82,7 +82,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
       isComponentSelectorOpen,
       containerRef,
       componentSelectorRef,
-      enableElementAwarePositioning,
+      // enableElementAwarePositioning,
     },
   );
 
@@ -514,8 +514,8 @@ export function UIFork({ port = 3001 }: UIForkProps) {
                   setPosition={setPosition}
                   codeEditor={codeEditor}
                   setCodeEditor={setCodeEditor}
-                  enableElementAwarePositioning={enableElementAwarePositioning}
-                  setEnableElementAwarePositioning={setEnableElementAwarePositioning}
+                  // enableElementAwarePositioning={enableElementAwarePositioning}
+                  // setEnableElementAwarePositioning={setEnableElementAwarePositioning}
                 />
               )}
 

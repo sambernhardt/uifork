@@ -9,8 +9,8 @@ interface SettingsViewProps {
   setPosition: (position: "top-left" | "top-right" | "bottom-left" | "bottom-right") => void;
   codeEditor: "vscode" | "cursor";
   setCodeEditor: (editor: "vscode" | "cursor") => void;
-  enableElementAwarePositioning: boolean;
-  setEnableElementAwarePositioning: (enabled: boolean) => void;
+  // enableElementAwarePositioning: boolean;
+  // setEnableElementAwarePositioning: (enabled: boolean) => void;
 }
 
 export function SettingsView({
@@ -21,8 +21,8 @@ export function SettingsView({
   setPosition,
   codeEditor,
   setCodeEditor,
-  enableElementAwarePositioning,
-  setEnableElementAwarePositioning,
+  // enableElementAwarePositioning,
+  // setEnableElementAwarePositioning,
 }: SettingsViewProps) {
   return (
     <div className={styles.settingsView}>
@@ -77,7 +77,7 @@ export function SettingsView({
             <option value="cursor">Cursor</option>
           </select>
         </div>
-        <hr
+        {/* <hr
           style={{
             width: "100%",
             border: "none",
@@ -122,7 +122,7 @@ export function SettingsView({
               </p>
             </div>
           </label>
-        </div>
+        </div> */}
       </div>
     </div>
   );
