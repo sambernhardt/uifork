@@ -20,6 +20,8 @@ import ExplainerAnimationV14 from "./ExplainerAnimation.v14"
 import ExplainerAnimationV15 from "./ExplainerAnimation.v15"
 import ExplainerAnimationV16 from "./ExplainerAnimation.v16"
 import ExplainerAnimationV17 from "./ExplainerAnimation.v17"
+import ExplainerAnimationV18 from "./ExplainerAnimation.v18"
+import ExplainerAnimationV19 from "./ExplainerAnimation.v19"
 export const VERSIONS = {
   "v1": {
     render: ExplainerAnimationV1,
@@ -87,6 +89,14 @@ export const VERSIONS = {
   },
   "v17": {
     render: ExplainerAnimationV17,
+    label: "",
+  },
+  "v18": {
+    render: ExplainerAnimationV18,
+    label: "",
+  },
+  "v19": {
+    render: ExplainerAnimationV19,
     label: "",
   },
 }
