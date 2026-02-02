@@ -4,9 +4,14 @@
  * To stop versioning this component, run: npx uifork promote DashboardContent <version-id>
  */
 import DashboardContentV1 from "./DashboardContent.v1"
+import DashboardContentV2 from "./DashboardContent.v2"
 export const VERSIONS = {
   "v1": {
     render: DashboardContentV1,
+    label: "",
+  },
+  "v2": {
+    render: DashboardContentV2,
     label: "",
   },
 }

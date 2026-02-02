@@ -161,7 +161,7 @@ body.demo-animate .optional-fade-in {
   }
 }
 
-.fade-up {
+body.demo-animate .fade-up {
   animation: fadeUp 2s cubic-bezier(0.04, 1.02, 0.13, 1.02) forwards;
   opacity: 0;
 }

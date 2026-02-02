@@ -23,7 +23,7 @@ export function DemoPage() {
     <div className="min-h-screen bg-background">
       {/* Navbar */}
       <nav className="border-b border-border/30 bg-background">
-        <div className="container mx-auto px-4 py-4">
+        <div className="mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Left side: Logo and links */}
             <div className="flex items-center gap-8">
@@ -62,7 +62,7 @@ export function DemoPage() {
       </nav>
 
       {/* Main content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="mx-auto px-6 py-8">
         <DashboardContent />
       </div>
     </div>
