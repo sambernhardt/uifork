@@ -45,7 +45,7 @@ import { ActiveView } from "./types";
  * }
  * ```
  */
-export function UIFork({ port = 3001 }: UIForkProps) {
+export function UIFork({ port = 3001, className = "", style }: UIForkProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   // UI state
@@ -410,7 +410,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
     <>
       <motion.div
         ref={containerRef}
-        className={`${styles.container} ${!isOpen ? styles.containerClosed : ""}`}
+        className={`${styles.container} ${!isOpen ? styles.containerClosed : ""} ${className}`}
         layout
         drag={dragEnabled && !isOpen}
         dragControls={dragControls}
@@ -428,6 +428,7 @@ export function UIFork({ port = 3001 }: UIForkProps) {
           transformOrigin,
           // Don't set cursor here - we handle it on document.body to override CSS
           touchAction: !isOpen ? "none" : "auto",
+          ...style,
         }}
         transition={{
           layout: {

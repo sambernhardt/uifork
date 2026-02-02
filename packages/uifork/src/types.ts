@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, CSSProperties } from "react";
 
 export type VersionType<T extends Record<string, unknown> = Record<string, unknown>> = {
   render: ComponentType<T> | (() => Promise<{ default: ComponentType<T> }>);
@@ -20,6 +20,10 @@ export type ForkedComponentProps<T extends Record<string, unknown> = Record<stri
 export type UIForkProps = {
   /** Port for the watch server (default: 3001) */
   port?: number;
+  /** Optional className to apply to the UIFork container */
+  className?: string;
+  /** Optional style object to apply to the UIFork container */
+  style?: CSSProperties;
 };
 
 /** Version info with key and optional label */

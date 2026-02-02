@@ -12,7 +12,7 @@ export function DemoPage() {
     const timeout = setTimeout(() => {
       // Remove demo-animate class to disable animations after timeout
       document.body.classList.remove("demo-animate");
-    }, 1000);
+    }, 2000);
 
     return () => {
       clearTimeout(timeout);
