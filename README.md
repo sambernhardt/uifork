@@ -6,10 +6,45 @@ Manage UI component versions in React. Create multiple versions, switch between 
 
 ## Getting started
 
-- [Manual](#manual)
-- [Using agents & skills](#using-agents--skills)
+Install the package:
 
-### Manual
+```tsx
+npm install uifork
+```
+
+Continue installation:
+
+- [Using agents & skills](#using-agents--skills)
+- [Manually](#manual)
+
+### Using agents & skills
+
+**1. Add skill**
+
+```bash
+npx skills add sambernhardt/uifork
+```
+
+**2. Add UIFork to your project**
+
+```bash
+# Prompt
+Add uifork to this application
+
+# Or if the skill isn’t picked up:
+/uifork add to this application
+```
+
+**3. Fork a version of a component**
+
+```bash
+# Prompt
+Fork a version of {some component} and make the following changes
+```
+
+### Manual install
+
+Note: even if you install manually, it's still recommended to [add the agent skill](#using-agents--skills) for the best experience when using AI.
 
 **1. Add the UIFork component to your app**
 
@@ -48,31 +83,6 @@ import Button from "./components/Button";
 
 // Works exactly as before - the active version is controlled by the UIFork widget
 <Button onClick={handleClick}>Click me</Button>;
-```
-
-### Using agents & skills
-
-**1. Add skill**
-
-```bash
-npx skills add sambernhardt/uifork
-```
-
-**2. Add UIFork to your project**
-
-```bash
-# Prompt
-Add uifork to this application
-
-# Or if the skill isn’t picked up:
-/uifork add to this application
-```
-
-**3. Fork a version of a component**
-
-```bash
-# Prompt
-Fork a version of {some component} and make the following changes
 ```
 
 ### Using the versioning UI
