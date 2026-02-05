@@ -1,0 +1,42 @@
+{
+  "name": "marketing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:local": "UIFORK_LOCAL=true vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "watch": "node ../../packages/uifork/cli.js watch ./src"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.1.0",
+    "@floating-ui/dom": "^1.6.0",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@tabler/icons-react": "^3.36.1",
+    "@tailwindcss/vite": "^4.1.18",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.563.0",
+    "motion": "^12.29.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.1.18",
+    "tw-animate-css": "^1.4.0",
+    "uifork": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.1.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.3.0",
+    "vite": "^7.3.1",
+    "vite-plugin-react-click-to-component": "^4.2.0"
+  }
+}
