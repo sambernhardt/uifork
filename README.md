@@ -100,7 +100,7 @@ import Button from "./components/Button";
 
 ### Using the versioning UI
 
-The versioning UI floats in the corner of your screen and lets you switch between versions of a forked component. Running the watch server lets you fork, rename, delete, and create new versions from the UI.
+The versioning UI floats in the corner of your screen and lets you switch between versions of a forked component. Use **Cmd+Arrow Up/Down** (Mac) or **Ctrl+Arrow Up/Down** (Windows/Linux) to cycle through versions without opening the widget. Running the watch server lets you fork, rename, delete, and create new versions from the UI.
 
 ### Running the watch server
 

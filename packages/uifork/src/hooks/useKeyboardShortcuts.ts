@@ -7,7 +7,7 @@ interface UseVersionKeyboardShortcutsOptions {
 }
 
 /**
- * Hook for Cmd+Arrow keyboard shortcuts to switch versions
+ * Hook for Cmd/Ctrl+Arrow keyboard shortcuts to switch versions
  */
 export function useVersionKeyboardShortcuts({
   versionKeys,
@@ -16,7 +16,7 @@ export function useVersionKeyboardShortcuts({
 }: UseVersionKeyboardShortcutsOptions) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!e.metaKey || versionKeys.length === 0) return;
+      if ((!e.metaKey && !e.ctrlKey) || versionKeys.length === 0) return;
       const currentIndex = versionKeys.indexOf(activeVersion);
       if (e.key === "ArrowDown") {
         e.preventDefault();
