@@ -18,7 +18,9 @@
   --uifork-bg: var(--uifork-bg-dark);
   --uifork-fg: var(--uifork-text-primary);
   --uifork-fg-secondary: var(--uifork-text-secondary);
-  --uifork-hover-bg: rgba(255, 255, 255, 0.1);
+  --uifork-hover-bg: rgba(255, 255, 255, 0.06);
+  --uifork-bg-select: rgba(255, 255, 255, 0.06);
+  --uifork-bg-select-hover: rgba(255, 255, 255, 0.1);
   --uifork-menu-item-height: 32px;
   --uifork-trigger-height: 32px;
 }
@@ -34,7 +36,9 @@
   --uifork-accent-delete: #dc2626;
   --uifork-shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --uifork-shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  --uifork-hover-bg: rgba(0, 0, 0, 0.08);
+  --uifork-hover-bg: rgba(0, 0, 0, 0.04);
+  --uifork-bg-select: rgba(0, 0, 0, 0.04);
+  --uifork-bg-select-hover: rgba(0, 0, 0, 0.08);
 }
 @media (prefers-color-scheme: light) {
   :global(#uifork-root[data-theme="system"]) {
@@ -48,7 +52,9 @@
     --uifork-accent-delete: #dc2626;
     --uifork-shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     --uifork-shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-    --uifork-hover-bg: rgba(0, 0, 0, 0.08);
+    --uifork-hover-bg: rgba(0, 0, 0, 0.04);
+    --uifork-bg-select: rgba(0, 0, 0, 0.04);
+    --uifork-bg-select-hover: rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -852,7 +858,7 @@
   height: var(--uifork-trigger-height);
   font-size: 14px;
   color: var(--uifork-fg);
-  background-color: var(--uifork-bg-input);
+  background-color: var(--uifork-bg-select);
   border: 1px solid var(--uifork-border-color);
   border-radius: 8px;
   cursor: pointer;
@@ -868,13 +874,12 @@
   text-align: left;
 }
 .settingsSelect:hover {
-  background-color: var(--uifork-hover-bg);
+  background-color: var(--uifork-bg-select-hover);
   border-color: var(--uifork-border-color);
-  opacity: 0.9;
 }
 .settingsSelect:focus {
   border-color: var(--uifork-border-color);
-  background-color: var(--uifork-hover-bg);
+  background-color: var(--uifork-bg-select-hover);
   outline: 2px solid var(--uifork-border-color);
   outline-offset: 2px;
 }
