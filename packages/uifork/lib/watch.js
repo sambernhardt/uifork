@@ -463,7 +463,7 @@ class VersionSync {
     this.server = null;
     this.wss = null;
     this.lazy = options.lazy || false;
-    this.port = options.port ?? process.env.PORT ?? 3001;
+    this.port = options.port ?? process.env.PORT ?? 3030;
 
     // Discover all components
     this.discoverComponents();

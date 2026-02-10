@@ -45,7 +45,7 @@ import { ActiveView } from "./types";
  * }
  * ```
  */
-export function UIFork({ port = 3001, className = "", style }: UIForkProps) {
+export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   // UI state

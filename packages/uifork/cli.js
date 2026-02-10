@@ -51,7 +51,7 @@ Options:
   -h, --help     Show this help message
   -v, --version  Show version number
   -w             Start watching after init (init command only)
-  --port <port>  Port for the watch server (default: 3001); also respects PORT env var
+  --port <port>  Port for the watch server (default: 3030); also respects PORT env var
   --lazy         Use lazy loading for component versions (watch command only)
 `);
 }

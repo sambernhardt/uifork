@@ -18,7 +18,7 @@ export type ForkedComponentProps<T extends Record<string, unknown> = Record<stri
 };
 
 export type UIForkProps = {
-  /** Port for the watch server (default: 3001) */
+  /** Port for the watch server (default: 3030) */
   port?: number;
   /** Optional className to apply to the UIFork container */
   className?: string;

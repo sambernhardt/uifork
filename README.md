@@ -111,7 +111,7 @@ The watch server does two things:
 
 **Important:** After generating new version files (e.g., manually or via AI agents), run the watch command to regenerate the corresponding `versions.ts` files. The watch server keeps `versions.ts` in sync with the filesystem.
 
-**Custom port:** The watch server defaults to port 3001. To use a different port, either pass `--port` to the CLI or set the `port` prop on the UIFork component. Both must match for the UI to connect.
+**Custom port:** The watch server defaults to port 3030. To use a different port, either pass `--port` to the CLI or set the `port` prop on the UIFork component. Both must match for the UI to connect.
 
 ```bash
 # CLI: run watch server on port 3002
@@ -269,13 +269,13 @@ npx uifork init src/components/Dropdown.tsx
 Start the watch server so the widget can talk to your codebase.
 
 ```bash
-npx uifork watch                    # current directory (port 3001)
+npx uifork watch                    # current directory (port 3030)
 npx uifork watch ./src              # specific directory
 npx uifork watch --port 3002        # custom port
 npx uifork watch ./src --port 3002  # directory + custom port
 ```
 
-- **`--port <port>`** — Port for the watch server (default: 3001). Also respects the `PORT` environment variable.
+- **`--port <port>`** — Port for the watch server (default: 3030). Also respects the `PORT` environment variable.
 
 ### `new <component-path> [version-id]`
 
