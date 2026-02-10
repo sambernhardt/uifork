@@ -31,6 +31,7 @@
   --uifork-text-primary: #171717;
   --uifork-text-secondary: #525252;
   --uifork-text-muted: #737373;
+  --uifork-accent-delete: #dc2626;
   --uifork-shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --uifork-shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   --uifork-hover-bg: rgba(0, 0, 0, 0.08);
@@ -44,6 +45,7 @@
     --uifork-text-primary: #171717;
     --uifork-text-secondary: #525252;
     --uifork-text-muted: #737373;
+    --uifork-accent-delete: #dc2626;
     --uifork-shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     --uifork-shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
     --uifork-hover-bg: rgba(0, 0, 0, 0.08);
@@ -729,7 +731,7 @@
 .componentSelectorDropdownHint {
   font-size: 11px;
   color: var(--uifork-text-muted);
-  padding: 4px 6px 4px;
+  padding: 6px 6px 4px;
   box-sizing: border-box;
   line-height: 1.4;
   max-width: 230px;
