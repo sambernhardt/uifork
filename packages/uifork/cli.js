@@ -6,6 +6,7 @@ const { UISwitcherScaffold } = require("./lib/init");
 const { VersionSync } = require("./lib/watch");
 const { VersionPromoter } = require("./lib/promote");
 const { findComponentManager } = require("./lib/cli-helpers");
+const { getVersionComponentIdentifier } = require("./lib/component-naming");
 
 function showHelp() {
   console.log(`
@@ -230,8 +231,7 @@ switch (command) {
 
       const displayVersion = targetVersion.replace(/^v/, "").replace(/_/g, ".").toUpperCase();
 
-      const importSuffix = manager.versionToImportSuffix(fileVersion);
-      const componentName = `${manager.componentName}${importSuffix}`;
+      const componentName = getVersionComponentIdentifier(manager.componentName, fileVersion);
 
       let templateContent;
       if (extension === ".tsx" || extension === ".jsx") {
@@ -413,10 +413,11 @@ export default function ${componentName}() {
 
       const sourceContent = fs.readFileSync(sourceFilePath, "utf8");
 
-      const importSuffix = manager.versionToImportSuffix(fileVersion);
-      const newImportSuffix = manager.versionToImportSuffix(targetFileVersion);
-      const oldComponentName = `${manager.componentName}${importSuffix}`;
-      const newComponentName = `${manager.componentName}${newImportSuffix}`;
+      const oldComponentName = getVersionComponentIdentifier(manager.componentName, fileVersion);
+      const newComponentName = getVersionComponentIdentifier(
+        manager.componentName,
+        targetFileVersion,
+      );
 
       const updatedContent = sourceContent.replace(
         new RegExp(oldComponentName, "g"),
