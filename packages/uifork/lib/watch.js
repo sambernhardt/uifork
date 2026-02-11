@@ -7,6 +7,10 @@ const WebSocket = require("ws");
 const cors = require("cors");
 const { exec } = require("child_process");
 const { VersionPromoter } = require("./promote");
+const {
+  getVersionComponentIdentifier,
+  versionToImportSuffix,
+} = require("./component-naming");
 
 /**
  * ComponentManager - Manages a single component's versions
@@ -90,7 +94,7 @@ class ComponentManager {
   }
 
   versionToImportSuffix(versionStr) {
-    return `V${versionStr.charAt(0).toUpperCase()}${versionStr.slice(1)}`;
+    return versionToImportSuffix(versionStr);
   }
 
   generateImportName(fileName) {
@@ -98,7 +102,7 @@ class ComponentManager {
     const match = fileName.match(versionPattern);
     if (!match) return null;
     const versionStr = match[1];
-    return `${this.componentName}${this.versionToImportSuffix(versionStr)}`;
+    return getVersionComponentIdentifier(this.componentName, versionStr);
   }
 
   generateVersionKey(fileName) {
@@ -903,8 +907,7 @@ class VersionSync {
 
       const displayVersion = targetVersion.replace(/^v/, "").replace(/_/g, ".").toUpperCase();
 
-      const importSuffix = manager.versionToImportSuffix(fileVersion);
-      const componentName = `${manager.componentName}${importSuffix}`;
+      const componentName = getVersionComponentIdentifier(manager.componentName, fileVersion);
 
       let templateContent;
       if (extension === ".tsx" || extension === ".jsx") {
@@ -1029,10 +1032,11 @@ export default function ${componentName}() {
 
       const sourceContent = fs.readFileSync(sourceFilePath, "utf8");
 
-      const importSuffix = manager.versionToImportSuffix(fileVersion);
-      const newImportSuffix = manager.versionToImportSuffix(targetFileVersion);
-      const oldComponentName = `${manager.componentName}${importSuffix}`;
-      const newComponentName = `${manager.componentName}${newImportSuffix}`;
+      const oldComponentName = getVersionComponentIdentifier(manager.componentName, fileVersion);
+      const newComponentName = getVersionComponentIdentifier(
+        manager.componentName,
+        targetFileVersion,
+      );
 
       let updatedContent = sourceContent.replace(
         new RegExp(oldComponentName, "g"),

@@ -1,5 +1,10 @@
 const fs = require("fs");
 const path = require("path");
+const {
+  getVersionComponentIdentifier,
+  toPascalCaseIdentifier,
+  versionToImportSuffix,
+} = require("./component-naming");
 
 class VersionPromoter {
   constructor(componentPath, versionId) {
@@ -190,8 +195,13 @@ class VersionPromoter {
     // Clean up the version content - remove version-specific naming if needed
     // The component name in the version file might be like ComponentNameV2
     // We want to replace it with just ComponentName
+    const baseComponentIdentifier = toPascalCaseIdentifier(this.componentName);
     const importSuffix = this.versionToImportSuffix(this.versionIdToFileVersion(this.versionId));
-    const versionedComponentName = `${this.componentName}${importSuffix}`;
+    const versionedComponentName = getVersionComponentIdentifier(
+      this.componentName,
+      this.versionIdToFileVersion(this.versionId),
+    );
+    const legacyVersionedComponentName = `${this.componentName}${importSuffix}`;
 
     let cleanedContent = versionContent;
 
@@ -200,25 +210,41 @@ class VersionPromoter {
     // 1. export default function ComponentNameV2
     cleanedContent = cleanedContent.replace(
       new RegExp(`export default function ${versionedComponentName}\\b`, "g"),
-      `export default function ${this.componentName}`,
+      `export default function ${baseComponentIdentifier}`,
+    );
+    cleanedContent = cleanedContent.replace(
+      new RegExp(`export default function ${legacyVersionedComponentName}\\b`, "g"),
+      `export default function ${baseComponentIdentifier}`,
     );
 
     // 2. function ComponentNameV2 (in case it's not exported yet)
     cleanedContent = cleanedContent.replace(
       new RegExp(`function ${versionedComponentName}\\b`, "g"),
-      `function ${this.componentName}`,
+      `function ${baseComponentIdentifier}`,
+    );
+    cleanedContent = cleanedContent.replace(
+      new RegExp(`function ${legacyVersionedComponentName}\\b`, "g"),
+      `function ${baseComponentIdentifier}`,
     );
 
     // 3. const ComponentNameV2 = (arrow function)
     cleanedContent = cleanedContent.replace(
       new RegExp(`const ${versionedComponentName}\\s*=`, "g"),
-      `const ${this.componentName} =`,
+      `const ${baseComponentIdentifier} =`,
+    );
+    cleanedContent = cleanedContent.replace(
+      new RegExp(`const ${legacyVersionedComponentName}\\s*=`, "g"),
+      `const ${baseComponentIdentifier} =`,
     );
 
     // 4. Any other references to the versioned component name
     cleanedContent = cleanedContent.replace(
       new RegExp(`\\b${versionedComponentName}\\b`, "g"),
-      this.componentName,
+      baseComponentIdentifier,
+    );
+    cleanedContent = cleanedContent.replace(
+      new RegExp(`\\b${legacyVersionedComponentName}\\b`, "g"),
+      baseComponentIdentifier,
     );
 
     // Write the cleaned content to the wrapper file
@@ -230,7 +256,7 @@ class VersionPromoter {
 
   versionToImportSuffix(versionStr) {
     // Convert 1_2 to V1_2 for import names
-    return `V${versionStr.charAt(0).toUpperCase()}${versionStr.slice(1)}`;
+    return versionToImportSuffix(versionStr);
   }
 
   promote() {
