@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { VersionSync } = require("./watch");
+const { toPascalCaseIdentifier } = require("./component-naming");
 
 class UISwitcherScaffold {
   constructor(filePath, shouldWatch = true) {
@@ -14,6 +15,7 @@ class UISwitcherScaffold {
 
     const parsedPath = path.parse(this.originalFilePath);
     this.componentName = parsedPath.name;
+    this.componentIdentifier = toPascalCaseIdentifier(this.componentName);
     this.parentDir = parsedPath.dir;
     this.originalExtension = parsedPath.ext; // Preserve .tsx or .ts
     this.v1File = path.join(this.parentDir, `${this.componentName}.v1${this.originalExtension}`);
@@ -38,11 +40,11 @@ class UISwitcherScaffold {
  * Manual edits to labels/descriptions are preserved, but structure changes may be overwritten.
  * To stop versioning this component, run: npx uifork promote ${this.componentName} <version-id>
  */
-import ${this.componentName}V1 from "${v1ImportPath}"
+import ${this.componentIdentifier}V1 from "${v1ImportPath}"
 
 export const VERSIONS = {
   "v1": {
-    render: ${this.componentName}V1,
+    render: ${this.componentIdentifier}V1,
     label: "",
   },
 }
@@ -65,7 +67,7 @@ export const VERSIONS = {
 import { ForkedComponent } from "uifork"
 import { VERSIONS } from "${versionsImportPath}"
 
-export default function ${this.componentName}(props: any) {
+export default function ${this.componentIdentifier}(props: any) {
   return (
     <ForkedComponent
       id="${this.componentName}"
@@ -124,7 +126,7 @@ export { VERSIONS }
         `4. Add new versions by creating ${this.componentName}.v2${this.originalExtension}, ${this.componentName}.v1_1${this.originalExtension}, etc.`,
       );
       console.log(
-        `5. Import the component: import ${this.componentName} from './${this.componentName}'`,
+        `5. Import the component: import ${this.componentIdentifier} from './${this.componentName}'`,
       );
       // Start watching automatically
       new VersionSync(this.parentDir);
@@ -134,7 +136,7 @@ export { VERSIONS }
         `4. Add new versions by creating ${this.componentName}.v2${this.originalExtension}, ${this.componentName}.v1_1${this.originalExtension}, etc.`,
       );
       console.log(
-        `5. Import the component: import ${this.componentName} from './${this.componentName}'`,
+        `5. Import the component: import ${this.componentIdentifier} from './${this.componentName}'`,
       );
     }
   }
