@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://github.com/sambernhardt/uifork",
+      "permanent": true
+    }
+  ]
+}
