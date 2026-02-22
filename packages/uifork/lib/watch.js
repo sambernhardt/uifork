@@ -12,6 +12,10 @@ const {
   versionToImportSuffix,
 } = require("./component-naming");
 
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /**
  * ComponentManager - Manages a single component's versions
  */
@@ -30,8 +34,9 @@ class ComponentManager {
 
   extractComponentName(versionsFilePath) {
     const basename = path.basename(versionsFilePath, ".versions.ts");
+    // Only strip known source extensions; dots in names (e.g. Button.icon) are preserved
     const ext = path.extname(basename);
-    if (ext) {
+    if ([".tsx", ".ts", ".jsx", ".js"].includes(ext)) {
       return basename.slice(0, -ext.length);
     }
     return basename;
@@ -39,7 +44,8 @@ class ComponentManager {
 
   getVersionFiles() {
     const files = fs.readdirSync(this.watchDir);
-    const versionPattern = new RegExp(`^${this.componentName}\\.v([\\d_]+)\\.(tsx?|jsx?)$`);
+    const escaped = escapeRegExp(this.componentName);
+    const versionPattern = new RegExp(`^${escaped}\\.v([\\d_]+)\\.(tsx?|jsx?)$`);
     const matchedFiles = files
       .filter((file) => {
         const match = file.match(versionPattern);
@@ -72,7 +78,8 @@ class ComponentManager {
 
   getVersionKeys() {
     const versionFiles = this.getVersionFiles();
-    const versionPattern = new RegExp(`^${this.componentName}\\.v([\\d_]+)`);
+    const escaped = escapeRegExp(this.componentName);
+    const versionPattern = new RegExp(`^${escaped}\\.v([\\d_]+)`);
     return versionFiles
       .map((file) => {
         const match = file.match(versionPattern);
@@ -98,7 +105,8 @@ class ComponentManager {
   }
 
   generateImportName(fileName) {
-    const versionPattern = new RegExp(`^${this.componentName}\\.v([\\d_]+)`);
+    const escaped = escapeRegExp(this.componentName);
+    const versionPattern = new RegExp(`^${escaped}\\.v([\\d_]+)`);
     const match = fileName.match(versionPattern);
     if (!match) return null;
     const versionStr = match[1];
@@ -106,7 +114,8 @@ class ComponentManager {
   }
 
   generateVersionKey(fileName) {
-    const versionPattern = new RegExp(`^${this.componentName}\\.v([\\d_]+)`);
+    const escaped = escapeRegExp(this.componentName);
+    const versionPattern = new RegExp(`^${escaped}\\.v([\\d_]+)`);
     const match = fileName.match(versionPattern);
     if (!match) return null;
     return `v${match[1]}`;
@@ -144,7 +153,8 @@ class ComponentManager {
       return { major: 1, minor: 0 };
     }
 
-    const versionPattern = new RegExp(`^${this.componentName}\\.v([\\d_]+)`);
+    const escaped = escapeRegExp(this.componentName);
+    const versionPattern = new RegExp(`^${escaped}\\.v([\\d_]+)`);
     let maxMajor = 0;
     let maxMinor = 0;
 
@@ -268,7 +278,8 @@ class ComponentManager {
     const versionFiles = this.getVersionFiles();
 
     this.currentVersionFiles = new Set(versionFiles);
-    const versionPattern = new RegExp(`^${this.componentName}\\.v([\\d_]+)`);
+    const escaped = escapeRegExp(this.componentName);
+    const versionPattern = new RegExp(`^${escaped}\\.v([\\d_]+)`);
     this.currentVersionKeys = new Set(
       versionFiles
         .map((file) => {
@@ -389,8 +400,9 @@ ${versions},
       if (removed.length === 1 && added.length === 1) {
         const oldFile = removed[0];
         const newFile = added[0];
-        const oldMatch = oldFile.match(new RegExp(`^${this.componentName}\\.v([\\d_]+)`));
-        const newMatch = newFile.match(new RegExp(`^${this.componentName}\\.v([\\d_]+)`));
+        const escaped = escapeRegExp(this.componentName);
+        const oldMatch = oldFile.match(new RegExp(`^${escaped}\\.v([\\d_]+)`));
+        const newMatch = newFile.match(new RegExp(`^${escaped}\\.v([\\d_]+)`));
         if (oldMatch && newMatch) {
           const oldKey = `v${oldMatch[1]}`;
           const newKey = `v${newMatch[1]}`;
@@ -1261,6 +1273,7 @@ export default function ${componentName}() {
       ignored: [/node_modules/, /^\./],
       persistent: true,
       ignoreInitial: true,
+      disableGlobbing: true,
     });
 
     watcher
@@ -1310,7 +1323,8 @@ export default function ${componentName}() {
 
     // Find which component this file belongs to
     for (const [name, manager] of this.components) {
-      const versionPattern = new RegExp(`^${manager.componentName}\\.v([\\d_]+)\\.(tsx?|jsx?)$`);
+      const escaped = escapeRegExp(manager.componentName);
+      const versionPattern = new RegExp(`^${escaped}\\.v([\\d_]+)\\.(tsx?|jsx?)$`);
       const isVersionFile = versionPattern.test(filename);
       const isVersionsFile = filename === `${manager.componentName}.versions.ts`;
 

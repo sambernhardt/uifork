@@ -6,6 +6,10 @@ const {
   versionToImportSuffix,
 } = require("./component-naming");
 
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 class VersionPromoter {
   constructor(componentPath, versionId) {
     // Find the component directory and files
@@ -49,10 +53,9 @@ class VersionPromoter {
 
   extractComponentName(versionsFilePath) {
     const basename = path.basename(versionsFilePath, ".versions.ts");
-    // Remove file extension if present (e.g., "Component.tsx" -> "Component")
-    // Version files are named like "Component.v1.tsx", not "Component.tsx.v1.tsx"
+    // Only strip known source extensions; dots in names (e.g. Button.icon) are preserved
     const ext = path.extname(basename);
-    if (ext) {
+    if ([".tsx", ".ts", ".jsx", ".js"].includes(ext)) {
       return basename.slice(0, -ext.length);
     }
     return basename;
@@ -83,6 +86,22 @@ class VersionPromoter {
         if (fs.existsSync(versionsFile)) {
           return versionsFile;
         }
+      }
+    }
+
+    // Path doesn't exist as-is — try treating it as a component reference
+    // e.g. "src/app/[orgSlug]/page" where "page.versions.ts" sits in that directory
+    // Only strip known source extensions; dots in names (e.g. Button.icon) are preserved
+    const dir = path.dirname(resolvedPath);
+    let baseName = path.basename(resolvedPath);
+    const ext = path.extname(baseName);
+    if ([".tsx", ".ts", ".jsx", ".js"].includes(ext)) {
+      baseName = baseName.slice(0, -ext.length);
+    }
+    if (fs.existsSync(dir) && fs.statSync(dir).isDirectory()) {
+      const versionsFile = path.join(dir, `${baseName}.versions.ts`);
+      if (fs.existsSync(versionsFile)) {
+        return versionsFile;
       }
     }
 
@@ -150,7 +169,8 @@ class VersionPromoter {
 
   getAllVersionFiles() {
     const files = fs.readdirSync(this.watchDir);
-    const versionPattern = new RegExp(`^${this.componentName}\\.v([\\d_]+)\\.(tsx?|jsx?)$`);
+    const escaped = escapeRegExp(this.componentName);
+    const versionPattern = new RegExp(`^${escaped}\\.v([\\d_]+)\\.(tsx?|jsx?)$`);
     return files
       .filter((file) => {
         const match = file.match(versionPattern);
