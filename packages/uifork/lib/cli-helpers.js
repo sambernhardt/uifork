@@ -33,6 +33,22 @@ function findComponentManager(componentPath) {
     }
   }
 
+  // Path doesn't exist as-is — try treating it as a component reference
+  // e.g. "src/app/[orgSlug]/page" where "page.versions.ts" sits in that directory
+  // Only strip known source extensions; dots in names (e.g. Button.icon) are preserved
+  const dir = path.dirname(resolvedPath);
+  let baseName = path.basename(resolvedPath);
+  const ext = path.extname(baseName);
+  if ([".tsx", ".ts", ".jsx", ".js"].includes(ext)) {
+    baseName = baseName.slice(0, -ext.length);
+  }
+  if (fs.existsSync(dir) && fs.statSync(dir).isDirectory()) {
+    const versionsFile = path.join(dir, `${baseName}.versions.ts`);
+    if (fs.existsSync(versionsFile)) {
+      return new ComponentManager(versionsFile);
+    }
+  }
+
   // Try searching by component name
   if (!componentPath.includes("/") && !componentPath.includes("\\")) {
     const found = recursiveSearchVersionsFile(process.cwd(), componentPath);
