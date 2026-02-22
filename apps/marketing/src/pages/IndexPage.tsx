@@ -1,5 +1,4 @@
 import FakeMessages from "../components/FakeMessages";
-import CyclingContentWheel from "../components/CycleText";
 import { Container } from "../components/Container";
 import { ThemeSwitcher } from "../components/ThemeSwitcher";
 
@@ -17,17 +16,8 @@ export function IndexPage() {
         <div className="text-sm">
           <div className="mb-16 flex flex-col gap-0">
             <h1 className="text-lg font-semibold text-foreground tracking-tight">uifork</h1>
-            <p className="font-pixel-square text-muted-foreground inline-flex items-center gap-1.5">
-              <span className="inline-block">
-                <CyclingContentWheel
-                  items={["Structured", "Organized", "Fast", "Embedded", "Deployable"]}
-                  radius={14}
-                  transitionDuration={500}
-                  intervalMs={5000}
-                  alignment="left"
-                />
-              </span>
-              iteration for humans and agents
+            <p className="font-pixel-square text-muted-foreground">
+              Iteration for humans and agents
             </p>
           </div>
         </div>

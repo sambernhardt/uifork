@@ -10,7 +10,10 @@ export default defineConfig({
     react(),
     dts({ include: ["src"] }),
     preserveDirectives() as Plugin,
-    cssInjectedByJsPlugin(),
+    cssInjectedByJsPlugin({
+      // Lower the priority to ensure "use client" is at the top of the file
+      topExecutionPriority: false,
+    }),
   ],
   build: {
     lib: {
