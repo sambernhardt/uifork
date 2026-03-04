@@ -748,6 +748,7 @@
   font-size: 11px;
   color: var(--uifork-text-muted);
   padding: 6px 6px 4px;
+  margin-top: 4px;
   box-sizing: border-box;
   line-height: 1.4;
   max-width: 230px;
