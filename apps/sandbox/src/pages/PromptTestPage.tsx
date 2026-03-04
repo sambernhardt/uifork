@@ -1,4 +1,4 @@
-import { PromptTestTopSection } from "./PromptTestTopSection";
+import PromptTestTopSection from "./PromptTestTopSection";
 
 const TABLE_DATA = [
   { name: "Acme Corp", email: "alice@acme.com", amount: "$12,400", status: "Paid" },
