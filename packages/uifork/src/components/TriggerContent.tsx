@@ -9,6 +9,7 @@ type TriggerContentProps = {
   activeVersion: string;
   activeVersionLabel?: string;
   formatVersionLabel: (version: string) => string;
+  showComponentName: boolean;
 };
 
 const TriggerContent = ({
@@ -17,8 +18,9 @@ const TriggerContent = ({
   activeVersion,
   activeVersionLabel,
   formatVersionLabel,
+  showComponentName,
 }: TriggerContentProps) => {
-  const displayVersion = activeVersionLabel || (activeVersion ? formatVersionLabel(activeVersion) : "-");
+  const displayVersion = activeVersion ? formatVersionLabel(activeVersion) : "-";
 
   if (!hasSelection) {
     return <ForkIcon className={styles.triggerIcon} />;
@@ -27,18 +29,27 @@ const TriggerContent = ({
   return (
     <>
       <ForkIcon className={styles.triggerIcon} />
-      <motion.span
-        layoutId="component-name"
-        layout="position"
-        className={styles.triggerLabel}
-        transition={{
-          duration: ANIMATION_DURATION,
-          ease: ANIMATION_EASING,
-        }}
+      {showComponentName && (
+        <motion.span
+          layoutId="component-name"
+          layout="position"
+          className={styles.triggerLabel}
+          transition={{
+            duration: ANIMATION_DURATION,
+            ease: ANIMATION_EASING,
+          }}
+        >
+          {selectedComponent}
+        </motion.span>
+      )}
+      <span
+        className={`${styles.triggerVersion}${!showComponentName ? ` ${styles.triggerVersionPrimary}` : ""}`}
       >
-        {selectedComponent}
-      </motion.span>
-      <span className={styles.triggerVersion}>{displayVersion}</span>
+        {displayVersion}
+      </span>
+      {activeVersionLabel && (
+        <span className={styles.triggerVersionLabel}> · {activeVersionLabel}</span>
+      )}
     </>
   );
 };

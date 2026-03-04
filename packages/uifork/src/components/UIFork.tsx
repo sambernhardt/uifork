@@ -482,6 +482,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
                 activeVersion={activeVersion}
                 activeVersionLabel={getVersionLabel(activeVersion)}
                 formatVersionLabel={formatVersionLabel}
+                showComponentName={mountedComponents.length > 1}
               />
             </motion.button>
           ) : (

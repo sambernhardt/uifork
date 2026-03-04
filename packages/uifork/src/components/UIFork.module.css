@@ -189,7 +189,8 @@
 }
 
 .triggerLabel,
-.triggerVersion {
+.triggerVersion,
+.triggerVersionLabel {
   white-space: nowrap;
 }
 
@@ -198,6 +199,15 @@
 }
 
 .triggerVersion {
+  color: var(--uifork-fg-secondary);
+}
+
+.triggerVersion.triggerVersionPrimary {
+  font-weight: 500;
+  color: var(--uifork-fg);
+}
+
+.triggerVersionLabel {
   color: var(--uifork-fg-secondary);
 }
 
