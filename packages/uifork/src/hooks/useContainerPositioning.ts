@@ -17,6 +17,12 @@ interface UseContainerPositioningProps {
    * in the same corner. Defaults to false.
    */
   enableElementAwarePositioning?: boolean;
+  /**
+   * If true, adds extra top offset for top-* positions to prevent the
+   * prompt toolbar (absolutely positioned above the container) from
+   * being clipped by the viewport edge.
+   */
+  isPrompting?: boolean;
 }
 
 interface UseContainerPositioningReturn {
@@ -36,6 +42,7 @@ export function useContainerPositioning({
   containerRef,
   componentSelectorRef,
   enableElementAwarePositioning = false,
+  isPrompting = false,
 }: UseContainerPositioningProps): UseContainerPositioningReturn {
   const [componentSelectorPosition, setComponentSelectorPosition] = useState({
     x: 0,
@@ -48,6 +55,11 @@ export function useContainerPositioning({
   // Calculate container position based on settings, adjusting for found elements
   const containerPosition = useMemo(() => {
     const basePosition = getContainerPosition(position);
+
+    if (isPrompting && (position === "top-left" || position === "top-right")) {
+      const PROMPT_TOOLBAR_CLEARANCE = 40; // 32px badge height + 8px gap
+      basePosition.top = `${20 + PROMPT_TOOLBAR_CLEARANCE}px`;
+    }
     
     // Only apply element-aware positioning if enabled
     if (!enableElementAwarePositioning) {
@@ -100,7 +112,7 @@ export function useContainerPositioning({
     }
     
     return basePosition;
-  }, [position, foundElements, enableElementAwarePositioning]);
+  }, [position, foundElements, enableElementAwarePositioning, isPrompting]);
   
   const transformOrigin = useMemo(() => getTransformOrigin(position), [position]);
 
