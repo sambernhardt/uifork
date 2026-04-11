@@ -1,4 +1,5 @@
 import PromptTestTopSection from "./PromptTestTopSection";
+import { TooltipProvider } from "../components/ui/tooltip";
 
 const TABLE_DATA = [
   { name: "Acme Corp", email: "alice@acme.com", amount: "$12,400", status: "Paid" },
@@ -10,6 +11,7 @@ const TABLE_DATA = [
 
 export function PromptTestPage() {
   return (
+    <TooltipProvider>
     <div className="min-h-screen bg-background">
       {/* Top nav */}
       <nav className="border-b border-border/50 bg-background">
@@ -47,7 +49,7 @@ export function PromptTestPage() {
         {/* Table section */}
         <div>
           <h3 className="text-sm font-medium text-muted-foreground mb-4">Recent transactions</h3>
-          <div className="overflow-x-auto rounded-md border border-border">
+          <div className="overflow-x-auto rounded-2xl border border-border">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
@@ -84,5 +86,6 @@ export function PromptTestPage() {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
