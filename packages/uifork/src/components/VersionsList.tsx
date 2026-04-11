@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import styles from "./UIFork.module.css";
 import { VersionItem } from "./VersionItem";
 import { VersionNameEditor } from "./VersionNameEditor";
@@ -56,12 +56,24 @@ export function VersionsList({
   setPopoverTriggerRef,
   setPopoverDropdownRef,
 }: VersionsListProps) {
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!listRef.current || !activeVersion) return;
+    const activeEl = listRef.current.querySelector(
+      `[data-key="${CSS.escape(activeVersion)}"]`
+    );
+    if (activeEl) {
+      activeEl.scrollIntoView({ block: "nearest" });
+    }
+  }, [activeVersion]);
+
   if (versions.length === 0) {
     return <div className={styles.emptyState}>No versions found</div>;
   }
 
   return (
-    <div className={styles.versionsList}>
+    <div ref={listRef} className={styles.versionsList}>
       {versions
         .slice()
         .reverse()
