@@ -108,14 +108,21 @@ This will:
 - Generate a `versions.ts` file to track all versions
 - Optionally start the watch server (use `-w` flag with either form)
 
-**Requirement:** For now, each version file must default-export its component. Named exports are being considered for the future.
+UIFork auto-detects whether the component uses a default export or a named export and generates the correct versioning scaffolding. If the file has multiple exported components and detection is ambiguous, specify which export to fork:
 
-**When the target file lacks a default export:** Prompt the user to update the component to use a default export, then update any files that import it (e.g., change `import { Foo }` to `import Foo`). Only run `npx uifork init` after the component has a default export.
+```bash
+npx uifork init src/components/Button.tsx --export Button
+npx uifork init src/components/Button.tsx --export default
+```
 
 ### 3. Use Component Normally
 
 ```tsx
+// Default export (auto-detected)
 import Button from "./components/Button";
+
+// Named export (auto-detected)
+import { Button } from "./components/Button";
 
 // Works exactly as before - active version controlled by UIFork widget
 <Button onClick={handleClick}>Click me</Button>;
@@ -139,6 +146,7 @@ Or use the explicit form:
 ```bash
 npx uifork init src/components/Dropdown.tsx
 npx uifork init src/components/Dropdown.tsx -w  # Start watching after init
+npx uifork init src/components/Dropdown.tsx --export Button  # Specify which export to fork
 ```
 
 ### `watch [directory]`
@@ -219,7 +227,7 @@ src/components/
 └── Button.v1_1.tsx         # Sub-versions (v1.1, v2.1, etc.)
 ```
 
-For now, each version file must default-export its component. Named exports are being considered for the future.
+Both default exports and named exports are supported. UIFork auto-detects the export style during init and maintains it across all version files.
 
 ## Version Naming
 
