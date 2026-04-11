@@ -11,6 +11,7 @@ const {
   getVersionComponentIdentifier,
   versionToImportSuffix,
 } = require("./component-naming");
+const { spawnAICLI } = require("./ai-cli");
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -476,6 +477,7 @@ class VersionSync {
     this.watchPath = watchPath ? path.resolve(watchPath) : process.cwd();
     this.components = new Map(); // Map<componentName, ComponentManager>
     this.wsClients = new Set();
+    this.activePrompts = new Set();
     this.server = null;
     this.wss = null;
     this.lazy = options.lazy || false;
@@ -652,7 +654,19 @@ class VersionSync {
     });
 
     this.server = http.createServer(app);
-    this.wss = new WebSocket.Server({ server: this.server });
+    this.wss = new WebSocket.Server({
+      server: this.server,
+      verifyClient: ({ req }) => {
+        const origin = req.headers.origin;
+        if (!origin) return true;
+        try {
+          const url = new URL(origin);
+          return url.hostname === "localhost" || url.hostname === "127.0.0.1";
+        } catch {
+          return false;
+        }
+      },
+    });
 
     this.wss.on("connection", (ws) => {
       this.wsClients.add(ws);
@@ -694,7 +708,7 @@ class VersionSync {
       });
     });
 
-    this.server.listen(port, () => {
+    this.server.listen(port, "127.0.0.1", () => {
       console.log(`\n[Server] Express server running on http://localhost:${port}`);
       console.log(`[Server] WebSocket server running on ws://localhost:${port}/ws`);
     });
@@ -705,7 +719,7 @@ class VersionSync {
     const componentName = payload?.component;
 
     // Validate component for operations that need it
-    if (["duplicate_version", "delete_version", "new_version", "rename_version", "rename_label"].includes(type)) {
+    if (["duplicate_version", "delete_version", "new_version", "rename_version", "rename_label", "prompt_version"].includes(type)) {
       if (!componentName) {
         ws.send(
           JSON.stringify({
@@ -746,6 +760,9 @@ class VersionSync {
         break;
       case "promote_version":
         this.handlePromoteVersion(ws, payload);
+        break;
+      case "prompt_version":
+        this.handlePromptVersion(ws, payload);
         break;
       default:
         console.warn(`[WebSocket] Unknown message type: ${type}`);
@@ -1194,6 +1211,144 @@ export default function ${componentName}() {
       );
     } catch (error) {
       console.error(`[WebSocket] Promote version error: ${error.message}`);
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          payload: { message: error.message },
+        }),
+      );
+    }
+  }
+
+  handlePromptVersion(ws, payload) {
+    const { sourceVersion, prompt, component, aiEditingTool, forkFirst } = payload;
+    const manager = this.getComponent(component);
+    const timestamp = new Date().toISOString();
+
+    try {
+      if (!aiEditingTool || aiEditingTool === "none") {
+        throw new Error(
+          "AI editing tool not configured. Go to Settings to select an AI editing tool.",
+        );
+      }
+
+      const ALLOWED_AI_TOOLS = ["claude-code", "cursor"];
+      if (!ALLOWED_AI_TOOLS.includes(aiEditingTool)) {
+        throw new Error(`Unknown AI editing tool: ${aiEditingTool}`);
+      }
+
+      if (!sourceVersion) {
+        throw new Error("Missing sourceVersion parameter");
+      }
+
+      if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
+        throw new Error("Missing or empty prompt");
+      }
+
+      const MAX_PROMPT_LENGTH = 10000;
+      if (prompt.length > MAX_PROMPT_LENGTH) {
+        throw new Error(`Prompt too long (${prompt.length} chars). Maximum is ${MAX_PROMPT_LENGTH}.`);
+      }
+
+      if (this.activePrompts.has(component)) {
+        throw new Error(`An AI edit is already in progress for ${component}. Please wait for it to finish.`);
+      }
+
+      if (!manager.validateVersionKey(sourceVersion)) {
+        throw new Error(`Invalid version format: ${sourceVersion}`);
+      }
+
+      const sourceFilePath = manager.getVersionFilePath(sourceVersion);
+      if (!fs.existsSync(sourceFilePath)) {
+        throw new Error(`Source version file not found: ${sourceVersion}`);
+      }
+
+      let targetVersion = sourceVersion;
+      let targetFilePath = sourceFilePath;
+
+      if (forkFirst) {
+        // Fork the source version into a new version, then edit the fork
+        const nextVersionNum = manager.getNextVersionNumber();
+        targetVersion = manager.versionNumberToKey(nextVersionNum);
+        const extension = path.extname(sourceFilePath);
+        const fileVersion = manager.versionKeyToFileVersion(targetVersion);
+        targetFilePath = path.join(
+          manager.watchDir,
+          `${manager.componentName}.v${fileVersion}${extension}`,
+        );
+
+        const sourceContent = fs.readFileSync(sourceFilePath, "utf8");
+        fs.writeFileSync(targetFilePath, sourceContent, "utf8");
+
+        console.log(`[WebSocket] Prompt version: forked ${sourceVersion} → ${targetVersion}`);
+        manager.generateVersionsFile();
+        this.broadcastFileChange(manager.componentName);
+      } else {
+        console.log(`[WebSocket] Prompt version: editing ${sourceVersion} in-place`);
+      }
+
+      console.log(`  Timestamp: ${timestamp}`);
+      console.log(`  Component: ${manager.componentName}`);
+      console.log(`  Prompt: ${prompt}`);
+      console.log(`  AI Tool: ${aiEditingTool}`);
+      console.log(`  Target: ${path.basename(targetFilePath)}`);
+
+      // Send ack immediately so UI can show prompting state
+      ws.send(
+        JSON.stringify({
+          type: "ack",
+          payload: {
+            action: "prompt_started",
+            message: forkFirst
+              ? `Forked ${sourceVersion} → ${targetVersion}, editing with ${aiEditingTool}...`
+              : `Editing ${sourceVersion} with ${aiEditingTool}...`,
+            version: targetVersion,
+          },
+        }),
+      );
+
+      this.activePrompts.add(component);
+
+      spawnAICLI({
+        aiTool: aiEditingTool,
+        filePath: targetFilePath,
+        prompt: prompt.trim(),
+        cwd: manager.watchDir,
+      }).then((result) => {
+        this.activePrompts.delete(component);
+
+        if (result.success) {
+          console.log(`[WebSocket] AI edit completed for ${targetVersion}`);
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(
+              JSON.stringify({
+                type: "prompt_completed",
+                payload: {
+                  message: `AI edit completed for ${targetVersion}`,
+                  version: targetVersion,
+                  component: manager.componentName,
+                },
+              }),
+            );
+          }
+        } else {
+          console.error(`[WebSocket] AI edit failed: ${result.error}`);
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(
+              JSON.stringify({
+                type: "prompt_failed",
+                payload: {
+                  message: result.error,
+                  version: targetVersion,
+                  component: manager.componentName,
+                },
+              }),
+            );
+          }
+        }
+      });
+    } catch (error) {
+      console.error(`[WebSocket] Prompt version error: ${error.message}`);
       ws.send(
         JSON.stringify({
           type: "error",

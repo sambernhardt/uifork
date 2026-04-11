@@ -5,11 +5,13 @@ import { GitForkIcon } from "./icons/GitForkIcon";
 import { MoreOptionsIcon } from "./icons/MoreOptionsIcon";
 import { VersionActionMenu } from "./VersionActionMenu";
 import { Tooltip } from "./Tooltip";
+import type { AiEditingTool } from "./SettingsView";
 
 interface VersionItemProps {
   version: string;
   label?: string;
   isSelected: boolean;
+  isPrompting?: boolean;
   formatVersionLabel: (version: string) => string;
   popoverPosition: { x: number; y: number } | undefined;
   isPopoverOpen: boolean;
@@ -21,6 +23,8 @@ interface VersionItemProps {
   onOpenInEditor: (version: string, e: React.MouseEvent) => void;
   onDelete: (version: string, e: React.MouseEvent) => void;
   onRename: (version: string, e: React.MouseEvent) => void;
+  onPromptVersion?: (version: string) => void;
+  aiEditingTool?: AiEditingTool;
   setPopoverTriggerRef: (version: string, el: HTMLButtonElement | null) => void;
   setPopoverDropdownRef: (version: string, el: HTMLDivElement | null) => void;
 }
@@ -29,6 +33,7 @@ export function VersionItem({
   version,
   label,
   isSelected,
+  isPrompting = false,
   formatVersionLabel,
   popoverPosition,
   isPopoverOpen,
@@ -40,6 +45,8 @@ export function VersionItem({
   onOpenInEditor,
   onDelete,
   onRename,
+  onPromptVersion,
+  aiEditingTool,
   setPopoverTriggerRef,
   setPopoverDropdownRef,
 }: VersionItemProps) {
@@ -53,13 +60,18 @@ export function VersionItem({
       onClick={() => onSelect(version)}
       className={`${styles.versionItem} ${styles.menuItem}`}
     >
-      {/* Checkmark */}
+      {/* Checkmark or loading spinner */}
       <div className={styles.checkmarkContainer}>
-        {isSelected && <CheckmarkIcon className={styles.checkmarkIcon} />}
+        {isPrompting ? (
+          <span className={styles.spinnerIcon} aria-hidden />
+        ) : (
+          isSelected && <CheckmarkIcon className={styles.checkmarkIcon} />
+        )}
       </div>
       <div className={styles.versionLabel}>
         <span className={styles.versionId}>{formattedVersion}</span>
         {label && <span className={styles.versionLabelText}>{label}</span>}
+        {isPrompting && <span className={styles.editingLabel}>Editing…</span>}
       </div>
       {/* Action buttons - only show when connected */}
       {isConnected && (
@@ -98,6 +110,8 @@ export function VersionItem({
                 onOpenInEditor={onOpenInEditor}
                 onDelete={onDelete}
                 onRename={onRename}
+                onPromptVersion={onPromptVersion}
+                aiEditingTool={aiEditingTool}
                 onClose={() => onTogglePopover(version)}
                 setDropdownRef={(el) => setPopoverDropdownRef(version, el)}
               />

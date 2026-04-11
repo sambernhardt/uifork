@@ -14,7 +14,7 @@
   --uifork-accent-danger: #ef4444;
   --uifork-accent-delete: #f87171;
   --uifork-shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --uifork-shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --uifork-shadow-md: 0 2px 8px -2px rgba(0, 0, 0, 0.08), 0 20px 40px -12px rgba(0, 0, 0, 0.12);
   --uifork-bg: var(--uifork-bg-dark);
   --uifork-fg: var(--uifork-text-primary);
   --uifork-fg-secondary: var(--uifork-text-secondary);
@@ -35,7 +35,7 @@
   --uifork-text-muted: #737373;
   --uifork-accent-delete: #dc2626;
   --uifork-shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --uifork-shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  --uifork-shadow-md: 0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 20px 40px -12px rgba(0, 0, 0, 0.08);
   --uifork-hover-bg: rgba(0, 0, 0, 0.04);
   --uifork-bg-select: rgba(0, 0, 0, 0.04);
   --uifork-bg-select-hover: rgba(0, 0, 0, 0.08);
@@ -51,7 +51,7 @@
     --uifork-text-muted: #737373;
     --uifork-accent-delete: #dc2626;
     --uifork-shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --uifork-shadow-md: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    --uifork-shadow-md: 0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 20px 40px -12px rgba(0, 0, 0, 0.08);
     --uifork-hover-bg: rgba(0, 0, 0, 0.04);
     --uifork-bg-select: rgba(0, 0, 0, 0.04);
     --uifork-bg-select-hover: rgba(0, 0, 0, 0.08);
@@ -97,6 +97,64 @@
 
 .container.containerClosed {
   border-radius: 16px;
+}
+
+.container.containerPromptOpen {
+  overflow: visible;
+}
+
+/* Floating toolbar above container when prompting */
+.promptToolbar {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
+}
+
+.promptToolbarBackButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--uifork-bg-dark);
+  border: 1px solid var(--uifork-border-color);
+  box-shadow: var(--uifork-shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--uifork-fg);
+  padding: 0;
+  box-sizing: border-box;
+  transition: background-color 0.15s;
+  font-family: inherit;
+}
+
+.promptToolbarBackButton:hover {
+  background-color: var(--uifork-bg-hover);
+}
+
+.promptToolbarBadge {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  background-color: var(--uifork-bg-dark);
+  border: 1px solid var(--uifork-border-color);
+  box-shadow: var(--uifork-shadow-md);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--uifork-fg);
+  white-space: nowrap;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.promptToolbarBadge + .promptToolbarBadge {
+  margin-left: -2px;
 }
 
 /* Override cursor when dragging */
@@ -228,10 +286,15 @@
 /* Dropdown content */
 .dropdown {
   min-width: 200px;
-  padding: 4px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+}
+
+/* Clip gradient overflow when prompt is shown; border-radius matches container (23px) */
+.dropdown.dropdownPromptOpen {
+  overflow: hidden;
+  border-radius: 23px;
 }
 
 /* Component selector row */
@@ -239,7 +302,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0px;
+  padding: 4px;
   box-sizing: border-box;
 }
 
@@ -301,7 +364,6 @@
 /* Divider */
 .divider {
   border-top: 1px solid var(--uifork-border-color);
-  margin: 4px 0;
 }
 
 /* Versions list */
@@ -310,7 +372,8 @@
   flex-direction: column;
   max-height: 300px;
   overflow-y: auto;
-  gap: 2px;
+  padding: 4px;
+  box-sizing: border-box;
   /* Custom scrollbar */
 }
 .versionsList::-webkit-scrollbar {
@@ -443,6 +506,30 @@
   opacity: 0.5;
 }
 
+.spinnerIcon {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--uifork-border-color);
+  border-top-color: var(--uifork-fg-secondary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.editingLabel {
+  font-size: 12px;
+  color: var(--uifork-text-muted);
+  opacity: 0.8;
+  margin-left: 4px;
+}
+
 /* Version label */
 .versionLabel {
   flex: 1;
@@ -537,16 +624,24 @@
   position: relative;
 }
 
+/* Popover scrim - blocks pointer events underneath when menu is open */
+.popoverScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1002;
+  background: transparent;
+}
+
 /* Popover menu */
 .popover {
   position: fixed;
-  z-index: 1002;
+  z-index: 1003;
   min-width: 140px;
   border-radius: 12px;
   background-color: var(--uifork-bg-dark);
   box-shadow: var(--uifork-shadow-md);
   border: 1px solid var(--uifork-border-color);
-  padding: 4px;
+  padding: 0;
   box-sizing: border-box;
   font-family:
     system-ui,
@@ -562,6 +657,10 @@
     sans-serif;
   transform-origin: left center;
   animation: popoverFadeIn 0.2s cubic-bezier(0.04, 1.02, 0.13, 1.02);
+}
+
+.popoverSection {
+  padding: 4px;
 }
 
 /* Popover menu item */
@@ -616,6 +715,12 @@
   width: 16px;
   height: 16px;
   color: var(--uifork-accent-danger);
+}
+
+/* Bottom section (new version button / offline message) */
+.versionListFooter {
+  padding: 4px;
+  box-sizing: border-box;
 }
 
 /* New version button */
@@ -781,7 +886,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 8px;
+  padding: 10px;
   box-sizing: border-box;
 }
 

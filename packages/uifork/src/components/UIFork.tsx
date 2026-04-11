@@ -11,6 +11,8 @@ import { SettingsView } from "./SettingsView";
 import { EmptyStateNoComponents } from "./EmptyStateNoComponents";
 import { NewVersionButton } from "./NewVersionButton";
 import { OfflineMessage } from "./OfflineMessage";
+import { PromptInput } from "./PromptInput";
+import { ChevronLeftIcon } from "./icons/ChevronLeftIcon";
 
 // Custom hooks
 import { useWebSocketConnection } from "../hooks/useWebSocketConnection";
@@ -54,6 +56,8 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [openPopoverVersion, setOpenPopoverVersion] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [promptingVersion, setPromptingVersion] = useState<string | null>(null);
+  const [promptingVersions, setPromptingVersions] = useState<Set<string>>(new Set());
 
   // Root ref for theme wrapper
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -72,6 +76,9 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
     "uifork-code-editor",
     "vscode",
   );
+  const [aiEditingTool, setAiEditingTool] = useLocalStorage<
+    "none" | "claude-code" | "cursor"
+  >("uifork-ai-editing-tool", "claude-code");
   // const [enableElementAwarePositioning, setEnableElementAwarePositioning] =
   //   useLocalStorage<boolean>("uifork-element-aware-positioning", false);
 
@@ -83,6 +90,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
       containerRef,
       componentSelectorRef,
       // enableElementAwarePositioning,
+      isPrompting: !!promptingVersion,
     },
   );
 
@@ -139,10 +147,13 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
     port,
     selectedComponent,
     onComponentsUpdate,
-    onVersionAck: ({ version, message, newVersion }) => {
+    onVersionAck: ({ version, message, newVersion, action }) => {
       let versionToActivate: string | null = null;
 
-      if (message?.includes("duplicated") || message?.includes("created new version")) {
+      if (
+        message?.includes("duplicated") ||
+        message?.includes("created new version")
+      ) {
         versionToActivate = version;
       } else if (message?.includes("renamed") && newVersion) {
         versionToActivate = newVersion;
@@ -150,6 +161,20 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
 
       if (versionToActivate) {
         storePendingVersion(versionToActivate);
+      }
+
+      if (action === "prompt_started") {
+        setPromptingVersions((prev) => new Set(prev).add(version));
+      }
+    },
+    onPromptStatus: (status) => {
+      setPromptingVersions((prev) => {
+        const next = new Set(prev);
+        next.delete(status.version);
+        return next;
+      });
+      if (status.type === "failed") {
+        console.error(`[UIFork] AI edit failed for ${status.version}: ${status.message}`);
       }
     },
     onPromoted: (promotedComponent) => {
@@ -219,6 +244,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
     onClose: () => {
       setIsOpen(false);
       setIsSettingsOpen(false);
+      setPromptingVersion(null);
     },
   });
 
@@ -234,6 +260,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
       setIsOpen(false);
       setIsSettingsOpen(false);
       setIsComponentSelectorOpen(false);
+      setPromptingVersion(null);
     }, [editingVersion, cancelRename]),
     additionalCheck: useCallback((target: Node) => {
       // Check if clicking inside component selector dropdown (portaled outside container)
@@ -244,6 +271,10 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
       const popoverElements = document.querySelectorAll("[data-popover-dropdown]");
       for (const el of popoverElements) {
         if (el.contains(target)) return true;
+      }
+      // Check if clicking the popover scrim - let VersionActionMenu handle it, don't close main dropdown
+      if ((target as Element).closest?.("[data-popover-scrim]")) {
+        return true;
       }
       return false;
     }, []),
@@ -300,6 +331,25 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
       setOpenPopoverVersion(null);
     }
   };
+
+  const handlePromptVersion = (version: string) => {
+    setPromptingVersion(version);
+    setOpenPopoverVersion(null);
+    setIsOpen(true);
+  };
+
+  const handlePromptSubmit = useCallback(
+    (version: string, prompt: string, forkFirst: boolean) => {
+      sendMessage("prompt_version", {
+        sourceVersion: version,
+        prompt,
+        aiEditingTool,
+        forkFirst,
+      });
+      setPromptingVersion(null);
+    },
+    [sendMessage, aiEditingTool],
+  );
 
   const handleTogglePopover = (version: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -383,6 +433,11 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
       return "closed-trigger-icon";
     }
 
+    // Prompt input takes priority over other open states
+    if (promptingVersion) {
+      return "opened-prompt-input";
+    }
+
     // When dropdown is open, determine which view to show
     if (isSettingsOpen) {
       return "opened-settings";
@@ -394,7 +449,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
 
     // Show version list even when disconnected - actions will be disabled
     return "opened-version-list";
-  }, [isOpen, isSettingsOpen, mountedComponents.length]);
+  }, [isOpen, isSettingsOpen, mountedComponents.length, promptingVersion]);
 
   // Don't render until mounted on client (prevents hydration mismatch)
   if (!isMounted) {
@@ -410,7 +465,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
     <>
       <motion.div
         ref={containerRef}
-        className={`${styles.container} ${!isOpen ? styles.containerClosed : ""} ${className}`}
+        className={`${styles.container} ${!isOpen ? styles.containerClosed : ""} ${activeView === "opened-prompt-input" ? styles.containerPromptOpen : ""} ${className}`}
         layout
         drag={dragEnabled && !isOpen}
         dragControls={dragControls}
@@ -422,8 +477,9 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
         onDragEnd={handleDragEnd}
         animate={resetDrag ? { x: 0, y: 0 } : {}}
         style={{
-          borderRadius: isOpen ? 12 : 20,
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+          borderRadius: !isOpen ? 20 : activeView === "opened-prompt-input" ? 23 : 12,
+          boxShadow:
+            "0 2px 8px -2px rgba(0, 0, 0, 0.08), 0 20px 40px -12px rgba(0, 0, 0, 0.12)",
           ...containerPosition,
           transformOrigin,
           // Don't set cursor here - we handle it on document.body to override CSS
@@ -445,6 +501,27 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
           },
         }}
       >
+        {/* Floating toolbar above container when prompting */}
+        {activeView === "opened-prompt-input" && (
+          <div className={styles.promptToolbar}>
+            <button
+              className={styles.promptToolbarBackButton}
+              onClick={() => setPromptingVersion(null)}
+              aria-label="Close prompt"
+            >
+              <ChevronLeftIcon />
+            </button>
+            {selectedComponent && (
+              <span className={styles.promptToolbarBadge}>{selectedComponent}</span>
+            )}
+            {promptingVersion && (
+              <span className={styles.promptToolbarBadge}>
+                {getVersionLabel(promptingVersion) || formatVersionLabel(promptingVersion)}
+              </span>
+            )}
+          </div>
+        )}
+
         <AnimatePresence mode="popLayout" initial={false}>
           {activeView === "closed-trigger-icon" || activeView === "closed-trigger-label" ? (
             <motion.button
@@ -483,6 +560,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
                 activeVersionLabel={getVersionLabel(activeVersion)}
                 formatVersionLabel={formatVersionLabel}
                 showComponentName={mountedComponents.length > 1}
+                isActiveVersionPrompting={promptingVersions.has(activeVersion)}
               />
             </motion.button>
           ) : (
@@ -491,7 +569,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
               ref={dropdownRef}
               role="listbox"
               aria-label="UI version options"
-              className={styles.dropdown}
+              className={`${styles.dropdown} ${activeView === "opened-prompt-input" ? styles.dropdownPromptOpen : ""}`}
               layout
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -514,8 +592,16 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
                   setPosition={setPosition}
                   codeEditor={codeEditor}
                   setCodeEditor={setCodeEditor}
-                  // enableElementAwarePositioning={enableElementAwarePositioning}
-                  // setEnableElementAwarePositioning={setEnableElementAwarePositioning}
+                  aiEditingTool={aiEditingTool}
+                  setAiEditingTool={setAiEditingTool}
+                />
+              )}
+
+              {activeView === "opened-prompt-input" && (
+                <PromptInput
+                  version={promptingVersion}
+                  onSubmit={handlePromptSubmit}
+                  onClose={() => setPromptingVersion(null)}
                 />
               )}
 
@@ -543,6 +629,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
                     openPopoverVersion={openPopoverVersion}
                     popoverPositions={popoverPositions}
                     isConnected={isConnected}
+                    promptingVersions={promptingVersions}
                     onSelectVersion={(version) => {
                       setActiveVersion(version);
                     }}
@@ -552,6 +639,8 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
                     onOpenInEditor={handleOpenInEditor}
                     onDeleteVersion={handleDeleteVersion}
                     onRenameVersion={handleRenameVersion}
+                    onPromptVersion={handlePromptVersion}
+                    aiEditingTool={aiEditingTool}
                     onRenameValueChange={setRenameValue}
                     onConfirmRename={handleConfirmRename}
                     onCancelRename={cancelRename}
@@ -564,11 +653,13 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
                       <div className={styles.divider} />
 
                       {/* New version button or offline message */}
-                      {isConnected ? (
-                        <NewVersionButton onClick={handleNewVersion} />
-                      ) : (
-                        <OfflineMessage />
-                      )}
+                      <div className={styles.versionListFooter}>
+                        {isConnected ? (
+                          <NewVersionButton onClick={handleNewVersion} />
+                        ) : (
+                          <OfflineMessage />
+                        )}
+                      </div>
                     </>
                   )}
                 </>

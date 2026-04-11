@@ -34,12 +34,12 @@ export function usePopoverPosition({ openPopoverVersion }: UsePopoverPositionOpt
         if (cancelled) return;
         try {
           const { x, y } = await computePosition(trigger, dropdown, {
-            placement: "bottom-end",
+            placement: "top-end",
             strategy: "fixed",
             middleware: [
               offset(4),
               flip({
-                fallbackPlacements: ["bottom-start", "top-end", "top-start"],
+                fallbackPlacements: ["bottom-end", "bottom-start", "top-start"],
               }),
               shift({ padding: 8 }),
             ],

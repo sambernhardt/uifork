@@ -4,9 +4,64 @@
  * To stop versioning this component, run: npx uifork promote PromptTestTopSection <version-id>
  */
 import PromptTestTopSectionV1 from "./PromptTestTopSection.v1"
+import PromptTestTopSectionV2 from "./PromptTestTopSection.v2"
+import PromptTestTopSectionV3 from "./PromptTestTopSection.v3"
+import PromptTestTopSectionV4 from "./PromptTestTopSection.v4"
+import PromptTestTopSectionV5 from "./PromptTestTopSection.v5"
+import PromptTestTopSectionV6 from "./PromptTestTopSection.v6"
+import PromptTestTopSectionV7 from "./PromptTestTopSection.v7"
+import PromptTestTopSectionV8 from "./PromptTestTopSection.v8"
+import PromptTestTopSectionV9 from "./PromptTestTopSection.v9"
+import PromptTestTopSectionV10 from "./PromptTestTopSection.v10"
+import PromptTestTopSectionV11 from "./PromptTestTopSection.v11"
+import PromptTestTopSectionV12 from "./PromptTestTopSection.v12"
 export const VERSIONS = {
   "v1": {
     render: PromptTestTopSectionV1,
+    label: "",
+  },
+  "v2": {
+    render: PromptTestTopSectionV2,
+    label: "Horizontal bars 🚀",
+  },
+  "v3": {
+    render: PromptTestTopSectionV3,
+    label: "",
+  },
+  "v4": {
+    render: PromptTestTopSectionV4,
+    label: "",
+  },
+  "v5": {
+    render: PromptTestTopSectionV5,
+    label: "Refined colors",
+  },
+  "v6": {
+    render: PromptTestTopSectionV6,
+    label: "",
+  },
+  "v7": {
+    render: PromptTestTopSectionV7,
+    label: "",
+  },
+  "v8": {
+    render: PromptTestTopSectionV8,
+    label: "",
+  },
+  "v9": {
+    render: PromptTestTopSectionV9,
+    label: "",
+  },
+  "v10": {
+    render: PromptTestTopSectionV10,
+    label: "",
+  },
+  "v11": {
+    render: PromptTestTopSectionV11,
+    label: "",
+  },
+  "v12": {
+    render: PromptTestTopSectionV12,
     label: "",
   },
 }

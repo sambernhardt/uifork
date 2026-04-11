@@ -14,7 +14,7 @@ export default function PromptTestTopSection() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card className="p-6 flex flex-col gap-6">
+      <Card className="p-6 rounded-2xl flex flex-col gap-6">
         <div>
           <span className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             Total Revenue
@@ -37,7 +37,7 @@ export default function PromptTestTopSection() {
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-6 rounded-2xl">
         <h3 className="text-sm font-medium text-muted-foreground mb-4">Revenue by month</h3>
         <div className="flex items-end gap-3 h-28">
           {BAR_CHART_DATA.map((item) => (
