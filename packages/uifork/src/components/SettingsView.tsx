@@ -1,6 +1,8 @@
 import styles from "./UIFork.module.css";
 import { ChevronRightIcon } from "./icons/ChevronRightIcon";
 
+export type AiEditingTool = "none" | "claude-code" | "cursor";
+
 interface SettingsViewProps {
   onBack: () => void;
   theme: "light" | "dark" | "system";
@@ -9,8 +11,8 @@ interface SettingsViewProps {
   setPosition: (position: "top-left" | "top-right" | "bottom-left" | "bottom-right") => void;
   codeEditor: "vscode" | "cursor";
   setCodeEditor: (editor: "vscode" | "cursor") => void;
-  // enableElementAwarePositioning: boolean;
-  // setEnableElementAwarePositioning: (enabled: boolean) => void;
+  aiEditingTool: AiEditingTool;
+  setAiEditingTool: (tool: AiEditingTool) => void;
 }
 
 export function SettingsView({
@@ -21,8 +23,8 @@ export function SettingsView({
   setPosition,
   codeEditor,
   setCodeEditor,
-  // enableElementAwarePositioning,
-  // setEnableElementAwarePositioning,
+  aiEditingTool,
+  setAiEditingTool,
 }: SettingsViewProps) {
   return (
     <div className={styles.settingsView}>
@@ -74,6 +76,19 @@ export function SettingsView({
             className={styles.settingsSelect}
           >
             <option value="vscode">VSCode</option>
+            <option value="cursor">Cursor</option>
+          </select>
+        </div>
+
+        <div className={styles.settingsGroup}>
+          <label className={styles.settingsLabel}>AI editing tool</label>
+          <select
+            value={aiEditingTool}
+            onChange={(e) => setAiEditingTool(e.target.value as AiEditingTool)}
+            className={styles.settingsSelect}
+          >
+            <option value="none">None</option>
+            <option value="claude-code">Claude Code</option>
             <option value="cursor">Cursor</option>
           </select>
         </div>

@@ -10,6 +10,7 @@ type TriggerContentProps = {
   activeVersionLabel?: string;
   formatVersionLabel: (version: string) => string;
   showComponentName: boolean;
+  isActiveVersionPrompting?: boolean;
 };
 
 const TriggerContent = ({
@@ -19,6 +20,7 @@ const TriggerContent = ({
   activeVersionLabel,
   formatVersionLabel,
   showComponentName,
+  isActiveVersionPrompting = false,
 }: TriggerContentProps) => {
   const displayVersion = activeVersion ? formatVersionLabel(activeVersion) : "-";
 
@@ -47,7 +49,10 @@ const TriggerContent = ({
       >
         {displayVersion}
       </span>
-      {activeVersionLabel && (
+      {isActiveVersionPrompting && (
+        <span className={styles.triggerVersionLabel}> · Editing…</span>
+      )}
+      {!isActiveVersionPrompting && activeVersionLabel && (
         <span className={styles.triggerVersionLabel}> · {activeVersionLabel}</span>
       )}
     </>

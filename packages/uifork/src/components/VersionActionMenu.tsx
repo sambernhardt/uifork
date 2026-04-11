@@ -5,8 +5,10 @@ import { PromoteIcon } from "./icons/PromoteIcon";
 import { OpenInEditorIcon } from "./icons/OpenInEditorIcon";
 import { DeleteIcon } from "./icons/DeleteIcon";
 import { RenameIcon } from "./icons/RenameIcon";
+import { PromptIcon } from "./icons/PromptIcon";
 import { MenuItem } from "./MenuItem";
 import { useClickOutside } from "../hooks/useClickOutside";
+import type { AiEditingTool } from "./SettingsView";
 
 interface VersionActionMenuProps {
   version: string;
@@ -16,6 +18,8 @@ interface VersionActionMenuProps {
   onOpenInEditor: (version: string, e: React.MouseEvent) => void;
   onDelete: (version: string, e: React.MouseEvent) => void;
   onRename: (version: string, e: React.MouseEvent) => void;
+  onPromptVersion?: (version: string) => void;
+  aiEditingTool?: AiEditingTool;
   onClose: () => void;
   setDropdownRef: (el: HTMLDivElement | null) => void;
 }
@@ -28,6 +32,8 @@ export function VersionActionMenu({
   onOpenInEditor,
   onDelete,
   onRename,
+  onPromptVersion,
+  aiEditingTool,
   onClose,
   setDropdownRef,
 }: VersionActionMenuProps) {
@@ -71,52 +77,76 @@ export function VersionActionMenu({
   // The CSS animation will handle the fade-in and scale effect
   // Render in a portal to escape the scroll container and allow overflow
   return createPortal(
-    <div
-      ref={combinedRef}
-      className={styles.popover}
-      data-popover-dropdown
-      style={{
-        visibility: "hidden",
-      }}
-      role="menu"
-    >
-      <MenuItem
-        icon={RenameIcon}
-        label={renameLabel}
-        stopPropagation
-        onClick={(e) => {
-          onRename(version, e);
-          onClose();
-        }}
+    <>
+      {/* Scrim blocks clicks underneath; clicking it closes the menu */}
+      <div
+        className={styles.popoverScrim}
+        data-popover-scrim
+        onClick={onClose}
+        aria-hidden
       />
-      <MenuItem
-        icon={PromoteIcon}
-        label="Promote"
-        onClick={(e) => {
-          onPromote(version, e);
-          onClose();
+      <div
+        ref={combinedRef}
+        className={styles.popover}
+        data-popover-dropdown
+        style={{
+          visibility: "hidden",
         }}
-      />
-      <MenuItem
-        icon={OpenInEditorIcon}
-        label="Open in editor"
-        onClick={(e) => {
-          onOpenInEditor(version, e);
-          onClose();
-        }}
-      />
-      <div className={styles.divider} />
-      <MenuItem
-        icon={DeleteIcon}
-        label="Delete"
-        variant="delete"
-        stopPropagation
-        onClick={(e) => {
-          onDelete(version, e);
-          onClose();
-        }}
-      />
-    </div>,
+        role="menu"
+      >
+        <div className={styles.popoverSection}>
+          <MenuItem
+            icon={RenameIcon}
+            label={renameLabel}
+            stopPropagation
+            onClick={(e) => {
+              onRename(version, e);
+              onClose();
+            }}
+          />
+          {aiEditingTool && aiEditingTool !== "none" && onPromptVersion && (
+            <MenuItem
+              icon={PromptIcon}
+              label="Edit with prompt…"
+              stopPropagation
+              onClick={() => {
+                onPromptVersion(version);
+                onClose();
+              }}
+            />
+          )}
+          <MenuItem
+            icon={PromoteIcon}
+            label="Promote"
+            onClick={(e) => {
+              onPromote(version, e);
+              onClose();
+            }}
+          />
+          <MenuItem
+            icon={OpenInEditorIcon}
+            label="Open in editor"
+            onClick={(e) => {
+              onOpenInEditor(version, e);
+              onClose();
+            }}
+          />
+        </div>
+        <div className={styles.divider} />
+        <div className={styles.popoverSection}>
+          <MenuItem
+            icon={DeleteIcon}
+            label="Delete"
+            variant="delete"
+            stopPropagation
+            onClick={(e) => {
+              onDelete(version, e);
+              onClose();
+            }}
+          />
+        </div>
+      </div>
+    </>,
     rootElement,
   );
 }

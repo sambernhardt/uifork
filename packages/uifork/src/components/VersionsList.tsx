@@ -3,6 +3,7 @@ import styles from "./UIFork.module.css";
 import { VersionItem } from "./VersionItem";
 import { VersionNameEditor } from "./VersionNameEditor";
 import type { VersionInfo } from "../types";
+import type { AiEditingTool } from "./SettingsView";
 
 interface VersionsListProps {
   versions: VersionInfo[];
@@ -13,6 +14,7 @@ interface VersionsListProps {
   openPopoverVersion: string | null;
   popoverPositions: Map<string, { x: number; y: number }>;
   isConnected: boolean;
+  promptingVersions?: Set<string>;
   onSelectVersion: (version: string) => void;
   onDuplicateVersion: (version: string, e: React.MouseEvent) => void;
   onTogglePopover: (version: string, e?: React.MouseEvent) => void;
@@ -20,6 +22,8 @@ interface VersionsListProps {
   onOpenInEditor: (version: string, e: React.MouseEvent) => void;
   onDeleteVersion: (version: string, e: React.MouseEvent) => void;
   onRenameVersion: (version: string, e: React.MouseEvent) => void;
+  onPromptVersion?: (version: string) => void;
+  aiEditingTool?: AiEditingTool;
   onRenameValueChange: (value: string) => void;
   onConfirmRename: (version: string) => void;
   onCancelRename: () => void;
@@ -36,6 +40,7 @@ export function VersionsList({
   openPopoverVersion,
   popoverPositions,
   isConnected,
+  promptingVersions = new Set(),
   onSelectVersion,
   onDuplicateVersion,
   onTogglePopover,
@@ -43,6 +48,8 @@ export function VersionsList({
   onOpenInEditor,
   onDeleteVersion,
   onRenameVersion,
+  onPromptVersion,
+  aiEditingTool,
   onRenameValueChange,
   onConfirmRename,
   onCancelRename,
@@ -83,6 +90,7 @@ export function VersionsList({
               version={key}
               label={label}
               isSelected={isSelected}
+              isPrompting={promptingVersions.has(key)}
               formatVersionLabel={formatVersionLabel}
               popoverPosition={popoverPositions.get(key)}
               isPopoverOpen={openPopoverVersion === key}
@@ -94,6 +102,8 @@ export function VersionsList({
               onOpenInEditor={onOpenInEditor}
               onDelete={onDeleteVersion}
               onRename={onRenameVersion}
+              onPromptVersion={onPromptVersion}
+              aiEditingTool={aiEditingTool}
               setPopoverTriggerRef={setPopoverTriggerRef}
               setPopoverDropdownRef={setPopoverDropdownRef}
             />
