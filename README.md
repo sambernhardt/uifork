@@ -86,13 +86,21 @@ This will:
 - Convert your component into a forked component that can be versioned
 - Generate a `versions.ts` file to track all versions
 
-**Note:** For now, each version file must default-export its component. Named exports are
-being considered for the future.
+UIFork auto-detects whether your component uses a default export or a named export and generates the correct versioning scaffolding. If the file has multiple exported components and detection is ambiguous, specify which export to fork:
+
+```bash
+npx uifork init src/components/Button.tsx --export Button
+npx uifork init src/components/Button.tsx --export default
+```
 
 **3. Use your component as usual**
 
 ```tsx
+// Default export (auto-detected)
 import Button from "./components/Button";
+
+// Named export (auto-detected)
+import { Button } from "./components/Button";
 
 // Works exactly as before - the active version is controlled by the UIFork widget
 <Button onClick={handleClick}>Click me</Button>;
@@ -262,7 +270,7 @@ npx uifork init src/components/Dropdown.tsx
 ```
 
 - **`-w`** — Start watch after init (default: off). Works with both forms.
-- **Requirement:** For now, each version file must default-export its component. Named exports are being considered for the future.
+- **`--export <name>`** — Specify which export to fork (e.g. `Button` or `default`). Auto-detected when unambiguous.
 
 ### `watch [directory]`
 

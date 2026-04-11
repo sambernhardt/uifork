@@ -209,12 +209,20 @@ class VersionPromoter {
     }
   }
 
+  parseExportNameFromVersionsFile() {
+    try {
+      const content = fs.readFileSync(this.versionsFilePath, "utf8");
+      const match = content.match(/@uifork-export\s+(\S+)/);
+      return match ? match[1] : "default";
+    } catch {
+      return "default";
+    }
+  }
+
   replaceWrapperWithVersion() {
     const versionContent = this.readVersionFile();
+    const exportName = this.parseExportNameFromVersionsFile();
 
-    // Clean up the version content - remove version-specific naming if needed
-    // The component name in the version file might be like ComponentNameV2
-    // We want to replace it with just ComponentName
     const baseComponentIdentifier = toPascalCaseIdentifier(this.componentName);
     const importSuffix = this.versionToImportSuffix(this.versionIdToFileVersion(this.versionId));
     const versionedComponentName = getVersionComponentIdentifier(
@@ -227,7 +235,8 @@ class VersionPromoter {
 
     // Replace the versioned component name with the base component name
     // Handle various export patterns:
-    // 1. export default function ComponentNameV2
+
+    // 1a. export default function ComponentNameV2
     cleanedContent = cleanedContent.replace(
       new RegExp(`export default function ${versionedComponentName}\\b`, "g"),
       `export default function ${baseComponentIdentifier}`,
@@ -237,7 +246,27 @@ class VersionPromoter {
       `export default function ${baseComponentIdentifier}`,
     );
 
-    // 2. function ComponentNameV2 (in case it's not exported yet)
+    // 1b. export function ComponentNameV2 (named, non-default)
+    cleanedContent = cleanedContent.replace(
+      new RegExp(`export function ${versionedComponentName}\\b`, "g"),
+      `export function ${baseComponentIdentifier}`,
+    );
+    cleanedContent = cleanedContent.replace(
+      new RegExp(`export function ${legacyVersionedComponentName}\\b`, "g"),
+      `export function ${baseComponentIdentifier}`,
+    );
+
+    // 1c. export const ComponentNameV2 (named arrow/const, non-default)
+    cleanedContent = cleanedContent.replace(
+      new RegExp(`export const ${versionedComponentName}\\s*=`, "g"),
+      `export const ${baseComponentIdentifier} =`,
+    );
+    cleanedContent = cleanedContent.replace(
+      new RegExp(`export const ${legacyVersionedComponentName}\\s*=`, "g"),
+      `export const ${baseComponentIdentifier} =`,
+    );
+
+    // 2. function ComponentNameV2 (non-exported references)
     cleanedContent = cleanedContent.replace(
       new RegExp(`function ${versionedComponentName}\\b`, "g"),
       `function ${baseComponentIdentifier}`,
@@ -247,7 +276,7 @@ class VersionPromoter {
       `function ${baseComponentIdentifier}`,
     );
 
-    // 3. const ComponentNameV2 = (arrow function)
+    // 3. const ComponentNameV2 = (arrow function, non-exported)
     cleanedContent = cleanedContent.replace(
       new RegExp(`const ${versionedComponentName}\\s*=`, "g"),
       `const ${baseComponentIdentifier} =`,
@@ -267,7 +296,16 @@ class VersionPromoter {
       baseComponentIdentifier,
     );
 
-    // Write the cleaned content to the wrapper file
+    // For named exports, if the version file used `export function X` the rename
+    // above already preserved it. If the original was a named export but the version
+    // file happens to use `export default`, convert it to a named export to match.
+    if (exportName !== "default") {
+      cleanedContent = cleanedContent.replace(
+        new RegExp(`export default (function|const|class)\\s+${escapeRegExp(baseComponentIdentifier)}\\b`),
+        `export $1 ${baseComponentIdentifier}`,
+      );
+    }
+
     fs.writeFileSync(this.wrapperFile, cleanedContent, "utf8");
     console.log(
       `\n✅ Replaced ${path.basename(this.wrapperFile)} with content from ${this.versionId}`,

@@ -49,11 +49,12 @@ Aliases:
   duplicate  Alias for fork
 
 Options:
-  -h, --help     Show this help message
-  -v, --version  Show version number
-  -w             Start watching after init (init command only)
-  --port <port>  Port for the watch server (default: 3030); also respects PORT env var
-  --lazy         Use lazy loading for component versions (watch command only)
+  -h, --help          Show this help message
+  -v, --version       Show version number
+  -w                  Start watching after init (init command only)
+  --export <name>     Specify which export to fork: a named export (e.g. Button) or "default" (init command only)
+  --port <port>       Port for the watch server (default: 3030); also respects PORT env var
+  --lazy              Use lazy loading for component versions (watch command only)
 `);
 }
 
@@ -91,12 +92,22 @@ if (args.includes("-v") || args.includes("--version")) {
   process.exit(0);
 }
 
+// Parse --export flag value
+function parseExportFlag(args) {
+  const exportIdx = args.indexOf("--export");
+  if (exportIdx !== -1 && args[exportIdx + 1]) {
+    return args[exportIdx + 1];
+  }
+  return undefined;
+}
+
 // If command is not a known command and exists, treat it as a component path (shorthand init)
 if (command && !knownCommands.includes(command)) {
   // Treat command as component path and initialize
   try {
     const shouldWatch = args.includes("-w") || args.includes("--watch");
-    const scaffolder = new UISwitcherScaffold(command, shouldWatch);
+    const exportName = parseExportFlag(args);
+    const scaffolder = new UISwitcherScaffold(command, shouldWatch, { exportName });
     scaffolder.scaffold();
   } catch (error) {
     console.error(`Error during scaffolding: ${error.message}`);
@@ -128,7 +139,8 @@ switch (command) {
 
     try {
       const shouldWatch = args.includes("-w") || args.includes("--watch");
-      const scaffolder = new UISwitcherScaffold(argument, shouldWatch);
+      const exportName = parseExportFlag(args);
+      const scaffolder = new UISwitcherScaffold(argument, shouldWatch, { exportName });
       scaffolder.scaffold();
     } catch (error) {
       console.error(`Error during scaffolding: ${error.message}`);
@@ -232,12 +244,14 @@ switch (command) {
       const displayVersion = targetVersion.replace(/^v/, "").replace(/_/g, ".").toUpperCase();
 
       const componentName = getVersionComponentIdentifier(manager.componentName, fileVersion);
+      const isNamed = manager.exportName !== "default";
+      const exportKeyword = isNamed ? "export" : "export default";
 
       let templateContent;
       if (extension === ".tsx" || extension === ".jsx") {
         templateContent = `import React from 'react';
 
-export default function ${componentName}() {
+${exportKeyword} function ${componentName}() {
   return (
     <div>
       ${displayVersion}
@@ -248,7 +262,7 @@ export default function ${componentName}() {
       } else {
         templateContent = `import React from 'react';
 
-export default function ${componentName}() {
+${exportKeyword} function ${componentName}() {
   return React.createElement('div', null, '${displayVersion}');
 }
 `;
