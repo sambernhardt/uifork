@@ -8,7 +8,8 @@ export type WebSocketMessageType =
   | "new_version"
   | "rename_version"
   | "rename_label"
-  | "promote_version";
+  | "promote_version"
+  | "prompt_version";
 
 interface UseWebSocketConnectionOptions {
   port: number;
@@ -21,8 +22,14 @@ interface UseWebSocketConnectionOptions {
       versions: string[];
     }>,
   ) => void;
-  onVersionAck?: (payload: { version: string; message?: string; newVersion?: string }) => void;
+  onVersionAck?: (payload: { version: string; message?: string; newVersion?: string; action?: string }) => void;
   onPromoted?: (componentName: string) => void;
+  onPromptStatus?: (payload: {
+    type: "completed" | "failed";
+    version: string;
+    component: string;
+    message: string;
+  }) => void;
   onError?: (message: string) => void;
 }
 
@@ -33,6 +40,7 @@ export function useWebSocketConnection({
   onComponentsUpdate,
   onVersionAck,
   onPromoted,
+  onPromptStatus,
   onError,
 }: UseWebSocketConnectionOptions) {
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
@@ -44,6 +52,7 @@ export function useWebSocketConnection({
   const onComponentsUpdateRef = useRef(onComponentsUpdate);
   const onVersionAckRef = useRef(onVersionAck);
   const onPromotedRef = useRef(onPromoted);
+  const onPromptStatusRef = useRef(onPromptStatus);
   const onErrorRef = useRef(onError);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isConnectingRef = useRef(false);
@@ -72,8 +81,9 @@ export function useWebSocketConnection({
     onComponentsUpdateRef.current = onComponentsUpdate;
     onVersionAckRef.current = onVersionAck;
     onPromotedRef.current = onPromoted;
+    onPromptStatusRef.current = onPromptStatus;
     onErrorRef.current = onError;
-  }, [onFileChanged, onComponentsUpdate, onVersionAck, onPromoted, onError]);
+  }, [onFileChanged, onComponentsUpdate, onVersionAck, onPromoted, onPromptStatus, onError]);
 
   // WebSocket connection function
   const connectWebSocket = useCallback(() => {
@@ -180,6 +190,21 @@ export function useWebSocketConnection({
             version: data.payload.version,
             message,
             newVersion,
+            action: data.payload.action,
+          });
+        } else if (data.type === "prompt_completed" && data.payload) {
+          onPromptStatusRef.current?.({
+            type: "completed",
+            version: data.payload.version,
+            component: data.payload.component,
+            message: data.payload.message || "",
+          });
+        } else if (data.type === "prompt_failed" && data.payload) {
+          onPromptStatusRef.current?.({
+            type: "failed",
+            version: data.payload.version,
+            component: data.payload.component,
+            message: data.payload.message || "",
           });
         } else if (data.type === "error") {
           onErrorRef.current?.(data.payload?.message || "Unknown error");
