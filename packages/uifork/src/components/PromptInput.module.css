@@ -1,0 +1,163 @@
+.promptContainer {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 280px;
+}
+
+.textareaWrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.textareaWrapper::before,
+.textareaWrapper::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 18px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.textareaWrapper::before {
+  top: -1px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(to bottom, var(--uifork-bg-dark) 5px, transparent);
+}
+
+.textareaWrapper::after {
+  bottom: -3px;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(to top, var(--uifork-bg-dark) 5px, transparent);
+}
+
+.textarea {
+  display: block;
+  width: 100%;
+  min-height: 80px;
+  max-height: 300px;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--uifork-fg);
+  background-color: transparent;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+  resize: none;
+  line-height: 1.5;
+  overflow-y: auto;
+}
+
+.textarea::placeholder {
+  color: var(--uifork-text-muted);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+}
+
+.submitButton {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--uifork-fg);
+  color: var(--uifork-bg-dark);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.submitButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.submitButtonIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.forkCheckbox {
+  height: 32px;
+  padding: 0 12px 0 9px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 16px;
+  transition:
+    background-color 0.15s,
+    opacity 0.2s;
+}
+
+.forkCheckbox:hover:not(.forkCheckboxDisabled) {
+  background-color: var(--uifork-hover-bg);
+}
+
+.forkCheckbox.forkCheckboxDisabled {
+  opacity: 0;
+  cursor: default;
+  pointer-events: none;
+}
+
+.forkCheckboxInput {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  border: 1px solid var(--uifork-text-muted);
+  border-radius: 4px;
+  background-color: transparent;
+  transition:
+    background-color 0.12s,
+    border-color 0.12s;
+  position: relative;
+}
+
+.forkCheckboxInput:checked {
+  background-color: var(--uifork-fg);
+  border-color: var(--uifork-fg);
+}
+
+.forkCheckboxInput:checked::after {
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 1px;
+  width: 4px;
+  height: 7px;
+  border: 1.5px solid var(--uifork-bg-dark);
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+.forkCheckboxLabel {
+  font-size: 13px;
+  color: var(--uifork-text-muted);
+  line-height: 1;
+}

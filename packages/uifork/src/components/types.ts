@@ -3,4 +3,5 @@ export type ActiveView =
   | "closed-trigger-label"
   | "opened-version-list"
   | "opened-no-components"
-  | "opened-settings";
+  | "opened-settings"
+  | "opened-prompt-input";
