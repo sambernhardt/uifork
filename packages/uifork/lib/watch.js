@@ -1272,10 +1272,6 @@ ${exportKeyword} function ${componentName}() {
         throw new Error(`Prompt too long (${prompt.length} chars). Maximum is ${MAX_PROMPT_LENGTH}.`);
       }
 
-      if (this.activePrompts.has(component)) {
-        throw new Error(`An AI edit is already in progress for ${component}. Please wait for it to finish.`);
-      }
-
       if (!manager.validateVersionKey(sourceVersion)) {
         throw new Error(`Invalid version format: ${sourceVersion}`);
       }
@@ -1289,7 +1285,6 @@ ${exportKeyword} function ${componentName}() {
       let targetFilePath = sourceFilePath;
 
       if (forkFirst) {
-        // Fork the source version into a new version, then edit the fork
         const nextVersionNum = manager.getNextVersionNumber();
         targetVersion = manager.versionNumberToKey(nextVersionNum);
         const extension = path.extname(sourceFilePath);
@@ -1309,27 +1304,32 @@ ${exportKeyword} function ${componentName}() {
         console.log(`[WebSocket] Prompt version: editing ${sourceVersion} in-place`);
       }
 
+      // Guard per target version -- forkFirst always gets a fresh target, so only
+      // in-place edits of the same version are blocked from running concurrently.
+      if (this.activePrompts.has(`${component}:${targetVersion}`)) {
+        throw new Error(`An AI edit is already in progress for ${component} ${targetVersion}. Please wait for it to finish.`);
+      }
+
       console.log(`  Timestamp: ${timestamp}`);
       console.log(`  Component: ${manager.componentName}`);
       console.log(`  Prompt: ${prompt}`);
       console.log(`  AI Tool: ${aiEditingTool}`);
       console.log(`  Target: ${path.basename(targetFilePath)}`);
 
-      // Send ack immediately so UI can show prompting state
-      ws.send(
-        JSON.stringify({
-          type: "ack",
-          payload: {
-            action: "prompt_started",
-            message: forkFirst
-              ? `Forked ${sourceVersion} → ${targetVersion}, editing with ${aiEditingTool}...`
-              : `Editing ${sourceVersion} with ${aiEditingTool}...`,
-            version: targetVersion,
-          },
-        }),
-      );
+      const activePromptKey = `${component}:${targetVersion}`;
+      this.activePrompts.add(activePromptKey);
 
-      this.activePrompts.add(component);
+      // Broadcast prompt_started to all clients so every tab sees the spinner
+      this.broadcast({
+        type: "prompt_started",
+        payload: {
+          message: forkFirst
+            ? `Forked ${sourceVersion} → ${targetVersion}, editing with ${aiEditingTool}...`
+            : `Editing ${sourceVersion} with ${aiEditingTool}...`,
+          version: targetVersion,
+          component: manager.componentName,
+        },
+      });
 
       spawnAICLI({
         aiTool: aiEditingTool,
@@ -1337,36 +1337,28 @@ ${exportKeyword} function ${componentName}() {
         prompt: prompt.trim(),
         cwd: manager.watchDir,
       }).then((result) => {
-        this.activePrompts.delete(component);
+        this.activePrompts.delete(activePromptKey);
 
         if (result.success) {
           console.log(`[WebSocket] AI edit completed for ${targetVersion}`);
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(
-              JSON.stringify({
-                type: "prompt_completed",
-                payload: {
-                  message: `AI edit completed for ${targetVersion}`,
-                  version: targetVersion,
-                  component: manager.componentName,
-                },
-              }),
-            );
-          }
+          this.broadcast({
+            type: "prompt_completed",
+            payload: {
+              message: `AI edit completed for ${targetVersion}`,
+              version: targetVersion,
+              component: manager.componentName,
+            },
+          });
         } else {
           console.error(`[WebSocket] AI edit failed: ${result.error}`);
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(
-              JSON.stringify({
-                type: "prompt_failed",
-                payload: {
-                  message: result.error,
-                  version: targetVersion,
-                  component: manager.componentName,
-                },
-              }),
-            );
-          }
+          this.broadcast({
+            type: "prompt_failed",
+            payload: {
+              message: result.error,
+              version: targetVersion,
+              component: manager.componentName,
+            },
+          });
         }
       });
     } catch (error) {
@@ -1380,22 +1372,32 @@ ${exportKeyword} function ${componentName}() {
     }
   }
 
-  sendComponents(ws) {
-    const componentsInfo = this.getComponentsInfo();
-    const message = JSON.stringify({
+  broadcast(data) {
+    const message = typeof data === "string" ? data : JSON.stringify(data);
+    this.wsClients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  }
+
+  buildComponentsMessage() {
+    return JSON.stringify({
       type: "components",
       payload: {
-        components: componentsInfo,
+        components: this.getComponentsInfo(),
+        activePrompts: Array.from(this.activePrompts),
       },
     });
+  }
 
+  sendComponents(ws) {
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(message);
+      ws.send(this.buildComponentsMessage());
     }
   }
 
   broadcastFileChange(componentName) {
-    const componentsInfo = this.getComponentsInfo();
     const fileChangedMessage = JSON.stringify({
       type: "file_changed",
       payload: {
@@ -1404,17 +1406,10 @@ ${exportKeyword} function ${componentName}() {
       },
     });
 
-    const componentsMessage = JSON.stringify({
-      type: "components",
-      payload: {
-        components: componentsInfo,
-      },
-    });
-
     this.wsClients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(fileChangedMessage);
-        client.send(componentsMessage);
+        client.send(this.buildComponentsMessage());
       }
     });
   }

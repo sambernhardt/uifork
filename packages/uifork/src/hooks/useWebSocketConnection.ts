@@ -21,11 +21,12 @@ interface UseWebSocketConnectionOptions {
       path: string;
       versions: string[];
     }>,
+    activePrompts?: string[],
   ) => void;
   onVersionAck?: (payload: { version: string; message?: string; newVersion?: string; action?: string }) => void;
   onPromoted?: (componentName: string) => void;
   onPromptStatus?: (payload: {
-    type: "completed" | "failed";
+    type: "started" | "completed" | "failed";
     version: string;
     component: string;
     message: string;
@@ -173,7 +174,14 @@ export function useWebSocketConnection({
         const data = JSON.parse(event.data);
 
         if (data.type === "components" && data.payload?.components) {
-          onComponentsUpdateRef.current?.(data.payload.components);
+          onComponentsUpdateRef.current?.(data.payload.components, data.payload.activePrompts);
+        } else if (data.type === "prompt_started" && data.payload) {
+          onPromptStatusRef.current?.({
+            type: "started",
+            version: data.payload.version,
+            component: data.payload.component,
+            message: data.payload.message || "",
+          });
         } else if (data.type === "file_changed") {
           onFileChangedRef.current?.();
         } else if (data.type === "ack" && data.payload?.version) {

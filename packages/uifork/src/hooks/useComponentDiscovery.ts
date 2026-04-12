@@ -64,6 +64,7 @@ export function useComponentDiscovery({ port: _port }: UseComponentDiscoveryOpti
         path: string;
         versions: string[];
       }>,
+      _activePrompts?: string[],
     ) => {
       setWsComponents(newWsComponents);
 

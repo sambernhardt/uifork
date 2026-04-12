@@ -142,12 +142,26 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
     versionKeys,
   } = useVersionManagement({ selectedComponent, versions });
 
+  // Wrap onComponentsUpdate to also hydrate promptingVersions from server state
+  const handleComponentsUpdate = useCallback(
+    (
+      components: Array<{ name: string; path: string; versions: string[] }>,
+      activePrompts?: string[],
+    ) => {
+      onComponentsUpdate(components, activePrompts);
+      if (activePrompts) {
+        setPromptingVersions(new Set(activePrompts));
+      }
+    },
+    [onComponentsUpdate],
+  );
+
   // WebSocket connection hook
   const { connectionStatus, sendMessage } = useWebSocketConnection({
     port,
     selectedComponent,
-    onComponentsUpdate,
-    onVersionAck: ({ version, message, newVersion, action }) => {
+    onComponentsUpdate: handleComponentsUpdate,
+    onVersionAck: ({ version, message, newVersion }) => {
       let versionToActivate: string | null = null;
 
       if (
@@ -162,17 +176,17 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
       if (versionToActivate) {
         storePendingVersion(versionToActivate);
       }
-
-      if (action === "prompt_started") {
-        setPromptingVersions((prev) => new Set(prev).add(version));
-      }
     },
     onPromptStatus: (status) => {
-      setPromptingVersions((prev) => {
-        const next = new Set(prev);
-        next.delete(status.version);
-        return next;
-      });
+      if (status.type === "started") {
+        setPromptingVersions((prev) => new Set(prev).add(`${status.component}:${status.version}`));
+      } else {
+        setPromptingVersions((prev) => {
+          const next = new Set(prev);
+          next.delete(`${status.component}:${status.version}`);
+          return next;
+        });
+      }
       if (status.type === "failed") {
         console.error(`[UIFork] AI edit failed for ${status.version}: ${status.message}`);
       }
@@ -418,6 +432,18 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
   // Determine if we're connected to the WebSocket server
   const isConnected = connectionStatus === "connected";
 
+  // Derive version-only prompting set for the selected component (for VersionsList)
+  const componentPromptingVersions = React.useMemo(() => {
+    const prefix = `${selectedComponent}:`;
+    const result = new Set<string>();
+    for (const key of promptingVersions) {
+      if (key.startsWith(prefix)) {
+        result.add(key.slice(prefix.length));
+      }
+    }
+    return result;
+  }, [promptingVersions, selectedComponent]);
+
   // Determine active view based on current state
   const activeView: ActiveView = React.useMemo(() => {
     if (!isOpen) {
@@ -560,7 +586,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
                 activeVersionLabel={getVersionLabel(activeVersion)}
                 formatVersionLabel={formatVersionLabel}
                 showComponentName={mountedComponents.length > 1}
-                isActiveVersionPrompting={promptingVersions.has(activeVersion)}
+                isActiveVersionPrompting={componentPromptingVersions.has(activeVersion)}
               />
             </motion.button>
           ) : (
@@ -629,7 +655,7 @@ export function UIFork({ port = 3030, className = "", style }: UIForkProps) {
                     openPopoverVersion={openPopoverVersion}
                     popoverPositions={popoverPositions}
                     isConnected={isConnected}
-                    promptingVersions={promptingVersions}
+                    promptingVersions={componentPromptingVersions}
                     onSelectVersion={(version) => {
                       setActiveVersion(version);
                     }}
